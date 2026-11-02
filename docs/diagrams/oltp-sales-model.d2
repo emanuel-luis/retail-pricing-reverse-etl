@@ -1,0 +1,106 @@
+# The OLTP master data, sales and inventory tables (the busy side the workload writes), keys
+# only plus the measures the pricing loop reads. Grounded in src/retail_pricing/data/contract.py
+# and docs/PLAN.md section 4. Every table also has version and updated_at. The pricing tables
+# are in oltp-pricing-model. The product hierarchy (master.category, product_class, brand with
+# brand_tier, supplier) is left out to keep the width; product shows their keys.
+...@_style
+
+classes: {
+  table: {
+    shape: sql_table
+    style.font-size: 13
+  }
+}
+
+title: "OLTP sales and inventory model: master data, sales, stock" {
+  shape: text
+  near: top-center
+  style: {font-size: 24; bold: true}
+}
+
+direction: right
+
+product: "master.product" {
+  class: table
+  product_id: bigint {constraint: primary_key}
+  class_id: int {constraint: foreign_key}
+  brand_id: int {constraint: foreign_key}
+  supplier_id: int {constraint: foreign_key}
+}
+
+store: "master.store" {
+  class: table
+  store_id: int {constraint: primary_key}
+  zone_id: smallint {constraint: foreign_key}
+}
+
+warehouse: "master.warehouse" {
+  class: table
+  warehouse_id: int {constraint: primary_key}
+}
+
+customer: "master.customer" {
+  class: table
+  customer_id: bigint {constraint: primary_key}
+}
+
+sale: "sales.sale" {
+  class: table
+  sale_id: bigint {constraint: primary_key}
+  channel: "text STORE|WEB"
+  store_id: int {constraint: foreign_key}
+  customer_id: bigint {constraint: foreign_key}
+  business_date: date
+}
+
+line: "sales.sale_line" {
+  class: table
+  sale_line_id: bigint {constraint: primary_key}
+  sale_id: bigint {constraint: foreign_key}
+  product_id: bigint {constraint: foreign_key}
+  quantity: int
+  unit_price: "numeric(10,2)"
+  promo_id: int {constraint: foreign_key}
+}
+
+ret: "sales.sale_return" {
+  class: table
+  return_id: bigint {constraint: primary_key}
+  sale_line_id: bigint {constraint: foreign_key}
+  quantity: int
+}
+
+store_stock: "inventory.store_stock" {
+  class: table
+  store_id: int {constraint: [primary_key; foreign_key]}
+  product_id: bigint {constraint: [primary_key; foreign_key]}
+  on_hand: int
+  last_received_date: date
+}
+
+wh_stock: "inventory.warehouse_stock" {
+  class: table
+  warehouse_id: int {constraint: [primary_key; foreign_key]}
+  product_id: bigint {constraint: [primary_key; foreign_key]}
+  on_hand: int
+}
+
+movement: "inventory.stock_movement" {
+  class: table
+  movement_id: bigint {constraint: primary_key}
+  store_id: int {constraint: foreign_key}
+  product_id: bigint {constraint: foreign_key}
+  movement_type: "text RECEIPT|SALE|..."
+}
+
+sale.store_id -> store.store_id
+sale.customer_id -> customer.customer_id
+line.sale_id -> sale.sale_id
+line.product_id -> product.product_id
+ret.sale_line_id -> line.sale_line_id
+store_stock.store_id -> store.store_id
+store_stock.product_id -> product.product_id
+wh_stock.warehouse_id -> warehouse.warehouse_id
+wh_stock.product_id -> product.product_id
+movement.store_id -> store.store_id
+movement.product_id -> product.product_id

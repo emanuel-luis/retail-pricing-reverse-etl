@@ -15,8 +15,8 @@ contract and the table below says what exists today.
 | Piece | State |
 | --- | --- |
 | TPC-DS generation and the deterministic OLTP seed | done |
-| OLTP and control databases, apply functions, workload generator | next |
-| ClickHouse, dbt pricing procedure, dbt runner | planned |
+| OLTP and control databases, apply functions, workload generator | done |
+| ClickHouse, dbt pricing procedure, dbt runner | next |
 | NiFi image, flows as code, extract and load | planned |
 | Transform, reverse load, reconciliation, `make demo` | planned |
 | Monitoring, heavy SF10 run, results | planned |
@@ -36,6 +36,24 @@ contract and the table below says what exists today.
 - Job registry and run audit in Postgres, and Prometheus plus Grafana over the whole loop
   (planned).
 
+## OLTP and control model
+
+The OLTP is a normalized retail schema generated from one contract (`data/contract.py`): every
+row carries `version` and `updated_at`, and the three price tables the engine writes back also
+carry `last_cycle_id` and `updated_by`. `pricing_apply.apply_batch` applies a staged batch in one
+set-based transaction: a row changes only if its version still equals the version extracted for
+the cycle, otherwise a conflict is recorded; a replayed batch returns its stored counts. The
+control database registers every job and audits cycles, runs and steps through functions that
+NiFi will call.
+
+![The pricing tables: products, zones and stores, the zone prices, store overrides and promo prices the engine writes back, costs, competitor prices, KVI and ladder rules, the SCD2 price history, the change log and the shelf-label queue.](docs/diagrams/oltp-pricing-model.svg)
+
+Source: [oltp-pricing-model.d2](docs/diagrams/oltp-pricing-model.d2).
+
+![The busy side of the OLTP: sales with lines and returns, store and warehouse stock with movements, and the master data they point to.](docs/diagrams/oltp-sales-model.svg)
+
+Source: [oltp-sales-model.d2](docs/diagrams/oltp-sales-model.d2).
+
 ## Data preparation
 
 ![TPC-DS is generated with DuckDB's tpcds extension into Parquet with a manifest, then DuckDB SQL maps it and the deterministic synthetic tables to the OLTP seed, also with a manifest.](docs/diagrams/data-prep.svg)
@@ -54,6 +72,12 @@ git clone https://github.com/emanuel-luis/retail-pricing-reverse-etl && cd retai
 make install
 make data SF=0.01   # TPC-DS SF0.01 plus the OLTP seed under data/ (seconds)
 make test           # unit tests plus the SF0.01 generation checks
+make up             # OLTP and control Postgres (copies .env.example to .env when missing)
+make load SF=0.01   # schema from the contract, COPY of the seed, constraints, triggers, roles
+make control-init   # job registry, audit schema and functions
+make test-sql       # apply/conflict/replay, triggers, roles, control functions, a workload run
+make workload       # concurrent sales, stock moves and manual price edits against the OLTP
+make down           # stop everything and delete the volumes
 ```
 
 On the owner's laptop `make data SF=1` takes about 36 s and SF10 about 8.5 minutes, with DuckDB
@@ -62,9 +86,12 @@ capped at 4 GB (not TPC-DS benchmark results).
 ## Project structure
 
 ```
-src/retail_pricing/   CLI, settings, JSON logging, data generation and build
-src/retail_pricing/sql/duckdb/   TPC-DS to OLTP mapping, one file per table
-tests/                unit tests and SF0.01 data checks
+src/retail_pricing/   CLI, settings, JSON logging, data generation and build, OLTP load,
+                      control init, workload generator
+src/retail_pricing/sql/   duckdb/ (TPC-DS to OLTP mapping), oltp/ (triggers, apply functions,
+                      roles), control/ (registry, audit, functions, views, grants)
+compose.yaml          OLTP and control Postgres, workload (profile workload)
+tests/                unit, SF0.01 data checks (slow) and SQL tests (sql)
 docs/                 PLAN (the contract), DECISIONS, D2 diagrams
 ```
 

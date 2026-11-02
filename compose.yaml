@@ -1,6 +1,7 @@
 # Memory limits are sized so the whole loop fits a laptop Docker VM (docs/PLAN.md section 1).
 # This file grows with each pull request; today: the OLTP and the control/audit Postgres, and the
-# workload generator (profile workload). Peaks are measured and noted here as services land.
+# workload generator (profile workload). Measured on 2026-11-02 at SF0.01 with the workload at
+# 20 sales/s: oltp 119 MiB, control-db 95 MiB, workload 47 MiB.
 name: retail-pricing-reverse-etl
 
 x-app-build: &app-build
