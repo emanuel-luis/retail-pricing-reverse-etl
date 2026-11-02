@@ -1,0 +1,53 @@
+version: 2
+
+# What NiFi reads and stages in pricing_apply.<target>_stage (PLAN 4.1): only rows whose target
+# row hash differs from the snapshot, numbered into batches in key order.
+models:
+  - name: rev_zone_price
+    description: Changed zone prices per cycle x product x zone (zone_price_stage shape).
+    data_tests:
+      - unique_combination: {arguments: {columns: [cycle_id, product_id, zone_id]}}
+    columns:
+      - {name: batch_no, description: "intDiv(row_number() over (order by key) - 1, batch_size)", data_tests: [not_null]}
+      - {name: expected_version, data_tests: [not_null]}
+      - {name: new_price, data_tests: [not_null]}
+      - {name: reason_code, data_tests: [not_null]}
+      - {name: row_hash, description: Hex cityHash64 of the key and the new price., data_tests: [not_null]}
+
+  - name: rev_store_override
+    description: Changed open overrides per cycle x store x product (store_override_stage shape, plus zone_id).
+    data_tests:
+      - unique_combination: {arguments: {columns: [cycle_id, store_id, product_id]}}
+    columns:
+      - {name: batch_no, data_tests: [not_null]}
+      - {name: reason_code, data_tests: [not_null]}
+
+  - name: rev_promo_price
+    description: Changed promo prices per cycle x promo x product x zone (promo_price_stage shape).
+    data_tests:
+      - unique_combination: {arguments: {columns: [cycle_id, promo_id, product_id, zone_id]}}
+    columns:
+      - {name: batch_no, data_tests: [not_null]}
+      - {name: reason_code, data_tests: [not_null]}
+
+  - name: rev_shelf_label
+    description: Every label of the cycle per store x product (shelf_label_stage shape), batched by label_batch_size.
+    data_tests:
+      - unique_combination: {arguments: {columns: [cycle_id, store_id, product_id]}}
+    columns:
+      - {name: batch_no, data_tests: [not_null]}
+      - name: source_target
+        data_tests:
+          - accepted_values: {arguments: {values: [zone_price, store_override]}}
+
+  - name: rev_reconcile_expected
+    description: >
+      The transit check per cycle x target x zone x category, same formula and keys as
+      pricing_apply.reconcile_actual (DECISIONS 26, 64): rows, sum of price cents and the
+      key-weighted sum (Int128).
+    data_tests:
+      - unique_combination: {arguments: {columns: [cycle_id, target, zone_id, category_id, check_name]}}
+    columns:
+      - name: target
+        data_tests:
+          - accepted_values: {arguments: {values: [zone_price, store_override, promo_price, shelf_label]}}

@@ -1,0 +1,26 @@
+version: 2
+
+unit_tests:
+  - name: rev_zone_price_diff_and_batches
+    description: >
+      Unchanged rows (new = old) and other cycles are not sent; the rest are numbered into
+      batches of batch_size (2 here) in (product_id, zone_id) order.
+    model: rev_zone_price
+    overrides:
+      vars: {cycle_id: 1, as_of: '2025-12-04', batch_size: 2}
+      macros: {is_incremental: false}
+    given:
+      - input: ref('pricing_zone_price')
+        rows:
+          - {cycle_id: 1, product_id: 5, zone_id: 1, old_price: 4.99, new_price: 5.49, expected_version: 2, primary_reason: VELOCITY_UP}
+          - {cycle_id: 1, product_id: 1, zone_id: 2, old_price: 4.99, new_price: 4.49, expected_version: 1, primary_reason: CAPPED}
+          - {cycle_id: 1, product_id: 1, zone_id: 1, old_price: 4.99, new_price: 4.99, expected_version: 1, primary_reason: HOLD_PROMO}
+          - {cycle_id: 1, product_id: 3, zone_id: 1, old_price: 9.99, new_price: 10.99, expected_version: 7, primary_reason: MARGIN_FLOOR}
+          - {cycle_id: 1, product_id: 2, zone_id: 1, old_price: 9.99, new_price: 9.49, expected_version: 1, primary_reason: SEASONAL}
+          - {cycle_id: 2, product_id: 9, zone_id: 1, old_price: 9.99, new_price: 9.49, expected_version: 1, primary_reason: SEASONAL}
+    expect:
+      rows:
+        - {product_id: 1, zone_id: 2, batch_no: 0, new_price: 4.49, expected_version: 1, reason_code: CAPPED}
+        - {product_id: 2, zone_id: 1, batch_no: 0, new_price: 9.49, expected_version: 1, reason_code: SEASONAL}
+        - {product_id: 3, zone_id: 1, batch_no: 1, new_price: 10.99, expected_version: 7, reason_code: MARGIN_FLOOR}
+        - {product_id: 5, zone_id: 1, batch_no: 1, new_price: 5.49, expected_version: 2, reason_code: VELOCITY_UP}

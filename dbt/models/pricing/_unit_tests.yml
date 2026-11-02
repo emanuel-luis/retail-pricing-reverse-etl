@@ -1,0 +1,70 @@
+version: 2
+
+unit_tests:
+  - name: promo_price_keeps_depth
+    description: >
+      New regular 10.99 at 20% off is 8.792, truncated to 8.79 and rounded down to the grid,
+      8.49. New regular 4.99 at 10% off is 4.491, so 4.49 (unchanged, still listed). The
+      exclude-policy and unchanged regular prices are not recalculated.
+    model: pricing_promo_price
+    overrides:
+      vars: {cycle_id: 1, as_of: '2025-12-04'}
+      macros: {is_incremental: false}
+    given:
+      - input: ref('pricing_zone_price')
+        rows:
+          - {cycle_id: 1, product_id: 1, zone_id: 1, new_price: 10.99, changed: true, promo_policy: keep_depth}
+          - {cycle_id: 1, product_id: 2, zone_id: 1, new_price: 4.99, changed: true, promo_policy: keep_depth}
+          - {cycle_id: 1, product_id: 3, zone_id: 1, new_price: 4.99, changed: true, promo_policy: exclude}
+          - {cycle_id: 1, product_id: 4, zone_id: 1, new_price: 4.99, changed: false, promo_policy: keep_depth}
+      - input: ref('stg_promotion')
+        rows:
+          - {promo_id: 7, start_date: '2025-12-01', end_date: '2025-12-20', discount_pct: 0.20}
+          - {promo_id: 8, start_date: '2025-12-05', end_date: '2025-12-20', discount_pct: 0.10}
+      - input: ref('stg_promo_price')
+        rows:
+          - {promo_id: 7, product_id: 1, zone_id: 1, promo_price: 7.99, version: 3}
+          - {promo_id: 8, product_id: 2, zone_id: 1, promo_price: 4.49, version: 1}
+          - {promo_id: 8, product_id: 3, zone_id: 1, promo_price: 4.49, version: 1}
+          - {promo_id: 8, product_id: 4, zone_id: 1, promo_price: 4.49, version: 1}
+      - input: ref('int_price_grid')
+        format: sql
+        rows: >
+          select arraySort(arrayConcat(
+              arrayMap(n -> toInt64(n * 100 + 49), range(10)),
+              arrayMap(n -> toInt64(n * 100 + 99), range(50)),
+              arrayMap(n -> toInt64(n * 100 + 90), range(50, 300)))) as grid
+    expect:
+      rows:
+        - {promo_id: 7, product_id: 1, new_price: 8.49, changed: true, expected_version: 3, primary_reason: PROMO_DEPTH_KEEP}
+        - {promo_id: 8, product_id: 2, new_price: 4.49, changed: false, expected_version: 1, primary_reason: PROMO_DEPTH_KEEP}
+
+  - name: zone_price_primary_reason_precedence
+    description: >
+      A hold wins; an unchanged row has no reason; then MARGIN_FLOOR > FLOOR_LIMITED_BY_CAP >
+      CAPPED > LADDER_ADJUST; then the largest component; ENDING_ROUND when only rounding moved it.
+    model: pricing_zone_price
+    overrides:
+      vars: {cycle_id: 1, as_of: '2025-12-04'}
+      macros: {is_incremental: false}
+    given:
+      - input: ref('int_price_laddered')
+        rows:
+          - {product_id: 1, zone_id: 1, cur_c: 499, new_c: 499, hold_reason: HOLD_PROMO, top_component: VELOCITY_UP, reasons: "['VELOCITY_UP','HOLD_PROMO']", current_price: 4.99, current_version: 1, lo_c: 0, hi_c: 999, floor_limited: false, class_id: 1, category_id: 1, elasticity: -1.2, max_change_pct: 0.05, min_margin: 0.1, promo_policy: keep_depth, unit_cost: 1}
+          - {product_id: 2, zone_id: 1, cur_c: 499, new_c: 499, hold_reason: '', top_component: VELOCITY_UP, reasons: "['VELOCITY_UP']", current_price: 4.99, current_version: 1, lo_c: 0, hi_c: 999, floor_limited: false, class_id: 1, category_id: 1, elasticity: -1.2, max_change_pct: 0.05, min_margin: 0.1, promo_policy: keep_depth, unit_cost: 1}
+          - {product_id: 3, zone_id: 1, cur_c: 499, new_c: 549, hold_reason: '', top_component: VELOCITY_UP, reasons: "['VELOCITY_UP','CAPPED','LADDER_ADJUST']", current_price: 4.99, current_version: 1, lo_c: 0, hi_c: 999, floor_limited: false, class_id: 1, category_id: 1, elasticity: -1.2, max_change_pct: 0.05, min_margin: 0.1, promo_policy: keep_depth, unit_cost: 1}
+          - {product_id: 4, zone_id: 1, cur_c: 499, new_c: 549, hold_reason: '', top_component: OVERSTOCK_MARKDOWN, reasons: "['OVERSTOCK_MARKDOWN','MARGIN_FLOOR','COST_PASS_THROUGH','LADDER_ADJUST']", current_price: 4.99, current_version: 1, lo_c: 0, hi_c: 999, floor_limited: false, class_id: 1, category_id: 1, elasticity: -1.2, max_change_pct: 0.05, min_margin: 0.1, promo_policy: keep_depth, unit_cost: 1}
+          - {product_id: 5, zone_id: 1, cur_c: 499, new_c: 549, hold_reason: '', top_component: SEASONAL, reasons: "['SEASONAL','FLOOR_LIMITED_BY_CAP']", current_price: 4.99, current_version: 1, lo_c: 0, hi_c: 999, floor_limited: false, class_id: 1, category_id: 1, elasticity: -1.2, max_change_pct: 0.05, min_margin: 0.1, promo_policy: keep_depth, unit_cost: 1}
+          - {product_id: 6, zone_id: 1, cur_c: 499, new_c: 549, hold_reason: '', top_component: SEASONAL, reasons: "['SEASONAL','LADDER_ADJUST']", current_price: 4.99, current_version: 1, lo_c: 0, hi_c: 999, floor_limited: false, class_id: 1, category_id: 1, elasticity: -1.2, max_change_pct: 0.05, min_margin: 0.1, promo_policy: keep_depth, unit_cost: 1}
+          - {product_id: 7, zone_id: 1, cur_c: 499, new_c: 549, hold_reason: '', top_component: VELOCITY_UP, reasons: "['VELOCITY_UP','SEASONAL']", current_price: 4.99, current_version: 1, lo_c: 0, hi_c: 999, floor_limited: false, class_id: 1, category_id: 1, elasticity: -1.2, max_change_pct: 0.05, min_margin: 0.1, promo_policy: keep_depth, unit_cost: 1}
+          - {product_id: 8, zone_id: 1, cur_c: 495, new_c: 499, hold_reason: '', top_component: '', reasons: "['ENDING_ROUND']", current_price: 4.99, current_version: 1, lo_c: 0, hi_c: 999, floor_limited: false, class_id: 1, category_id: 1, elasticity: -1.2, max_change_pct: 0.05, min_margin: 0.1, promo_policy: keep_depth, unit_cost: 1}
+    expect:
+      rows:
+        - {product_id: 1, changed: false, primary_reason: HOLD_PROMO}
+        - {product_id: 2, changed: false, primary_reason: null}
+        - {product_id: 3, changed: true, primary_reason: CAPPED}
+        - {product_id: 4, changed: true, primary_reason: MARGIN_FLOOR}
+        - {product_id: 5, changed: true, primary_reason: FLOOR_LIMITED_BY_CAP}
+        - {product_id: 6, changed: true, primary_reason: LADDER_ADJUST}
+        - {product_id: 7, changed: true, primary_reason: VELOCITY_UP}
+        - {product_id: 8, changed: true, primary_reason: ENDING_ROUND}

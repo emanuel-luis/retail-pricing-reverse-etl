@@ -1,0 +1,27 @@
+version: 2
+
+# Tables over every cycle, rebuilt on each run.
+models:
+  - name: mart_price_change_impact
+    description: Changed zone prices per cycle x zone x category x primary_reason with counts, average change and projected revenue and margin delta.
+    data_tests:
+      - unique_combination: {arguments: {columns: [cycle_id, zone_id, category_id, primary_reason]}}
+
+  - name: mart_proposed_vs_applied
+    description: >
+      Every row sent per cycle x target x key, with the apply outcome, the value in the OLTP now
+      and whether an applied value was overwritten later. Complete for cycle N once cycle N + 1
+      has extracted.
+    data_tests:
+      - unique_combination: {arguments: {columns: [cycle_id, target, product_id, zone_id, store_id, promo_id]}}
+    columns:
+      - name: outcome
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [applied, unchanged, conflict, rejected, staged, not_sent]
+
+  - name: mart_conflicts
+    description: Version conflicts per cycle x target x key, the engine's proposal against the human price and its editor.
+    data_tests:
+      - unique_combination: {arguments: {columns: [cycle_id, target, key_text]}}

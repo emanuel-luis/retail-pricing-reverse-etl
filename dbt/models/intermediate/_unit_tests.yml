@@ -1,5 +1,15 @@
 version: 2
 
+# The ending grid of the seed bands: [0,10) .49/.99, [10,50) .99, [50,300) .90, in cents.
+x-grid: &grid
+  input: ref('int_price_grid')
+  format: sql
+  rows: >
+    select arraySort(arrayConcat(
+        arrayMap(n -> toInt64(n * 100 + 49), range(10)),
+        arrayMap(n -> toInt64(n * 100 + 99), range(50)),
+        arrayMap(n -> toInt64(n * 100 + 90), range(50, 300)))) as grid
+
 unit_tests:
   - name: elasticity_clamp_and_fallback
     description: >
@@ -36,3 +46,73 @@ unit_tests:
         - {category_id: 3, is_fallback: true, elasticity: -1.2}
         - {category_id: 4, is_fallback: false, elasticity: -0.3}
         - {category_id: 5, is_fallback: true, elasticity: -1.2}
+
+  - name: bounded_floor_cap_and_ending
+    description: >
+      All at current 99.90 (cap 5%: cents [9491, 10489]) except row 4. 1: the margin floor
+      (90.00 / 0.9 = 100.00) beats the 95.00 candidate, nearest grid price inside is 100.90.
+      2: a 120.00 candidate is capped at 104.89, ending 103.90. 3: the floor (110.00) is above
+      the cap, the price is the highest grid price <= hi. 4: 20.99 with cap 3% and floor 21.12
+      has no grid price inside [21.12, 21.61], so it holds.
+    model: int_price_bounded
+    given:
+      - input: ref('int_price_candidate')
+        rows:
+          - {product_id: 1, zone_id: 1, current_price: 99.90, max_change_pct: 0.05, min_margin: 0.10, unit_cost: 90.00, candidate_price: 95.00, has_promo: false, promo_policy: keep_depth, component_reasons: "['VELOCITY_DOWN']", top_component: VELOCITY_DOWN}
+          - {product_id: 2, zone_id: 1, current_price: 99.90, max_change_pct: 0.05, min_margin: 0.10, unit_cost: 50.00, candidate_price: 120.00, has_promo: false, promo_policy: keep_depth, component_reasons: "['COMPETITOR_BLEND']", top_component: COMPETITOR_BLEND}
+          - {product_id: 3, zone_id: 1, current_price: 99.90, max_change_pct: 0.05, min_margin: 0.10, unit_cost: 99.00, candidate_price: 99.90, has_promo: false, promo_policy: keep_depth, component_reasons: "[]", top_component: ''}
+          - {product_id: 4, zone_id: 1, current_price: 20.99, max_change_pct: 0.03, min_margin: 0.10, unit_cost: 19.00, candidate_price: 20.50, has_promo: false, promo_policy: keep_depth, component_reasons: "['VELOCITY_UP']", top_component: VELOCITY_UP}
+      - *grid
+    expect:
+      rows:
+        - {product_id: 1, lo_c: 10000, hi_c: 10489, new_c: 10090, binding_reason: MARGIN_FLOOR, hold_reason: '', floor_limited: false}
+        - {product_id: 2, lo_c: 9491, hi_c: 10489, new_c: 10390, binding_reason: CAPPED, hold_reason: '', floor_limited: false}
+        - {product_id: 3, lo_c: 10489, hi_c: 10489, new_c: 10390, binding_reason: FLOOR_LIMITED_BY_CAP, hold_reason: '', floor_limited: true}
+        - {product_id: 4, lo_c: 2112, hi_c: 2161, new_c: 2099, binding_reason: MARGIN_FLOOR, hold_reason: HOLD_INFEASIBLE, floor_limited: false}
+
+  - name: laddered_pack_tier_and_infeasible_hold
+    description: >
+      PACK class 1: the 1-unit pack (2.49) is below the 2-unit pack's unit price (5.49 / 2), so
+      it rises to the next grid price at or above 2.745, 2.99. TIER class 2: tier 2 equal to
+      tier 1 (9.99) rises one grid step to 10.99. PACK class 3: the 1-unit pack would need 2.99
+      but its ceiling is 2.60, so the whole class holds at current prices (5.99 back to 5.49).
+    model: int_price_laddered
+    given:
+      - input: ref('int_price_bounded')
+        rows:
+          - {product_id: 1, zone_id: 1, class_id: 1, cur_c: 249, new_c: 249, hi_c: 320, hold_reason: '', reasons: "[]"}
+          - {product_id: 2, zone_id: 1, class_id: 1, cur_c: 549, new_c: 549, hi_c: 570, hold_reason: '', reasons: "[]"}
+          - {product_id: 3, zone_id: 1, class_id: 2, cur_c: 999, new_c: 999, hi_c: 1200, hold_reason: '', reasons: "[]"}
+          - {product_id: 4, zone_id: 1, class_id: 2, cur_c: 999, new_c: 999, hi_c: 1200, hold_reason: '', reasons: "[]"}
+          - {product_id: 5, zone_id: 1, class_id: 3, cur_c: 249, new_c: 249, hi_c: 260, hold_reason: '', reasons: "[]"}
+          - {product_id: 6, zone_id: 1, class_id: 3, cur_c: 549, new_c: 599, hi_c: 620, hold_reason: '', reasons: "['VELOCITY_UP']"}
+      - input: ref('stg_ladder_group')
+        rows:
+          - {ladder_group_id: 1, ladder_type: PACK}
+          - {ladder_group_id: 2, ladder_type: TIER}
+          - {ladder_group_id: 3, ladder_type: PACK}
+      - input: ref('stg_ladder_member')
+        rows:
+          - {ladder_group_id: 1, product_id: 1, rank: 1}
+          - {ladder_group_id: 1, product_id: 2, rank: 2}
+          - {ladder_group_id: 2, product_id: 3, rank: 1}
+          - {ladder_group_id: 2, product_id: 4, rank: 2}
+          - {ladder_group_id: 3, product_id: 5, rank: 1}
+          - {ladder_group_id: 3, product_id: 6, rank: 2}
+      - input: ref('stg_product')
+        rows:
+          - {product_id: 1, class_id: 1, pack_units: 1}
+          - {product_id: 2, class_id: 1, pack_units: 2}
+          - {product_id: 3, class_id: 2, pack_units: 1}
+          - {product_id: 4, class_id: 2, pack_units: 1}
+          - {product_id: 5, class_id: 3, pack_units: 1}
+          - {product_id: 6, class_id: 3, pack_units: 2}
+      - *grid
+    expect:
+      rows:
+        - {product_id: 1, new_c: 299, hold_reason: '', ladder_adjusted: true}
+        - {product_id: 2, new_c: 549, hold_reason: '', ladder_adjusted: false}
+        - {product_id: 3, new_c: 999, hold_reason: '', ladder_adjusted: false}
+        - {product_id: 4, new_c: 1099, hold_reason: '', ladder_adjusted: true}
+        - {product_id: 5, new_c: 249, hold_reason: HOLD_LADDER, ladder_adjusted: false}
+        - {product_id: 6, new_c: 549, hold_reason: HOLD_LADDER, ladder_adjusted: false}
