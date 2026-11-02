@@ -1,6 +1,6 @@
 """`oltp load`: schema from the contract, COPY of the seed Parquet, then the rest (PLAN 4.1).
 
-Phases: tables (PKs only), copy, constraints, indexes, triggers, apply, roles, sequences,
+Phases: tables (PKs only), copy, constraints, indexes, triggers, apply, definers, roles, sequences,
 analyze. Each phase and each table logs one JSON line with rows and seconds. Loading into
 non-empty tables is refused; `replace=True` drops the schemas first (a schema change means a
 reset, not a migration).
@@ -155,6 +155,8 @@ def load(sf: float, data_dir: Path, settings: OltpSettings, *, replace: bool = F
             _run(conn, [sql_file("040_triggers.sql")])
         with _phase("apply"):
             _run(conn, [sql_file("050_apply.sql")])
+        with _phase("definers"):
+            _run(conn, [sql_file("055_definers.sql")])
         with _phase("roles"):
             create_roles(conn, settings)
         with _phase("sequences"):
