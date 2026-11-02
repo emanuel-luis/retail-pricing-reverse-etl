@@ -4,7 +4,7 @@ SHELL := bash
 # Git Bash on Windows would rewrite container paths such as /var/lib/... into Windows paths.
 export MSYS_NO_PATHCONV := 1
 
-.PHONY: help install lint fmt test test-fast test-data test-sql data env up down ps logs load control-init ch-init ch-load workload workload-stop d2-install diagrams diagrams-check diagrams-watch
+.PHONY: help install lint fmt test test-fast test-data test-sql data env up down ps logs load control-init ch-init ch-load workload workload-stop runner-logs d2-install diagrams diagrams-check diagrams-watch
 
 # Scale factor of the TPC-DS data: 0.01 (CI), 1 (default demo), 10 (documented heavy run).
 SF ?= 1
@@ -70,10 +70,14 @@ ch-load: ## Load the seed Parquet into ClickHouse raw: make ch-load SF=0.01 CYCL
 
 # --profile on the command line replaces COMPOSE_PROFILES, so the core profile is named again.
 workload: env ## Start the OLTP workload generator (profile workload)
-	docker compose $(ALL_PROFILES) up -d --build --wait workload
+	docker compose $(ALL_PROFILES) build dbt-runner
+	docker compose $(ALL_PROFILES) up -d --wait workload
 
 workload-stop: ## Stop the workload generator
 	docker compose $(ALL_PROFILES) stop workload
+
+runner-logs: ## Follow the dbt runner logs
+	docker compose $(ALL_PROFILES) logs -f --tail 100 dbt-runner
 
 # Diagrams: docs/diagrams/<name>.d2 rendered to <name>.svg (committed). One pinned D2 everywhere.
 # Layout engine, themes and padding live in docs/diagrams/_style.d2 (d2-config), so d2 runs in a

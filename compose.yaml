@@ -127,15 +127,51 @@ services:
       retries: 30
       start_period: 5s
 
-  workload:
+  dbt-runner:
+    # The one service that builds the shared app image (compose refuses two builders of a tag).
     build: *app-build
     image: retail-pricing-app:local
+    profiles: [core]
+    mem_limit: 512m
+    command: ["dbt-runner", "serve"]
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    environment:
+      DBT_RUNNER_HOST: 0.0.0.0
+      DBT_RUNNER_PORT: "8580"
+      DBT_RUNNER_PROJECT_DIR: /home/app/dbt
+      DBT_RUNNER_STATE_DIR: /var/lib/dbt-runner
+      DBT_THREADS: ${DBT_THREADS:-2}
+      # Read by dbt/profiles.yml through env_var.
+      CLICKHOUSE_HOST: clickhouse
+      CLICKHOUSE_HTTP_PORT: "8123"
+      CLICKHOUSE_DBT_USER: dbt
+      CLICKHOUSE_DBT_PASSWORD: ${CLICKHOUSE_DBT_PASSWORD:?set CLICKHOUSE_DBT_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:${DBT_RUNNER_PORT:-28580}:8580"
+    volumes:
+      - dbt_runner_state:/var/lib/dbt-runner
+    healthcheck:
+      test: ["CMD", "retail-pricing", "health", "--url", "http://127.0.0.1:8580/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 5s
+
+  workload:
+    # Reuses the image dbt-runner builds; `docker compose --profile core build dbt-runner` first.
+    image: retail-pricing-app:local
+    pull_policy: never
     profiles: [workload]
     mem_limit: 256m
     command: ["workload", "run"]
     depends_on:
       oltp:
         condition: service_healthy
+      dbt-runner:
+        condition: service_started
+        required: false
     environment:
       # Inside the network the OLTP is reached by name, whatever the host-side .env says.
       OLTP_HOST: oltp
@@ -157,3 +193,4 @@ volumes:
   control_data:
   s3_data:
   clickhouse_data:
+  dbt_runner_state:
