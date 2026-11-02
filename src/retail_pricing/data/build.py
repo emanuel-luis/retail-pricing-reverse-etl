@@ -210,6 +210,21 @@ def build(sf: float, settings: DataSettings) -> Path:
                 f"FROM read_parquet('{pq}', hive_partitioning = false)"
             )
         create_macros(con)
+        # TPC-DS leaves i_current_price and i_wholesale_cost NULL on some item versions (none at
+        # SF0.01, some from SF1 on). Fill them deterministically so every price and cost
+        # downstream is set: a price in 0.99..49.99 and a cost at 45..75% of it. A NULL record
+        # start date becomes 1997-10-27, the earliest start TPC-DS assigns.
+        item_pq = (src / "item.parquet").as_posix()
+        con.execute(
+            "CREATE OR REPLACE VIEW tpcds.item AS SELECT * REPLACE ("
+            " CAST(coalesce(i_current_price, round(0.99 + 49 * u(i_item_sk::VARCHAR, 'fill_price'),"
+            " 2)) AS DECIMAL(7,2)) AS i_current_price,"
+            " CAST(coalesce(i_wholesale_cost, round(coalesce(i_current_price, round(0.99 + 49 *"
+            " u(i_item_sk::VARCHAR, 'fill_price'), 2)) * (0.45 + 0.3 * u(i_item_sk::VARCHAR,"
+            " 'fill_cost')), 2)) AS DECIMAL(7,2)) AS i_wholesale_cost,"
+            " coalesce(i_rec_start_date, DATE '1997-10-27') AS i_rec_start_date)"
+            f" FROM read_parquet('{item_pq}', hive_partitioning = false)"
+        )
         con.execute("CREATE TABLE build.dropped (table_name VARCHAR, rule VARCHAR, rows BIGINT)")
         con.execute(
             "CREATE TABLE build.pack_units AS "
