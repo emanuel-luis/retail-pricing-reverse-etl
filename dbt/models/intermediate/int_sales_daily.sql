@@ -25,18 +25,28 @@ lines as (
     ) s on s.sale_id = l.sale_id
     group by l.product_id, s.zone_id, s.business_date
 ),
+-- Returns in the window, and only the sale lines and sales they point at: the IN filters are
+-- on the primary keys, so the 34M-line table at SF10 is read only where a return exists.
+returns_in_window as (
+    select sale_line_id, quantity, amount, business_date from {{ ref('stg_sale_return') }}
+    where business_date > {{ as_of() }} - {{ var('history_days') }}
+      and business_date <= {{ as_of() }}
+),
+returned_lines as (
+    select sale_line_id, sale_id, product_id, unit_cost from {{ ref('stg_sale_line') }}
+    where sale_line_id in (select sale_line_id from returns_in_window)
+),
 returns as (
     select l.product_id as product_id, s.zone_id as zone_id, r.business_date as business_date,
            -toInt64(sum(r.quantity)) as units,
            -toDecimal128(sum(r.amount), 2) as net_revenue,
            -toDecimal128(sum(r.quantity * l.unit_cost), 2) as cost
-    from {{ ref('stg_sale_line') }} l
+    from returns_in_window r
+    inner join returned_lines l on l.sale_line_id = r.sale_line_id
     inner join (
-        select sale_line_id, quantity, amount, business_date from {{ ref('stg_sale_return') }}
-        where business_date > {{ as_of() }} - {{ var('history_days') }}
-          and business_date <= {{ as_of() }}
-    ) r on r.sale_line_id = l.sale_line_id
-    inner join (select sale_id, zone_id from sale) s on s.sale_id = l.sale_id
+        select sale_id, zone_id from sale
+        where sale_id in (select sale_id from returned_lines)
+    ) s on s.sale_id = l.sale_id
     group by l.product_id, s.zone_id, r.business_date
 )
 select u.product_id as product_id,
