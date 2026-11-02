@@ -6,7 +6,7 @@
     {%- set rel = source('raw', table) -%}
     {%- if execute and load_relation(rel) is none -%}
         (select {% for name, type in columns.items() -%}
-            CAST(NULL AS Nullable({{ type }})) AS {{ name }}{{ ', ' if not loop.last }}
+            assumeNotNull(CAST(NULL AS Nullable({{ type }}))) AS {{ name }}{{ ', ' if not loop.last }}
         {%- endfor %} where 0)
     {%- else -%}
         {{ rel }}

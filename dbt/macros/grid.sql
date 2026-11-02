@@ -35,3 +35,6 @@ multiIf({{ grid_round(t, g) }} between ({{ lo }}) and ({{ hi }}) and {{ grid_rou
 
 {# Integer basis points (1e-4) of a Decimal(5,4) rate such as max_change_pct. #}
 {% macro e4(x) -%}toInt64(({{ x }}) * 10000){%- endmacro %}
+
+{# Int64 cents to the OLTP price type numeric(10,2); exact (cents / 100 has two decimals). #}
+{% macro cents_to_price(c) -%}CAST(toDecimal64({{ c }}, 2) / 100 AS Decimal(10, 2)){%- endmacro %}
