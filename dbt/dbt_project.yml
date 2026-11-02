@@ -1,0 +1,52 @@
+name: retail_pricing
+version: "1.0.0"
+config-version: 2
+profile: retail_pricing
+
+model-paths: [models]
+macro-paths: [macros]
+test-paths: [tests]
+seed-paths: [seeds]
+target-path: target
+clean-targets: [target, logs]
+
+flags:
+  send_anonymous_usage_stats: false
+
+# cycle_id and as_of have no default: every run passes them (macros/vars.sql validates them).
+vars:
+  batch_size: 1000
+  label_batch_size: 5000
+  label_lead_days: 2
+  history_days: 400
+  elasticity_min_obs: 200
+
+models:
+  retail_pricing:
+    staging:
+      +schema: stg
+      +materialized: view
+    intermediate:
+      +schema: int
+      +materialized: table
+      +engine: MergeTree()
+    pricing:
+      +schema: pricing
+      +materialized: incremental
+      +incremental_strategy: append
+      +engine: MergeTree()
+      +pre-hook: "{{ cycle_delete() }}"
+    reverse:
+      +schema: reverse
+      +materialized: incremental
+      +incremental_strategy: append
+      +engine: MergeTree()
+      +pre-hook: "{{ cycle_delete() }}"
+    marts:
+      +schema: marts
+      +materialized: table
+      +engine: MergeTree()
+
+data_tests:
+  retail_pricing:
+    +severity: error

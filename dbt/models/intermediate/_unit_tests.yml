@@ -1,0 +1,38 @@
+version: 2
+
+unit_tests:
+  - name: elasticity_clamp_and_fallback
+    description: >
+      A steep negative slope clamps to -3.0, a positive one to -0.3; too few observations or no
+      price variance fall back to -1.2; a category with no sales falls back too.
+    model: int_elasticity
+    overrides:
+      vars: {elasticity_min_obs: 3}
+    given:
+      - input: ref('stg_category')
+        rows:
+          - {category_id: 1}
+          - {category_id: 2}
+          - {category_id: 3}
+          - {category_id: 4}
+          - {category_id: 5}
+      - input: ref('int_weekly_price_qty')
+        rows:
+          - {category_id: 1, product_id: 1, zone_id: 1, units: 1000, avg_price: 1}
+          - {category_id: 1, product_id: 1, zone_id: 1, units: 10, avg_price: 2}
+          - {category_id: 1, product_id: 1, zone_id: 1, units: 1, avg_price: 4}
+          - {category_id: 2, product_id: 2, zone_id: 1, units: 5, avg_price: 1}
+          - {category_id: 2, product_id: 2, zone_id: 1, units: 1, avg_price: 2}
+          - {category_id: 3, product_id: 3, zone_id: 1, units: 5, avg_price: 3}
+          - {category_id: 3, product_id: 3, zone_id: 1, units: 6, avg_price: 3}
+          - {category_id: 3, product_id: 3, zone_id: 1, units: 7, avg_price: 3}
+          - {category_id: 4, product_id: 4, zone_id: 1, units: 1, avg_price: 1}
+          - {category_id: 4, product_id: 4, zone_id: 1, units: 10, avg_price: 2}
+          - {category_id: 4, product_id: 4, zone_id: 1, units: 1000, avg_price: 4}
+    expect:
+      rows:
+        - {category_id: 1, is_fallback: false, elasticity: -3.0}
+        - {category_id: 2, is_fallback: true, elasticity: -1.2}
+        - {category_id: 3, is_fallback: true, elasticity: -1.2}
+        - {category_id: 4, is_fallback: false, elasticity: -0.3}
+        - {category_id: 5, is_fallback: true, elasticity: -1.2}

@@ -1,0 +1,19 @@
+# Everything comes from the environment. From the host: CLICKHOUSE_HOST=127.0.0.1 and the
+# published HTTP port; inside compose: clickhouse:8123.
+retail_pricing:
+  target: dev
+  outputs:
+    dev:
+      type: clickhouse
+      driver: http
+      host: "{{ env_var('CLICKHOUSE_HOST', '127.0.0.1') }}"
+      port: "{{ env_var('CLICKHOUSE_HTTP_PORT', '28123') | int }}"
+      user: "{{ env_var('CLICKHOUSE_DBT_USER', 'dbt') }}"
+      password: "{{ env_var('CLICKHOUSE_DBT_PASSWORD', '') }}"
+      schema: stg
+      threads: 4
+      connect_timeout: 10
+      send_receive_timeout: 600
+      # SQL-standard outer joins: unmatched columns are NULL, not the type default.
+      custom_settings:
+        join_use_nulls: 1
