@@ -155,6 +155,7 @@ def test_command_is_an_argument_list(tmp_path: Path) -> None:
     assert variables == {"cycle_id": 7, "run_id": RUN, "as_of": "2025-12-04"}
     assert cmd[cmd.index("--target-path") + 1].endswith("cycle=7")
     assert cmd[cmd.index("--log-format") + 1] == "json"
+    assert cmd[cmd.index("--profiles-dir") + 1] == cmd[cmd.index("--project-dir") + 1]
 
 
 def test_restart_marks_running_jobs_failed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

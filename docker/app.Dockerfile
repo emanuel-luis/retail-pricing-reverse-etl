@@ -29,7 +29,7 @@ RUN groupadd --system --gid 10001 app \
 COPY --from=build /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:${PATH}" \
     PYTHONUNBUFFERED=1
-# The dbt project (dbt/.gitkeep keeps the folder present before the models land). The runner's
+# The dbt project, read-only at run time. The runner's
 # state, dbt targets and logs live on a volume that inherits this directory's owner.
 COPY --chown=app:app dbt /home/app/dbt
 RUN mkdir /var/lib/dbt-runner && chown app:app /var/lib/dbt-runner

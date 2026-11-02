@@ -205,6 +205,9 @@ class JobManager:
             "build",
             "--project-dir",
             str(self.project_dir),
+            # profiles.yml lives in the project and reads everything from env.
+            "--profiles-dir",
+            str(self.project_dir),
             "--vars",
             json.dumps(variables),
             "--target-path",
