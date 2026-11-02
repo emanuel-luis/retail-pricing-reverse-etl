@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.coverage
+htmlcov/
+dist/
+*.egg-info/
+
+# Secrets: only .env.example is committed
+.env
+
+# Generated data, run outputs and local tool state: never committed
+/data/
+/runs/
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+logs/

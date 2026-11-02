@@ -1,0 +1,37 @@
+# Monthly update PRs, one group per ecosystem for minor and patch. Semver-major version updates
+# are ignored and move by hand. A release waits 7 days before it is proposed. Security updates
+# skip the schedule and the cooldown. .github/workflows/dependabot-auto-merge.yml merges these PRs
+# once CI is green. The docker and docker-compose ecosystems join when the stack lands.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: uv
+    directory: /
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 7
+    groups:
+      python:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+      # The TPC-DS generator ships inside DuckDB's tpcds extension: a DuckDB minor can change the
+      # generated rows, so the line moves by hand with the expected counts (docs/DECISIONS.md).
+      - dependency-name: "duckdb"
+        update-types: ["version-update:semver-minor"]

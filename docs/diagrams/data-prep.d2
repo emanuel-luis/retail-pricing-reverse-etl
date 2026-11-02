@@ -1,0 +1,40 @@
+# Data preparation: TPC-DS generation and the deterministic OLTP seed, with the checks and the
+# manifests each step writes. Grounded in docs/PLAN.md section 3 and src/retail_pricing/data/
+# (generate.py, build.py, synth.py, contract.py) plus src/retail_pricing/sql/duckdb/.
+...@_style
+
+title: "Data preparation: TPC-DS to the OLTP seed" {
+  shape: text
+  near: top-center
+  style: {font-size: 24; bold: true}
+}
+
+direction: down
+
+dsdgen: "DuckDB 2.0.0 tpcds extension\nCALL dsdgen(sf=N)\nSF0.01 CI · SF1 demo · SF10 heavy" {class: source}
+
+generate: "retail-pricing data generate\nfile database, memory limit,\nonly the tables the build uses" {class: process}
+counts: "known row counts\nat SF0.01, 1 and 10;\nmismatch fails" {class: check}
+tpcds: "data/tpcds/sf=N/\n<table>.parquet (zstd)\nmanifest: counts, sha256,\ncontent hash" {class: store}
+
+synth: "deterministic synthesis\nu(key, salt) from md5\nsupplier costs, competitors,\nmargin rules, KVI, zones, ladders" {class: process}
+build: "retail-pricing data build\nDuckDB SQL per OLTP table,\nin FK order; dates shifted\n8,372 days (anchor 2025-12-04)" {class: process}
+contract: "contract.py\nevery OLTP column,\ntype and key, in order" {class: check}
+oltp: "data/oltp/sf=N/\n<schema>__<table>.parquet\nmanifest: counts, content\nhashes, dropped rows" {class: store}
+
+dsdgen -> generate
+generate -> counts {class: layer}
+generate -> tpcds
+tpcds -> build
+synth -> build
+build -> contract {class: layer}
+build -> oltp
+
+legend: Legend {
+  class: legend
+  grid-columns: 2
+  source: generator {class: [source; legend-item]}
+  process: CLI step {class: [process; legend-item]}
+  store: files on disk {class: [store; legend-store]}
+  check: check or contract {class: [check; legend-item]}
+}
