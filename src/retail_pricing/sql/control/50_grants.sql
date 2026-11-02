@@ -33,3 +33,31 @@ GRANT SELECT ON ALL TABLES IN SCHEMA registry, audit TO grafana_ro;
 
 -- exporter: postgres-exporter.
 GRANT pg_monitor TO exporter;
+
+-- audit_writer: NOLOGIN owner of every SECURITY DEFINER function, so they never run as the
+-- (super)user that built the database. It gets only what those functions touch: no DDL, no
+-- TRUNCATE, and DELETE only on reconcile_result. Identity columns need no sequence grants.
+GRANT USAGE ON SCHEMA registry, audit TO audit_writer;
+GRANT SELECT ON registry.job, registry.extract_table,
+    audit.reconcile_expected, audit.reconcile_actual TO audit_writer;
+GRANT SELECT, INSERT, UPDATE ON registry.watermark, audit.cycle, audit.job_run, audit.step,
+    audit.alert TO audit_writer;
+GRANT SELECT, INSERT ON audit.extract_plan TO audit_writer;
+GRANT SELECT, INSERT, DELETE ON audit.reconcile_result TO audit_writer;
+
+-- ALTER FUNCTION ... OWNER TO needs CREATE on the schema for the new owner: held only here.
+GRANT CREATE ON SCHEMA registry, audit TO audit_writer;
+DO $$
+DECLARE
+    f regprocedure;
+BEGIN
+    FOR f IN
+        SELECT p.oid::regprocedure
+        FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+        WHERE n.nspname IN ('registry', 'audit') AND p.prosecdef
+          AND pg_get_userbyid(p.proowner) <> 'audit_writer'
+    LOOP
+        EXECUTE format('ALTER FUNCTION %s OWNER TO audit_writer', f);
+    END LOOP;
+END $$;
+REVOKE CREATE ON SCHEMA registry, audit FROM audit_writer;

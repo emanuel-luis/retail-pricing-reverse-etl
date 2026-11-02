@@ -18,6 +18,9 @@ def _step(name: str, **extra: object) -> None:
 
 def create_roles(conn: psycopg.Connection, s: ControlSettings) -> None:
     """Create or update the login roles; the passwords never reach a log line."""
+    if not conn.execute("SELECT 1 FROM pg_roles WHERE rolname = 'audit_writer'").fetchone():
+        conn.execute("CREATE ROLE audit_writer NOLOGIN")  # owns the SECURITY DEFINER functions
+        _step("role", role="audit_writer", action="create")
     for user, password in (
         (s.nifi_user, s.nifi_password),
         (s.grafana_user, s.grafana_password),

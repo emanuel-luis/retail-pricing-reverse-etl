@@ -168,3 +168,38 @@ def test_exporter_role_is_pg_monitor(ctl_settings: ControlSettings) -> None:
         row = one(exporter, "SELECT pg_has_role('pg_monitor', 'member')")
         assert row == (True,)
         exporter.execute("SELECT count(*) FROM pg_stat_activity")
+
+
+def test_definer_functions_are_not_owned_by_a_superuser(db: Conn) -> None:
+    rows = db.execute(
+        "SELECT p.oid::regprocedure::text, r.rolname, r.rolsuper, p.proconfig::text"
+        " FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace"
+        " JOIN pg_roles r ON r.oid = p.proowner"
+        " WHERE n.nspname IN ('audit', 'registry') AND p.prosecdef"
+    ).fetchall()
+    assert len(rows) >= 11  # ten NiFi functions and the step trigger
+    for name, owner, superuser, config in rows:
+        assert (owner, superuser) == ("audit_writer", False), name
+        assert "search_path" in config, name
+    assert one(db, "SELECT rolsuper, rolcanlogin FROM pg_roles WHERE rolname = 'audit_writer'") == (
+        False,
+        False,
+    )
+
+
+@pytest.mark.parametrize(
+    "statement",
+    [
+        "DROP TABLE audit.cycle",
+        "TRUNCATE audit.step",
+        "CREATE TABLE audit.rogue (x int)",
+        "DELETE FROM audit.cycle",
+    ],
+)
+def test_audit_writer_cannot_drop_truncate_or_create(db: Conn, statement: str) -> None:
+    db.execute("SET ROLE audit_writer")
+    try:
+        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+            db.execute(statement)  # type: ignore[call-overload]
+    finally:
+        db.execute("RESET ROLE")
