@@ -1,5 +1,5 @@
--- One row per item version x zone: valid from the shifted version start, valid to the next
--- version's start; the current version's row is open and carries the seed zone price.
+-- One row per item version x zone, versions in surrogate-key order: valid from the shifted
+-- version start, valid to the next version's start; the current version's row is open and carries the seed zone price.
 INSERT INTO pricing.price_history BY NAME
 WITH v AS (
     SELECT m.product_id, z.zone_id, i.i_item_sk, shift_date(i.i_rec_start_date) AS vs,
@@ -11,10 +11,10 @@ WITH v AS (
 ),
 h AS (
     SELECT v.*,
-           lead(vs) OVER (PARTITION BY product_id, zone_id ORDER BY vs, i_item_sk) AS next_vs
+           lead(vs) OVER (PARTITION BY product_id, zone_id ORDER BY i_item_sk) AS next_vs
     FROM v
 )
-SELECT row_number() OVER (ORDER BY h.product_id, h.zone_id, h.vs, h.i_item_sk) AS history_id,
+SELECT row_number() OVER (ORDER BY h.product_id, h.zone_id, h.i_item_sk) AS history_id,
        h.product_id,
        h.zone_id,
        CASE WHEN h.is_current THEN zp.price ELSE h.version_price END AS price,

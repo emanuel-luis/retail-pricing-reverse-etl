@@ -56,7 +56,8 @@ make data SF=0.01   # TPC-DS SF0.01 plus the OLTP seed under data/ (seconds)
 make test           # unit tests plus the SF0.01 generation checks
 ```
 
-`make data SF=1` takes about a minute and 1 GB of RAM; SF10 takes a few minutes and about 5 GB.
+On the owner's laptop `make data SF=1` takes about 36 s and SF10 about 8.5 minutes, with DuckDB
+capped at 4 GB (not TPC-DS benchmark results).
 
 ## Project structure
 

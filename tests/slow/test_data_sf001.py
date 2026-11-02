@@ -217,3 +217,28 @@ def test_store_stock_is_the_sold_assortment(con: duckdb.DuckDBPyConnection) -> N
     assert _one(con, "SELECT count(*) FROM inventory.store_stock") == _one(
         con, "SELECT count(*) FROM inventory.stock_movement"
     )
+
+
+def test_price_history_intervals_are_ordered_and_non_empty(
+    con: duckdb.DuckDBPyConnection,
+) -> None:
+    # Versions follow i_item_sk; a filled start date must never tie or invert a later version.
+    assert (
+        _one(
+            con,
+            "SELECT count(*) FROM pricing.price_history "
+            "WHERE valid_to IS NOT NULL AND valid_to <= valid_from",
+        )
+        == 0
+    )
+    # Exactly one open row per product and zone, carrying the seed zone price.
+    assert (
+        _one(
+            con,
+            "SELECT count(*) FROM pricing.zone_price z LEFT JOIN ("
+            " SELECT product_id, zone_id, count(*) AS n, any_value(price) AS price"
+            " FROM pricing.price_history WHERE valid_to IS NULL GROUP BY ALL) h"
+            " USING (product_id, zone_id) WHERE h.n IS DISTINCT FROM 1 OR h.price <> z.price",
+        )
+        == 0
+    )

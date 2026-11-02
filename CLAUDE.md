@@ -13,7 +13,7 @@ synthetic tables. `docs/PLAN.md` is the contract and lists what each pull reques
 - `make test-fast`: pytest with the default selection (deselects `slow`, `sql`, `clickhouse`,
   `integration`).
 - `make test-data`: `pytest -m slow`: generates TPC-DS SF0.01 twice in temp dirs, builds the OLTP
-  seed and checks counts, schemas against the contract, FKs and determinism (about a minute).
+  seed and checks counts, schemas against the contract, FKs and determinism (about 10 s).
 - `make data SF=<n>`: `retail-pricing data all --sf <n>` into `data/` (git-ignored): TPC-DS
   Parquet plus manifest under `data/tpcds/sf=<n>/`, the OLTP seed under `data/oltp/sf=<n>/`.
   SF1 or more is a heavy local run on the owner's machine (shared heavy lock).

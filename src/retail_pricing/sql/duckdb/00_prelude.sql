@@ -4,16 +4,15 @@
 CREATE TABLE build.day AS
 SELECT d_date_sk AS date_sk, shift_date(d_date) AS d FROM tpcds.date_dim;
 
--- One current version per business key (the latest start date wins).
+-- One current version per business key: the highest surrogate key, which dsdgen assigns in
+-- start-date order. Start dates can be NULL (randomly injected), so they never decide.
 CREATE TABLE build.item_current AS
 SELECT * FROM tpcds.item
-QUALIFY row_number() OVER (
-    PARTITION BY i_item_id ORDER BY i_rec_start_date DESC NULLS LAST, i_item_sk DESC) = 1;
+QUALIFY row_number() OVER (PARTITION BY i_item_id ORDER BY i_item_sk DESC) = 1;
 
 CREATE TABLE build.store_current AS
 SELECT * FROM tpcds.store
-QUALIFY row_number() OVER (
-    PARTITION BY s_store_id ORDER BY s_rec_start_date DESC NULLS LAST, s_store_sk DESC) = 1;
+QUALIFY row_number() OVER (PARTITION BY s_store_id ORDER BY s_store_sk DESC) = 1;
 
 -- Every item version maps to its product (dense rank of i_item_id).
 CREATE TABLE build.item_map AS

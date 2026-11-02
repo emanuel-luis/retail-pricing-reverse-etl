@@ -5,7 +5,7 @@
 # Merge mode: PROTECTED. main has branch protection with the CI jobs as required checks, so
 # `gh pr merge --auto` hands the merge to GitHub, which waits until every required check passes.
 # The required checks are the ci.yml jobs; security.yml (pip-audit, zizmor) is not required
-# (program decision 26), so GitHub does not wait for it.
+# (portfolio branch-protection policy), so GitHub does not wait for it.
 #
 # A merge made with the GITHUB_TOKEN does not start push workflows, so main's CI runs again on
 # the next human push, its schedule or a manual dispatch, not right after this merge.
