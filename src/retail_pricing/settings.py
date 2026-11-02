@@ -145,3 +145,18 @@ class S3Settings(_Base):
     @property
     def endpoint(self) -> str:
         return f"http://{self.host}:{self.api_port}"
+
+
+class DbtRunnerSettings(_Base):
+    """The dbt runner HTTP service (`DBT_RUNNER_*`, plus `DBT_THREADS`)."""
+
+    model_config = SettingsConfigDict(env_prefix="DBT_RUNNER_")
+
+    host: str = "127.0.0.1"
+    # Host-side value; the compose service overrides it with the in-container port.
+    port: int = 28580
+    project_dir: Path = Path("dbt")
+    # Job files, dbt targets and dbt logs; a named volume in compose.
+    state_dir: Path = Path("runs/dbt-runner")
+    dbt_bin: str = "dbt"
+    threads: int = Field(default=2, validation_alias="DBT_THREADS")
