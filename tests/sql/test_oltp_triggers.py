@@ -22,6 +22,9 @@ def _zone_price(conn: psycopg.Connection) -> tuple[Decimal, int, str, int | None
 
 def _edit(conn: psycopg.Connection, actor: str, price: Decimal, cycle: int | None = None) -> None:
     with conn.transaction():
+        # The engine is a role, not an actor name: only pricing_engine keeps last_cycle_id.
+        if actor == "pricing-engine":
+            conn.execute("SET LOCAL ROLE pricing_engine")
         conn.execute("SELECT set_config('app.actor', %s, true)", (actor,))
         conn.execute(
             "UPDATE pricing.zone_price SET price = %s, last_cycle_id = %s"

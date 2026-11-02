@@ -10,7 +10,9 @@ GRANT SELECT ON ALL TABLES IN SCHEMA master, inventory, pricing, market, rules, 
 -- workload: sales, stock, manual pricing edits, cost rows, label printing, the business clock.
 GRANT INSERT, UPDATE ON ALL TABLES IN SCHEMA sales, inventory TO {workload};
 GRANT UPDATE (price, effective_from) ON pricing.zone_price TO {workload};
-GRANT INSERT, UPDATE (price, valid_to) ON pricing.store_price_override TO {workload};
+-- No INSERT: the workload only edits open overrides; new ones come from the engine.
+REVOKE INSERT ON pricing.store_price_override FROM {workload};
+GRANT UPDATE (price, valid_to) ON pricing.store_price_override TO {workload};
 GRANT INSERT ON pricing.supplier_cost TO {workload};
 GRANT UPDATE (status) ON pricing.shelf_label_queue TO {workload};
 GRANT UPDATE (business_date) ON ops.business_clock TO {workload};

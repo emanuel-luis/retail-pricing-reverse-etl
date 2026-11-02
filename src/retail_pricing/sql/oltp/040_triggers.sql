@@ -26,23 +26,30 @@ BEGIN
     END LOOP;
 END $$;
 
--- Who changed an owned price; only the engine keeps last_cycle_id.
+-- Who changed an owned price; only the engine keeps last_cycle_id. The engine is recognized by
+-- the role, not by app.actor: inside pricing_apply.apply_batch (SECURITY DEFINER, owned by the
+-- NOLOGIN role pricing_engine) current_user is pricing_engine, and no login role can become it.
+-- app.actor is a free setting, so a session that claims 'pricing-engine' without the role is
+-- recorded as 'unknown' and loses last_cycle_id like any other edit. Fires on INSERT too, so a
+-- new row cannot carry a forged cycle id either.
 CREATE OR REPLACE FUNCTION pricing.track_price() RETURNS trigger
 LANGUAGE plpgsql AS $$
 DECLARE actor text := coalesce(nullif(current_setting('app.actor', true), ''), 'unknown');
 BEGIN
-    NEW.updated_by := actor;
-    IF actor <> 'pricing-engine' THEN
+    IF current_user = 'pricing_engine' THEN
+        NEW.updated_by := 'pricing-engine';
+    ELSE
+        NEW.updated_by := CASE WHEN actor = 'pricing-engine' THEN 'unknown' ELSE actor END;
         NEW.last_cycle_id := NULL;
     END IF;
     RETURN NEW;
 END $$;
 
-CREATE OR REPLACE TRIGGER track_price BEFORE UPDATE ON pricing.zone_price
+CREATE OR REPLACE TRIGGER track_price BEFORE INSERT OR UPDATE ON pricing.zone_price
     FOR EACH ROW EXECUTE FUNCTION pricing.track_price();
-CREATE OR REPLACE TRIGGER track_price BEFORE UPDATE ON pricing.store_price_override
+CREATE OR REPLACE TRIGGER track_price BEFORE INSERT OR UPDATE ON pricing.store_price_override
     FOR EACH ROW EXECUTE FUNCTION pricing.track_price();
-CREATE OR REPLACE TRIGGER track_price BEFORE UPDATE ON pricing.promo_price
+CREATE OR REPLACE TRIGGER track_price BEFORE INSERT OR UPDATE ON pricing.promo_price
     FOR EACH ROW EXECUTE FUNCTION pricing.track_price();
 
 -- SECURITY DEFINER: the workload role edits zone prices but has no rights on price_history.

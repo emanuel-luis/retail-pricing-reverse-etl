@@ -267,9 +267,9 @@ Staging tables, one per target, are written by NiFi with PutDatabaseRecord INSER
 - `batch(cycle_id, target, batch_no) PK, received, applied, unchanged, conflicts, rejects, processed_at`, the idempotency record
 - `conflict(cycle_id, target, key_text) PK, expected_version, actual_version, proposed_price, actual_price, actual_updated_by, detected_at`
 
-`pricing_apply.apply_batch(p_cycle_id bigint, p_target text, p_batch_no int) RETURNS TABLE(target text, batch_no int, received int, applied int, unchanged int, conflicts int, rejects int, replayed boolean)` is SECURITY DEFINER, owned by `oltp_owner`, EXECUTE granted to `nifi`. It is one set-based transaction:
+`pricing_apply.apply_batch(p_cycle_id bigint, p_target text, p_batch_no int) RETURNS TABLE(target text, batch_no int, received int, applied int, unchanged int, conflicts int, rejects int, replayed boolean)` is SECURITY DEFINER, owned by the NOLOGIN least-privilege role `pricing_engine` (DECISIONS 68), EXECUTE granted to `nifi`. It is one set-based transaction:
 1. `INSERT INTO batch ... ON CONFLICT DO NOTHING RETURNING`. If no row comes back, the batch was processed before: return the stored counts with `replayed = true`. This makes it idempotent per cycle and retry-safe.
-2. `set_config('app.actor', 'pricing-engine', true)`.
+2. `set_config('app.actor', 'pricing-engine', true)`. The price triggers recognize the engine by `current_user = 'pricing_engine'`, not by this setting (DECISIONS 69).
 3. Lock the target rows of the batch `ORDER BY key FOR UPDATE`. A fixed lock order means no deadlocks with single-row workload edits.
 4. Reject: price <= 0, unknown key, or promo price >= regular price. Status `rejected`, with a detail.
 5. Unchanged: the target already has `last_cycle_id = p_cycle_id` (an earlier partial attempt) or `price = new_price`.

@@ -46,6 +46,10 @@ DENIED = {
     "workload": [
         "UPDATE rules.kvi SET kvi_tier = kvi_tier",
         "UPDATE pricing.zone_price SET last_cycle_id = 1",
+        (
+            "INSERT INTO pricing.store_price_override (store_id, product_id, price, valid_from)"
+            " VALUES (1, 1, 1, DATE '2030-01-01')"
+        ),
         "UPDATE pricing.price_history SET price = price",
         "DELETE FROM sales.sale WHERE false",
         "SELECT count(*) FROM pricing_apply.batch",
@@ -95,3 +99,27 @@ def test_role_cannot_do_anything_else(role_conn: tuple[str, psycopg.Connection])
     for stmt in DENIED[role]:
         with pytest.raises(psycopg.errors.InsufficientPrivilege), conn.transaction():
             conn.execute(stmt.encode())
+
+
+def test_only_the_engine_role_keeps_last_cycle_id(oltp_owner: psycopg.Connection) -> None:
+    """app.actor is a free setting: claiming 'pricing-engine' without the role changes nothing."""
+    key = "WHERE product_id = 1 AND zone_id = 1"
+    with oltp_owner.transaction(force_rollback=True):
+        oltp_owner.execute("SET LOCAL ROLE pricing_engine")
+        row = oltp_owner.execute(
+            f"UPDATE pricing.zone_price SET price = price + 0.01, last_cycle_id = 999 {key}"
+            " RETURNING last_cycle_id, updated_by"
+        ).fetchone()
+        assert row == (999, "pricing-engine")
+        oltp_owner.execute("RESET ROLE")
+        oltp_owner.execute("SET LOCAL ROLE workload")
+        oltp_owner.execute("SET LOCAL app.actor = 'pricing-engine'")
+        row = oltp_owner.execute(
+            f"UPDATE pricing.zone_price SET price = price + 0.01 {key}"
+            " RETURNING last_cycle_id, updated_by"
+        ).fetchone()
+        assert row == (None, "unknown")
+        source = oltp_owner.execute(
+            f"SELECT source FROM pricing.price_history {key} AND valid_to IS NULL"
+        ).fetchone()
+        assert source == ("manual",)
