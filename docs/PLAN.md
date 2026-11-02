@@ -823,6 +823,18 @@ marts exist. Neither is committed outside its PR.
 
 ---
 
+### Open items found in PR 3 (owned by PR 5)
+
+- `rev_reconcile_expected` emits only the `transit` check, while `reconcile_actual` returns
+  `transit` and `applied` rows, and `audit.reconcile` fails a check missing on either side. PR 5
+  adds the expected `applied` check (the rows the cycle proposed, joined to the OLTP outcome
+  once extracted) or compares `applied` against the stage outcome, and records the choice.
+- The `pricing_apply` stage tables carry no `version`/`updated_at`, so they are not in the
+  extract list and `raw.pricing_apply__*` does not exist; `stg_apply_outcome` and
+  `stg_apply_conflict` return empty typed relations until then (every sent row shows as
+  `not_sent` in `mart_proposed_vs_applied`). PR 5 adds an extract path for the stage outcome and
+  conflict tables (append-only by cycle) and the matching raw tables.
+
 ## 15. Low-impact decisions for docs/DECISIONS.md
 
 - Host CLI for data, load, deploy and cycles: avoids slow Windows bind mounts and keeps DuckDB out of the VM budget.

@@ -1,7 +1,9 @@
 # Memory limits are sized so the whole loop fits a laptop Docker VM (docs/PLAN.md section 1).
-# This file grows with each pull request; today: the OLTP and the control/audit Postgres, and the
-# workload generator (profile workload). Measured on 2026-11-02 at SF0.01 with the workload at
-# 20 sales/s: oltp 119 MiB, control-db 95 MiB, workload 47 MiB.
+# This file grows with each pull request; today: the OLTP and the control/audit Postgres,
+# ClickHouse, the S3-compatible store and the dbt runner (profile core), and the workload
+# generator (profile workload). Measured on 2026-11-02 at SF0.01: oltp 119 MiB, control-db 95 MiB,
+# workload 47 MiB (20 sales/s); clickhouse 719 MiB, s3 133 MiB and dbt-runner 61 MiB after two
+# dbt builds (largest dbt query 166 MiB).
 name: retail-pricing-reverse-etl
 
 x-app-build: &app-build

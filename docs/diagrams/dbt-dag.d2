@@ -1,0 +1,90 @@
+# The dbt pricing procedure on ClickHouse: raw tables to staging, the intermediate pricing steps
+# in rule order, the cycle-scoped pricing outputs, the reverse diffs NiFi sends back and the marts.
+# Grounded in dbt/models/** (every edge is a ref() in the model SQL; secondary staging refs are
+# folded into the stg node) and dbt/tests/guardrails/. The 34 staging views and the four rev_*
+# diffs are drawn as one node each.
+...@_style
+
+title: "dbt pricing procedure: from raw to the reverse diffs" {
+  shape: text
+  near: top-center
+  style: {font-size: 24; bold: true}
+}
+
+direction: down
+
+raw: "raw.* · 32 tables\nReplacingMergeTree(version)\none per OLTP table" {class: store}
+stg: "stg · 34 views\nFINAL, renamed, typed;\napply outcome and conflicts" {class: process}
+
+sales: "int_sales_daily\nproduct × zone × day,\nreturns netted" {class: process}
+demand: "int_demand\nunits 28/90/365 d,\nvelocity, seasonality" {class: process}
+weekly: "int_weekly_price_qty\nproduct × zone × week" {class: process}
+elastic: "int_elasticity\nlog-log slope per category,\nclamped, with fallback" {class: process}
+state: "int_current_state\nprice + version snapshot,\npromos, rules, KVI, ladders" {class: process}
+comp: "int_competitor_index\nmedian of 14 d, index" {class: process}
+cover: "int_stock_cover\ndays of cover, aging" {class: process}
+cost: "int_cost_current\nlatest supplier cost" {class: process}
+grid: "int_price_grid\nending grid in cents" {class: process}
+
+candidate: "int_price_candidate\nKVI align, competitor blend,\nvelocity, cover, season" {class: process}
+bounded: "int_price_bounded\nholds, margin floor, cap,\nprice ending" {class: process}
+laddered: "int_price_laddered\npack and tier ladders\nmonotone, else hold" {class: process}
+
+zone_price: "pricing_zone_price\ncycle × product × zone\nnew price, reasons, version" {class: store}
+override: "pricing_store_override\ncycle × store × product" {class: store}
+promo: "pricing_promo_price\ndepth kept on the grid" {class: store}
+labels: "pricing_shelf_label\nchanged shelf prices\nper store" {class: store}
+log: "pricing_price_change_log\nand margin projection" {class: store}
+
+rev: "rev_zone_price, rev_store_override,\nrev_promo_price, rev_shelf_label\nchanged rows only (row hash),\nexpected_version, batch_no" {class: serving}
+rev_rec: "rev_reconcile_expected\nrows, cents, key-weighted sum\nby zone and category" {class: serving}
+marts: "marts\nprice change impact,\nproposed vs applied, conflicts" {class: serving}
+
+guard: "guardrails g01-g10\ncap, margin floor, ladders,\nendings, depth, labels,\nbatches; errors stop the cycle" {class: check}
+units: "dbt unit tests\nfloor, cap, ladders,\nelasticity, depth, diff" {class: check}
+
+raw -> stg
+stg -> sales
+stg -> state
+stg -> cost
+stg -> grid
+sales -> demand
+sales -> weekly
+weekly -> elastic
+state -> comp
+state -> cover
+demand -> cover
+demand -> candidate
+elastic -> candidate
+comp -> candidate
+cover -> candidate
+cost -> candidate
+state -> candidate
+candidate -> bounded
+grid -> bounded
+bounded -> laddered
+grid -> laddered
+laddered -> zone_price
+zone_price -> override
+zone_price -> promo
+zone_price -> log
+override -> labels
+promo -> labels
+zone_price -> rev
+override -> rev
+promo -> rev
+labels -> rev
+rev -> rev_rec
+rev -> marts
+bounded -> units {class: meta}
+zone_price -> guard {class: meta}
+
+legend: Legend {
+  class: legend
+  grid-columns: 3
+  store: "table" {class: [store; legend-store]}
+  process: "model step" {class: [process; legend-item]}
+  serving: "read by NiFi or BI" {class: [serving; legend-item]}
+  check: "test" {class: [check; legend-item]}
+  edges: "solid: ref()\ndashed: tested by" {shape: text; style.font-size: 13}
+}
