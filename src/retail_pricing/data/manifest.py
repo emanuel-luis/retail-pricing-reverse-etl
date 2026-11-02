@@ -1,4 +1,4 @@
-"""Manifest helpers: file sha256 (corruption) and an order-independent content hash (reproducibility)."""
+"""Manifest helpers: file sha256 (corruption) and an order-independent content hash."""
 
 import hashlib
 import json
@@ -26,7 +26,8 @@ def content_hash(con: duckdb.DuckDBPyConnection, relation: str) -> tuple[int, st
 
 
 def parquet_hash(con: duckdb.DuckDBPyConnection, path: Path) -> tuple[int, str]:
-    return content_hash(con, f"read_parquet('{path.as_posix()}')")
+    # hive_partitioning off: the sf=<N> directory must not become a column
+    return content_hash(con, f"read_parquet('{path.as_posix()}', hive_partitioning = false)")
 
 
 def sha256_file(path: Path) -> str:

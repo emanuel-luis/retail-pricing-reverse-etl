@@ -205,7 +205,10 @@ def build(sf: float, settings: DataSettings) -> Path:
         con.execute("CREATE SCHEMA tpcds; CREATE SCHEMA build;")
         for t in TPCDS_TABLES:
             pq = (src / f"{t}.parquet").as_posix()
-            con.execute(f"CREATE VIEW tpcds.{t} AS SELECT * FROM read_parquet('{pq}')")
+            con.execute(
+                f"CREATE VIEW tpcds.{t} AS SELECT * "
+                f"FROM read_parquet('{pq}', hive_partitioning = false)"
+            )
         create_macros(con)
         con.execute("CREATE TABLE build.dropped (table_name VARCHAR, rule VARCHAR, rows BIGINT)")
         con.execute(
@@ -238,7 +241,8 @@ def build(sf: float, settings: DataSettings) -> Path:
             )
         dropped: dict[str, dict[str, int]] = defaultdict(dict)
         for table, rule, rows in con.execute(
-            "SELECT table_name, rule, sum(rows)::BIGINT FROM build.dropped GROUP BY ALL ORDER BY ALL"
+            "SELECT table_name, rule, sum(rows)::BIGINT FROM build.dropped "
+            "GROUP BY ALL ORDER BY ALL"
         ).fetchall():
             dropped[table][rule] = rows
     finally:

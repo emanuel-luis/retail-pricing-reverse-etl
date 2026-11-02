@@ -3,7 +3,8 @@
 INSERT INTO market.competitor_price BY NAME
 WITH prods AS (
     SELECT product_id FROM master.product
-    WHERE product_id IN (SELECT product_id FROM rules.kvi) OR u(product_id, 'competitor_watch') < 0.25
+    WHERE product_id IN (SELECT product_id FROM rules.kvi)
+       OR u(product_id, 'competitor_watch') < 0.25
 ),
 presence AS (
     SELECT c.competitor_id, c.price_bias, z.zone_id
@@ -11,7 +12,8 @@ presence AS (
     WHERE u(c.competitor_id || ':' || z.zone_id, 'competitor_zone') < 0.7
 ),
 obs AS (
-    SELECT pr.competitor_id, zp.product_id, pr.zone_id, anchor() - CAST(7 * w AS INTEGER) AS observed_date,
+    SELECT pr.competitor_id, zp.product_id, pr.zone_id,
+           anchor() - CAST(7 * w AS INTEGER) AS observed_date,
            zp.price * (1 + pr.price_bias + 0.06 * (u(pr.competitor_id || ':' || zp.product_id
                || ':' || pr.zone_id || ':' || w, 'competitor_noise') - 0.5)) AS v
     FROM presence pr

@@ -11,7 +11,8 @@ extra AS (
            row_number() OVER (
                PARTITION BY main.promo_id
                ORDER BY u(main.promo_id || ':' || p.product_id, 'promo_item'), p.product_id) AS rn
-    FROM main JOIN master.product p ON p.class_id = main.class_id AND p.product_id <> main.product_id
+    FROM main
+    JOIN master.product p ON p.class_id = main.class_id AND p.product_id <> main.product_id
 )
 SELECT promo_id, product_id FROM main
 UNION ALL

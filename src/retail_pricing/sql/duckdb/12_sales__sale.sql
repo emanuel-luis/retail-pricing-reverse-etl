@@ -57,7 +57,8 @@ SELECT h.sale_id,
        coalesce(l.ext_discount,
                 greatest(l.list_price - l.sales_price, 0) * l.quantity, 0) AS discount_amount,
        coalesce(l.ext_sales,
-                coalesce(l.sales_price, l.list_price, l.i_current_price) * l.quantity) AS net_amount,
+                coalesce(l.sales_price, l.list_price, l.i_current_price) * l.quantity)
+           AS net_amount,
        coalesce(l.wholesale_cost, l.i_wholesale_cost) AS unit_cost,
        l.promo_sk AS promo_id
 FROM build.line_src l
