@@ -66,6 +66,67 @@ services:
       timeout: 5s
       retries: 30
 
+  s3:
+    image: rustfs/rustfs:1.0.4@sha256:ed9210d6411d77ffceb70d94b964a3cb7d225983368bc25bebe01e995293dcc2
+    profiles: [core]
+    mem_limit: 384m
+    environment:
+      RUSTFS_ACCESS_KEY: ${S3_ACCESS_KEY:?set S3_ACCESS_KEY in .env}
+      RUSTFS_SECRET_KEY: ${S3_SECRET_KEY:?set S3_SECRET_KEY in .env}
+      RUSTFS_ADDRESS: ":9000"
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_CONSOLE_ADDRESS: ":9001"
+    ports:
+      - "127.0.0.1:${S3_API_PORT:-29000}:9000"
+      - "127.0.0.1:${S3_CONSOLE_PORT:-29001}:9001"
+    volumes:
+      - s3_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9000/health >/dev/null"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:26.3.62.3@sha256:de3e47c64078aa196dae2349e048fc98ba81947f651f5c20e06e46baea8ae40a
+    profiles: [core]
+    mem_limit: 2304m
+    # Not root: the entrypoint would chown the read-only data mount and exit.
+    user: "101:101"
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    environment:
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-ch_admin}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?set CLICKHOUSE_PASSWORD in .env}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+      # Read by config/clickhouse through from_env.
+      CLICKHOUSE_NIFI_PASSWORD: ${CLICKHOUSE_NIFI_PASSWORD:?set CLICKHOUSE_NIFI_PASSWORD in .env}
+      CLICKHOUSE_DBT_PASSWORD: ${CLICKHOUSE_DBT_PASSWORD:?set CLICKHOUSE_DBT_PASSWORD in .env}
+      CLICKHOUSE_GRAFANA_PASSWORD: ${CLICKHOUSE_GRAFANA_PASSWORD:?set CLICKHOUSE_GRAFANA_PASSWORD in .env}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:?set S3_ACCESS_KEY in .env}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:?set S3_SECRET_KEY in .env}
+      RAW_S3_URL: ${RAW_S3_URL:-http://s3:9000/retail-raw/}
+    ports:
+      - "127.0.0.1:${CLICKHOUSE_HTTP_PORT:-28123}:8123"
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      # Single files: the image entrypoint writes its own file into users.d at start.
+      - ./config/clickhouse/config.d/memory.xml:/etc/clickhouse-server/config.d/memory.xml:ro
+      - ./config/clickhouse/config.d/prometheus.xml:/etc/clickhouse-server/config.d/prometheus.xml:ro
+      - ./config/clickhouse/config.d/named-collections.xml:/etc/clickhouse-server/config.d/named-collections.xml:ro
+      - ./config/clickhouse/users.d/users.xml:/etc/clickhouse-server/users.d/users.xml:ro
+      # `ch load-raw` reads the OLTP seed Parquet through file() (dev and CI only).
+      - ./data:/var/lib/clickhouse/user_files:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:8123/ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 5s
+
   workload:
     build: *app-build
     image: retail-pricing-app:local
@@ -94,3 +155,5 @@ services:
 volumes:
   oltp_data:
   control_data:
+  s3_data:
+  clickhouse_data:
