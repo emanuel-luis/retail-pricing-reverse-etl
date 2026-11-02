@@ -73,6 +73,37 @@ jobs:
         if: always()
         run: make down
 
+  dbt:
+    name: dbt (ClickHouse, SF0.01)
+    runs-on: ubuntu-latest
+    needs: lint
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { persist-credentials: false }
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with: { enable-cache: true }
+      - run: uv sync --locked
+      - run: cp .env.example .env
+      - run: make data SF=0.01
+      # dbt runs inside the dbt-runner container, the same way NiFi will call it
+      - run: docker compose up -d --build --wait clickhouse s3 dbt-runner
+      - run: make ch-init s3-init
+      - run: make ch-load SF=0.01 CYCLE=1
+      - run: make dbt-build CYCLE=1 AS_OF=2025-12-04
+      # a second cycle exercises the incremental delete-and-append path
+      - run: make ch-load SF=0.01 CYCLE=2
+      - run: make dbt-build CYCLE=2 AS_OF=2025-12-04
+      - run: make test-clickhouse
+      - name: Service state and logs
+        if: failure()
+        run: |
+          docker compose ps -a
+          docker compose logs --no-color --tail 300
+      - name: Remove the stack
+        if: always()
+        run: make down
+
   diagrams:
     name: diagrams (D2 render check)
     runs-on: ubuntu-latest
