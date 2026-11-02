@@ -1,0 +1,1 @@
+-- Intentionally empty in the seed: written by pricing_apply.apply_batch (shelf_label target).
