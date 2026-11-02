@@ -1,7 +1,7 @@
 # Monthly update PRs, one group per ecosystem for minor and patch. Semver-major version updates
 # are ignored and move by hand. A release waits 7 days before it is proposed. Security updates
 # skip the schedule and the cooldown. .github/workflows/dependabot-auto-merge.yml merges these PRs
-# once CI is green. The docker and docker-compose ecosystems join when the stack lands.
+# once CI is green.
 version: 2
 updates:
   - package-ecosystem: github-actions
@@ -35,3 +35,35 @@ updates:
       # generated rows, so the line moves by hand with the expected counts (docs/DECISIONS.md).
       - dependency-name: "duckdb"
         update-types: ["version-update:semver-minor"]
+
+  - package-ecosystem: docker
+    directory: /docker
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 7
+    groups:
+      docker:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+      # The runtime stays on Python 3.12 (portfolio baseline); only patch and digest updates.
+      - dependency-name: "python"
+        update-types: ["version-update:semver-minor"]
+
+  - package-ecosystem: docker-compose
+    directory: /
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 7
+    groups:
+      docker-compose:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+    ignore:
+      # A Postgres major upgrade needs a dump and restore or fresh volumes; majors move by hand.
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]

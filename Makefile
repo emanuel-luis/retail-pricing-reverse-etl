@@ -4,7 +4,7 @@ SHELL := bash
 # Git Bash on Windows would rewrite container paths such as /var/lib/... into Windows paths.
 export MSYS_NO_PATHCONV := 1
 
-.PHONY: help install lint fmt test test-fast test-data data d2-install diagrams diagrams-check diagrams-watch
+.PHONY: help install lint fmt test test-fast test-data test-sql data env up down ps logs load control-init workload workload-stop d2-install diagrams diagrams-check diagrams-watch
 
 # Scale factor of the TPC-DS data: 0.01 (CI), 1 (default demo), 10 (documented heavy run).
 SF ?= 1
@@ -34,6 +34,40 @@ test: test-fast test-data ## Everything that runs without the stack
 
 data: ## Generate TPC-DS and build the OLTP seed at scale SF (make data SF=0.01)
 	uv run retail-pricing data all --sf $(SF)
+
+test-sql: ## SQL tests against the compose Postgres services (make up load control-init first)
+	uv run pytest -m sql
+
+# Stack. Every service has a profile; .env sets COMPOSE_PROFILES=core for a bare `up`.
+ALL_PROFILES := --profile core --profile workload
+
+env: ## Copy .env.example to .env when .env is missing (local-only passwords)
+	@[ -f .env ] || { cp .env.example .env; echo "created .env from .env.example (local-only values)"; }
+
+up: env ## Start the core services and wait until they are healthy
+	docker compose up -d --build --wait
+
+down: ## Stop every service of this project and delete its volumes
+	docker compose $(ALL_PROFILES) down -v --remove-orphans
+
+ps: ## Show service status
+	docker compose $(ALL_PROFILES) ps
+
+logs: ## Follow the logs of every service
+	docker compose $(ALL_PROFILES) logs -f --tail 100
+
+load: ## Load the OLTP seed of scale SF into Postgres (make data first)
+	uv run retail-pricing oltp load --sf $(SF)
+
+control-init: ## Create the control/audit schemas, functions, roles and registry seed
+	uv run retail-pricing control init
+
+# --profile on the command line replaces COMPOSE_PROFILES, so the core profile is named again.
+workload: env ## Start the OLTP workload generator (profile workload)
+	docker compose $(ALL_PROFILES) up -d --build --wait workload
+
+workload-stop: ## Stop the workload generator
+	docker compose $(ALL_PROFILES) stop workload
 
 # Diagrams: docs/diagrams/<name>.d2 rendered to <name>.svg (committed). One pinned D2 everywhere.
 # Layout engine, themes and padding live in docs/diagrams/_style.d2 (d2-config), so d2 runs in a

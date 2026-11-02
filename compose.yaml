@@ -1,0 +1,96 @@
+# Memory limits are sized so the whole loop fits a laptop Docker VM (docs/PLAN.md section 1).
+# This file grows with each pull request; today: the OLTP and the control/audit Postgres, and the
+# workload generator (profile workload). Measured on 2026-11-02 at SF0.01 with the workload at
+# 20 sales/s: oltp 119 MiB, control-db 95 MiB, workload 47 MiB.
+name: retail-pricing-reverse-etl
+
+x-app-build: &app-build
+  context: .
+  dockerfile: docker/app.Dockerfile
+
+services:
+  oltp:
+    image: postgres:18.6-alpine@sha256:10a5c69a83035ab5239f5620d708520e8b28f5aa1f2b20143e6024532edadfb5
+    profiles: [core]
+    mem_limit: 1280m
+    shm_size: 256m
+    command:
+      - postgres
+      - -c
+      - shared_buffers=256MB
+      - -c
+      - effective_cache_size=768MB
+      - -c
+      - work_mem=16MB
+      - -c
+      - maintenance_work_mem=128MB
+      - -c
+      - max_connections=60
+      - -c
+      - max_wal_size=4GB
+      - -c
+      - shared_preload_libraries=pg_stat_statements
+      - -c
+      - track_io_timing=on
+    environment:
+      POSTGRES_DB: ${OLTP_DB:-retail}
+      POSTGRES_USER: ${OLTP_OWNER_USER:-oltp_owner}
+      POSTGRES_PASSWORD: ${OLTP_OWNER_PASSWORD:?set OLTP_OWNER_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:${OLTP_PG_PORT:-25432}:5432"
+    volumes:
+      # PG 18 keeps PGDATA under /var/lib/postgresql/<major>, so the mount is one level up.
+      - oltp_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  control-db:
+    image: postgres:18.6-alpine@sha256:10a5c69a83035ab5239f5620d708520e8b28f5aa1f2b20143e6024532edadfb5
+    profiles: [core]
+    mem_limit: 256m
+    command: ["postgres", "-c", "shared_buffers=32MB", "-c", "work_mem=4MB", "-c", "max_connections=40"]
+    environment:
+      POSTGRES_DB: ${CONTROL_DB:-control}
+      POSTGRES_USER: ${CONTROL_OWNER_USER:-control_owner}
+      POSTGRES_PASSWORD: ${CONTROL_OWNER_PASSWORD:?set CONTROL_OWNER_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:${CONTROL_PG_PORT:-25433}:5432"
+    volumes:
+      - control_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  workload:
+    build: *app-build
+    image: retail-pricing-app:local
+    profiles: [workload]
+    mem_limit: 256m
+    command: ["workload", "run"]
+    depends_on:
+      oltp:
+        condition: service_healthy
+    environment:
+      # Inside the network the OLTP is reached by name, whatever the host-side .env says.
+      OLTP_HOST: oltp
+      OLTP_PORT: "5432"
+      OLTP_DB: ${OLTP_DB:-retail}
+      OLTP_WORKLOAD_PASSWORD: ${OLTP_WORKLOAD_PASSWORD:?set OLTP_WORKLOAD_PASSWORD in .env}
+      WORKLOAD_SEED: ${WORKLOAD_SEED:-7}
+      WORKLOAD_SALES_PER_SECOND: ${WORKLOAD_SALES_PER_SECOND:-20}
+      WORKLOAD_PRICE_EDITS_PER_SECOND: ${WORKLOAD_PRICE_EDITS_PER_SECOND:-0.5}
+      WORKLOAD_DAY_SECONDS: ${WORKLOAD_DAY_SECONDS:-600}
+    healthcheck:
+      test: ["CMD", "retail-pricing", "health", "--url", "http://127.0.0.1:9108/metrics"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+volumes:
+  oltp_data:
+  control_data:

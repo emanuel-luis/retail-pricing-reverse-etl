@@ -9,6 +9,9 @@ license-files = ["LICENSE"]
 authors = [{ name = "Emanuel Luis" }]
 dependencies = [
     "duckdb==2.0.0",
+    "prometheus-client>=0.23",
+    "psycopg[binary]>=3.3",
+    "pyarrow>=22",
     "pydantic-settings>=2.16.1",
     "typer>=0.27.3",
 ]

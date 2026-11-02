@@ -19,6 +19,20 @@ data_app = typer.Typer(no_args_is_help=True, help="Generate TPC-DS data and buil
 app.add_typer(data_app, name="data")
 
 
+def _register_subcommands() -> None:
+    """Sub-apps live next to their implementations; their modules import nothing heavy."""
+    from retail_pricing.control.cli import app as control_app
+    from retail_pricing.oltp.cli import app as oltp_app
+    from retail_pricing.workload.cli import app as workload_app
+
+    app.add_typer(oltp_app, name="oltp")
+    app.add_typer(control_app, name="control")
+    app.add_typer(workload_app, name="workload")
+
+
+_register_subcommands()
+
+
 @app.callback()
 def main(
     log_level: Annotated[str, typer.Option(help="Log level for the JSON logs on stderr.")] = "INFO",
@@ -73,3 +87,19 @@ def data_all(sf: SfOption, data_dir: DataDirOption = None) -> None:
 def version() -> None:
     """Print the package version."""
     typer.echo(__version__)
+
+
+@app.command()
+def health(
+    url: Annotated[str, typer.Option(help="HTTP URL that must answer 200 within the timeout.")],
+    timeout: Annotated[float, typer.Option(help="Seconds before giving up.")] = 3.0,
+) -> None:
+    """Exit 0 when URL answers HTTP 200 (container healthchecks; no curl in the image)."""
+    import urllib.request
+
+    try:
+        with urllib.request.urlopen(url, timeout=timeout) as resp:
+            ok = resp.status == 200
+    except OSError:
+        ok = False
+    raise typer.Exit(0 if ok else 1)

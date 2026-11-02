@@ -17,12 +17,22 @@ synthetic tables. `docs/PLAN.md` is the contract and lists what each pull reques
 - `make data SF=<n>`: `retail-pricing data all --sf <n>` into `data/` (git-ignored): TPC-DS
   Parquet plus manifest under `data/tpcds/sf=<n>/`, the OLTP seed under `data/oltp/sf=<n>/`.
   SF1 or more is a heavy local run on the owner's machine (shared heavy lock).
+- `make up` / `make down`: compose services with `--wait` (copies `.env.example` to `.env` when
+  missing) / every profile down with volumes. `make ps`, `make logs`. Compose project
+  `retail-pricing-reverse-etl`; today: `oltp` (127.0.0.1:25432, db `retail`), `control-db`
+  (127.0.0.1:25433, db `control`), `workload` (profile `workload`, app image
+  `retail-pricing-app:local`). A stack run on the owner's machine takes the heavy lock.
+- `make load SF=<n>`: `retail-pricing oltp load --sf <n>` (`--replace` drops and reloads).
+  `make control-init`: `retail-pricing control init` (idempotent; seed from the contract).
+  `make test-sql`: `pytest -m sql` against the running services (OLTP loaded at SF0.01; control
+  tests use their own database `control_test`). `make workload` / `make workload-stop`.
+  `retail-pricing workload edit --count N --kvi --seed S`: scripted manual price edits.
 - `make d2-install`, `make diagrams`, `make diagrams-check`, `make diagrams-watch NAME=<name>`:
   pinned D2 (`D2_VERSION`, sha256 `D2_SHA256`, Linux x86_64). On the owner's machine render through
   WSL: `wsl -d Ubuntu -e bash -lc 'cd /mnt/d/dev/Pessoal/retail-pricing-reverse-etl && make diagrams'`.
 - Git Bash on Windows has no make: run the recipe lines by hand (`uv run ...`).
-- CI (`.github/workflows/ci.yml`): `lint` gates `test-fast` (unit plus SF0.01 data); `diagrams`
-  runs on its own; `UV_LOCKED=1`; actions pinned by SHA. `security.yml`: pip-audit and zizmor.
+- CI (`.github/workflows/ci.yml`): `lint` gates `test-fast` (unit plus SF0.01 data) and `sql`
+  (compose Postgres, SF0.01 load, control init, `pytest -m sql`); `diagrams` runs on its own; `UV_LOCKED=1`; actions pinned by SHA. `security.yml`: pip-audit and zizmor.
   Dependabot is monthly with a 7-day cooldown, minor and patch grouped, majors ignored;
   `dependabot-auto-merge.yml` merges green minor and patch updates.
 
@@ -35,8 +45,14 @@ synthetic tables. `docs/PLAN.md` is the contract and lists what each pull reques
   `data/` (`contract.py`: every OLTP table's columns, the single source of truth for the Postgres
   and ClickHouse DDL; `generate.py`: TPC-DS through DuckDB's `tpcds` extension; `build.py`: the
   OLTP seed; `synth.py`: Python mirror of `u()` and the pure rules; `manifest.py`), `sql/duckdb/`
-  (one mapping SQL per OLTP table, in FK order).
-- `tests/unit/` (no data), `tests/slow/` (SF0.01 generation, marker `slow`).
+  (one mapping SQL per OLTP table, in FK order), `oltp/` (`ddl.py` renders tables, constraints
+  and indexes from the contract; `load.py`), `sql/oltp/` (triggers, `pricing_apply` stage
+  tables and `apply_batch` / `reconcile_actual`, roles), `control/` (`init.py`, `seed.py`: jobs
+  and one `extract_table` row per contract table), `sql/control/` (registry, audit, functions,
+  views, grants), `workload/` (`logic.py` pure decisions, `run.py` I/O and Prometheus metrics).
+- `compose.yaml`, `docker/app.Dockerfile` (the one Python image), `.env.example`.
+- `tests/unit/` (no data), `tests/slow/` (SF0.01 generation, marker `slow`), `tests/sql/`
+  (marker `sql`, compose Postgres).
 
 ## Invariants
 
@@ -50,6 +66,14 @@ synthetic tables. `docs/PLAN.md` is the contract and lists what each pull reques
 - The OLTP seed Parquet columns are exactly `data/contract.py`, in order; change the contract, the
   build SQL and (later) the DDL together.
 - DuckDB stays on 2.0.x: a minor update can change the generated rows (Dependabot ignores it).
+- The OLTP applies engine prices only through `pricing_apply.apply_batch`: a row changes only when
+  its `version` equals the extracted one; anything else is a recorded conflict, never an
+  overwrite. A batch is idempotent per (cycle, target, batch). Workload edits run with
+  `app.actor = 'store-ops'` and clear `last_cycle_id`.
+- SECURITY DEFINER functions are owned by NOLOGIN roles with only the grants they need, never by
+  the superuser the Postgres image creates.
+- Secrets come from `.env` (copied from `.env.example`, local-only values); settings hold them as
+  `SecretStr` and logs never print them.
 
 ## Conventions
 

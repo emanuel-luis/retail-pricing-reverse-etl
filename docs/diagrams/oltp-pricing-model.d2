@@ -1,0 +1,162 @@
+# The OLTP tables the pricing loop reads and writes back, with their keys and the columns the
+# rules use. Grounded in src/retail_pricing/data/contract.py (columns, types, PKs, FKs) and
+# docs/PLAN.md section 4. Every table also has version and updated_at; the three tables the
+# engine writes back carry last_cycle_id and updated_by. Sales and inventory are in
+# oltp-sales-model.
+...@_style
+
+classes: {
+  table: {
+    shape: sql_table
+    style.font-size: 15
+  }
+}
+
+title: "OLTP pricing model: what the engine reads and writes back" {
+  shape: text
+  near: top-center
+  style: {font-size: 24; bold: true}
+}
+
+direction: right
+
+product: "master.product" {
+  class: table
+  product_id: bigint {constraint: primary_key}
+  class_id: int {constraint: foreign_key}
+  brand_id: int {constraint: foreign_key}
+  supplier_id: int {constraint: foreign_key}
+  pack_units: "numeric(5,2)"
+}
+
+zone: "master.price_zone" {
+  class: table
+  zone_id: smallint {constraint: primary_key}
+  channel: "text STORE|WEB"
+  price_factor: "numeric(5,4)"
+}
+
+store: "master.store" {
+  class: table
+  store_id: int {constraint: primary_key}
+  zone_id: smallint {constraint: foreign_key}
+}
+
+zone_price: "pricing.zone_price (write-back)" {
+  class: table
+  product_id: bigint {constraint: [primary_key; foreign_key]}
+  zone_id: smallint {constraint: [primary_key; foreign_key]}
+  price: "numeric(10,2)"
+  version: bigint
+  last_cycle_id: bigint
+}
+
+override: "pricing.store_price_override (write-back)" {
+  class: table
+  override_id: bigint {constraint: primary_key}
+  store_id: int {constraint: foreign_key}
+  product_id: bigint {constraint: foreign_key}
+  price: "numeric(10,2)"
+  valid_to: date
+  version: bigint
+}
+
+promotion: "pricing.promotion" {
+  class: table
+  promo_id: int {constraint: primary_key}
+  start_date: date
+  end_date: date
+  discount_pct: "numeric(5,4)"
+}
+
+promo_price: "pricing.promo_price (write-back)" {
+  class: table
+  promo_id: int {constraint: [primary_key; foreign_key]}
+  product_id: bigint {constraint: [primary_key; foreign_key]}
+  zone_id: smallint {constraint: [primary_key; foreign_key]}
+  promo_price: "numeric(10,2)"
+  version: bigint
+}
+
+cost: "pricing.supplier_cost" {
+  class: table
+  product_id: bigint {constraint: [primary_key; foreign_key]}
+  valid_from: date {constraint: primary_key}
+  unit_cost: "numeric(12,4)"
+}
+
+history: "pricing.price_history (SCD2)" {
+  class: table
+  history_id: bigint {constraint: primary_key}
+  product_id: bigint {constraint: foreign_key}
+  zone_id: smallint {constraint: foreign_key}
+  valid_from: timestamptz
+  valid_to: timestamptz
+  source: "text seed|engine|manual"
+}
+
+competitor_price: "market.competitor_price" {
+  class: table
+  observation_id: bigint {constraint: primary_key}
+  product_id: bigint {constraint: foreign_key}
+  zone_id: smallint {constraint: foreign_key}
+  price: "numeric(10,2)"
+}
+
+kvi: "rules.kvi" {
+  class: table
+  product_id: bigint {constraint: [primary_key; foreign_key]}
+  kvi_tier: smallint
+  competitor_index_target: "numeric(4,3)"
+}
+
+ladder: "rules.ladder_member" {
+  class: table
+  ladder_group_id: int {constraint: primary_key}
+  product_id: bigint {constraint: [primary_key; foreign_key]}
+  rank: smallint
+}
+
+rule: "rules.category_rule" {
+  class: table
+  category_id: int {constraint: primary_key}
+  min_margin: "numeric(5,4)"
+  max_change_pct: "numeric(5,4)"
+  promo_policy: text
+}
+
+change: "pricing.price_change (audit of applied rows)" {
+  class: table
+  change_id: bigint {constraint: primary_key}
+  cycle_id: bigint
+  target: text
+  old_price: "numeric(10,2)"
+  new_price: "numeric(10,2)"
+  reason_code: text
+}
+
+labels: "pricing.shelf_label_queue (write-back)" {
+  class: table
+  label_id: bigint {constraint: primary_key}
+  cycle_id: bigint
+  store_id: int {constraint: foreign_key}
+  product_id: bigint {constraint: foreign_key}
+  status: "text queued|printed"
+}
+
+zone_price.product_id -> product.product_id
+zone_price.zone_id -> zone.zone_id
+store.zone_id -> zone.zone_id
+override.store_id -> store.store_id
+override.product_id -> product.product_id
+promo_price.promo_id -> promotion.promo_id
+promo_price.product_id -> product.product_id
+promo_price.zone_id -> zone.zone_id
+cost.product_id -> product.product_id
+history.product_id -> product.product_id
+history.zone_id -> zone.zone_id
+competitor_price.product_id -> product.product_id
+kvi.product_id -> product.product_id
+ladder.product_id -> product.product_id
+labels.store_id -> store.store_id
+labels.product_id -> product.product_id
