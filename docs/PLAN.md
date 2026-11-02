@@ -131,9 +131,13 @@ table's content hash (below). If the manifest exists and its counts match, the s
 For SF0.01, 1 and 10 the counts are checked against the known values; a mismatch is an error.
 
 Content hash, order-independent and engine-version-tolerant: `count(*)` plus
-`sum(md5_number(CAST(struct_pack(COLUMNS(*)) AS VARCHAR))) % 2^64`, written as hex. Note that
-`hash(t.*)` is invalid in DuckDB 2.0. The file sha256 detects corruption. The content hash is
-the reproducibility claim.
+`sum(md5_number_lower(CAST(t AS VARCHAR)))::HUGEINT % 2^64` over `FROM <relation> t`, written as
+hex. `CAST(t AS VARCHAR)` renders the whole row as a struct (session TimeZone UTC); the sum of
+UBIGINT values is an exact HUGEINT. Note that `hash(t.*)` is invalid in DuckDB 2.0,
+`struct_pack(COLUMNS(*))` expands to one struct per column (not one per row), and
+`sum(md5_number(...))` returns a lossy DOUBLE. Parquet is read with `hive_partitioning = false`
+so the `sf=<N>` directory never becomes a column. The file sha256 detects corruption. The content
+hash is the reproducibility claim.
 
 ### 3.2 Build (`retail-pricing data build --sf N`)
 DuckDB SQL files in `sql/duckdb/` (one per OLTP table, in FK order) read the TPC-DS Parquet and
