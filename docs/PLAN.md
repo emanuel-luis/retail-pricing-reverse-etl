@@ -212,17 +212,17 @@ are TPC-DS current store versions, so SF1 has 6 stores and SF10 has 51.
 | sale_return | 2,816 | 290,296 | 2,905,894 |
 | zone_price | 180 | 27,000 | 459,000 |
 | store_price_override | 1 | 539 | 13,458 |
-| promotion / promo_item / promo_price | 3 / 7 / 12 | 300 / 3,506 / 9,992 | 500 / 6,078 / 51,536 |
+| promotion / promo_item / promo_price | 3 / 7 / 12 | 300 / 3,506 / 9,992 | 500 / 6,078 / 51,529 |
 | store_stock (= seed stock_movement) | 90 | 53,995 | 2,271,233 |
 | warehouse_stock | 90 | 45,000 | 510,000 |
 | supplier_cost | 2,160 | 216,000 | 1,224,000 |
 | price_history | 360 | 54,000 | 918,000 |
 | competitor_price | 832 | 128,744 | 2,251,032 |
-| kvi / ladder_group / ladder_member | 5 / 12 / 25 | 180 / 534 / 3,380 | 1,020 / 1,589 / 18,589 |
-| zone prices raised by the seed ladder repair | 10 | 5,939 | 118,644 |
+| kvi / ladder_group / ladder_member | 5 / 12 / 25 | 180 / 534 / 3,380 | 1,020 / 1,587 / 18,580 |
+| zone prices raised by the seed ladder repair | 10 | 5,939 | 118,576 |
 
 Timings on the owner's laptop (16 threads, DuckDB memory limit 4 GB), `data all` from scratch:
-SF0.01 about 3 s, SF1 about 36 s, SF10 about 8.5 minutes. They are not TPC-DS benchmark results.
+SF0.01 about 3 s, SF1 about 37 s, SF10 about 8.7 minutes (generate 190-203 s, build 321-329 s). They are not TPC-DS benchmark results.
 
 ---
 
