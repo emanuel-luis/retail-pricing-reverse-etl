@@ -1,0 +1,12 @@
+# Every text file is LF in the working tree too: configs, SQL and scripts are read inside Linux
+# containers, and the CI checks compare exact bytes.
+* text=auto eol=lf
+# Shell scripts, SQL and configs are read inside Linux containers: keep LF on every checkout.
+*.sh text eol=lf
+*.sql text eol=lf
+Makefile text eol=lf
+*.d2 text eol=lf
+# Rendered diagrams: keep the bytes D2 writes (no EOL conversion, so make diagrams-check compares
+# exactly what CI renders) and collapse them in PR diffs; review the .d2 source instead.
+*.svg -text
+docs/diagrams/*.svg linguist-generated=true

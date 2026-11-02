@@ -1,0 +1,62 @@
+[project]
+name = "retail-pricing-reverse-etl"
+version = "0.1.0"
+description = "ELT and reverse ETL for retail pricing: Postgres OLTP, Apache NiFi, ClickHouse and dbt, audited write-back."
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Emanuel Luis" }]
+dependencies = [
+    "duckdb==2.0.0",
+    "pydantic-settings>=2.16.1",
+    "typer>=0.27.3",
+]
+
+[project.scripts]
+retail-pricing = "retail_pricing.cli:app"
+
+[build-system]
+requires = ["uv_build>=0.9,<0.14"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "retail_pricing"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+extend-select = ["BLE", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+files = ["src"]
+strict = true
+enable_error_code = ["ignore-without-code"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "-m",
+    "not slow and not sql and not clickhouse and not integration",
+]
+timeout = 300
+markers = [
+    "slow: generates real TPC-DS data (SF0.01 or more); run with -m slow",
+    "sql: needs the OLTP and control Postgres from compose",
+    "clickhouse: needs ClickHouse from compose",
+    "integration: needs the whole compose stack and a deployed NiFi flow",
+]
+
+[dependency-groups]
+dev = [
+    "hypothesis>=6.170.9",
+    "mypy>=2.4.0",
+    "pytest>=9.1.1",
+    "pytest-timeout>=2.4.0",
+    "ruff>=0.17.2",
+]
