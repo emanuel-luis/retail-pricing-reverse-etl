@@ -197,24 +197,32 @@ the manifest. A null optional FK becomes NULL, except a null `ss_store_sk`, whic
 The catalog channel is dropped: it has no store or zone, and keeping it would add about 30% volume
 with no pricing signal.
 
-### 3.4 Expected row counts
-TPC-DS inputs are known (see the facts in DECISIONS). OLTP outputs are estimates until PR 1
-measures them.
+### 3.4 Measured row counts
+Measured on 2026-11-02 (DuckDB 2.0.0, two clean runs per scale with identical content hashes;
+the manifests also record every dropped-row count and the rows the ladder repair raised). Stores
+are TPC-DS current store versions, so SF1 has 6 stores and SF10 has 51.
 
 | Table | SF0.01 | SF1 | SF10 |
 |---|---|---|---|
-| product | ~90 est. | 9,000 | 51,000 |
-| store / warehouse / zones (incl. WEB) | 1 / 1 / 2 | 12 / 5 / 4 | 102 / 10 / 9 |
-| sale_line | ~36k est. | ~3.6M (2,880,404 + 719,384 minus nulls) | ~36.0M (28,800,991 + 7,197,566) |
-| sale (headers) | ~3.5k est. | ~0.33M est. | ~3.3M est. |
-| sale_return | ~3.6k est. | ~0.36M (287,514 + 71,763) | ~3.59M |
-| zone_price | ~180 | 36,000 | 459,000 |
-| store_stock | ~90 | ~0.1M est. | ~3.5M est. |
-| warehouse_stock | ~90 | 45,000 | 510,000 |
-| supplier_cost | ~2.2k | 216,000 | 1,224,000 |
-| price_history | ~360 | 72,000 | 918,000 |
-| competitor_price | ~0.5k est. | ~0.26M est. | ~3.3M est. |
-| promo_price | ~60 est. | ~12k est. | ~45k est. |
+| product | 90 | 9,000 | 51,000 |
+| store / warehouse / zones (incl. WEB) | 1 / 1 / 2 | 6 / 5 / 3 | 51 / 10 / 9 |
+| customer | 1,000 | 100,000 | 500,000 |
+| sale (headers) | 3,000 | 300,000 | 3,000,000 |
+| sale_line | 34,145 | 3,404,503 | 34,051,213 |
+| sale_return | 2,816 | 290,296 | 2,905,894 |
+| zone_price | 180 | 27,000 | 459,000 |
+| store_price_override | 1 | 539 | 13,458 |
+| promotion / promo_item / promo_price | 3 / 7 / 12 | 300 / 3,506 / 9,992 | 500 / 6,078 / 51,536 |
+| store_stock (= seed stock_movement) | 90 | 53,995 | 2,271,233 |
+| warehouse_stock | 90 | 45,000 | 510,000 |
+| supplier_cost | 2,160 | 216,000 | 1,224,000 |
+| price_history | 360 | 54,000 | 918,000 |
+| competitor_price | 832 | 128,744 | 2,251,032 |
+| kvi / ladder_group / ladder_member | 5 / 12 / 25 | 180 / 534 / 3,380 | 1,020 / 1,589 / 18,589 |
+| zone prices raised by the seed ladder repair | 10 | 5,939 | 118,644 |
+
+Timings on the owner's laptop (16 threads, DuckDB memory limit 4 GB), `data all` from scratch:
+SF0.01 about 3 s, SF1 about 36 s, SF10 about 8.5 minutes. They are not TPC-DS benchmark results.
 
 ---
 
