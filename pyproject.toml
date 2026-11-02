@@ -8,7 +8,9 @@ license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "Emanuel Luis" }]
 dependencies = [
+    "boto3>=1.43.123",
     "duckdb==2.0.0",
+    "httpx>=0.28.1",
     "prometheus-client>=0.23",
     "psycopg[binary]>=3.3",
     "pyarrow>=22",

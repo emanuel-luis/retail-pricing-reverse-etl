@@ -97,3 +97,51 @@ class WorkloadSettings(_Base):
     return_share: float = 0.02
     day_seconds: int = 600
     metrics_port: int = 9108
+
+
+class ClickHouseSettings(_Base):
+    """ClickHouse HTTP endpoint and user passwords (`CLICKHOUSE_*`).
+
+    `user` and `password` are the image admin account (CLICKHOUSE_USER, CLICKHOUSE_PASSWORD).
+    The users nifi, dbt and grafana come from config/clickhouse/users.d with their own passwords.
+    """
+
+    model_config = SettingsConfigDict(env_prefix="CLICKHOUSE_")
+
+    host: str = "127.0.0.1"
+    # The same variable compose publishes the port with, so moving it in .env moves both.
+    port: int = Field(default=28123, validation_alias="CLICKHOUSE_HTTP_PORT")
+    user: str = "ch_admin"
+    password: SecretStr = SecretStr("")
+    nifi_password: SecretStr = SecretStr("")
+    dbt_password: SecretStr = SecretStr("")
+    grafana_password: SecretStr = SecretStr("")
+
+    @property
+    def url(self) -> str:
+        return f"http://{self.host}:{self.port}"
+
+    def password_of(self, user: str) -> SecretStr:
+        """Password of the admin or of one of the three XML users."""
+        return {
+            self.user: self.password,
+            "nifi": self.nifi_password,
+            "dbt": self.dbt_password,
+            "grafana": self.grafana_password,
+        }[user]
+
+
+class S3Settings(_Base):
+    """The S3-compatible raw zone (`S3_*`); credentials are local-only."""
+
+    model_config = SettingsConfigDict(env_prefix="S3_")
+
+    host: str = "127.0.0.1"
+    api_port: int = 29000
+    access_key: str = "retail_s3_admin"
+    secret_key: SecretStr = SecretStr("")
+    bucket: str = "retail-raw"
+
+    @property
+    def endpoint(self) -> str:
+        return f"http://{self.host}:{self.api_port}"

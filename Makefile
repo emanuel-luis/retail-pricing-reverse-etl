@@ -4,7 +4,7 @@ SHELL := bash
 # Git Bash on Windows would rewrite container paths such as /var/lib/... into Windows paths.
 export MSYS_NO_PATHCONV := 1
 
-.PHONY: help install lint fmt test test-fast test-data test-sql data env up down ps logs load control-init workload workload-stop d2-install diagrams diagrams-check diagrams-watch
+.PHONY: help install lint fmt test test-fast test-data test-sql data env up down ps logs load control-init ch-init ch-load workload workload-stop d2-install diagrams diagrams-check diagrams-watch
 
 # Scale factor of the TPC-DS data: 0.01 (CI), 1 (default demo), 10 (documented heavy run).
 SF ?= 1
@@ -61,6 +61,12 @@ load: ## Load the OLTP seed of scale SF into Postgres (make data first)
 
 control-init: ## Create the control/audit schemas, functions, roles and registry seed
 	uv run retail-pricing control init
+
+ch-init: ## Create the ClickHouse databases and raw tables (make up first)
+	uv run retail-pricing ch init
+
+ch-load: ## Load the seed Parquet into ClickHouse raw: make ch-load SF=0.01 CYCLE=1
+	uv run retail-pricing ch load-raw --sf $(SF) --cycle $(CYCLE)
 
 # --profile on the command line replaces COMPOSE_PROFILES, so the core profile is named again.
 workload: env ## Start the OLTP workload generator (profile workload)
