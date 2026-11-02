@@ -1,11 +1,10 @@
-# ruff: noqa: F811
 """`control init`, the registry seed and the roles."""
 
 from typing import Any
 
 import psycopg
 import pytest
-from control_fixtures import ctl_settings, db, one  # noqa: F401
+from control_helpers import one
 
 from retail_pricing.control.init import init
 from retail_pricing.data.contract import TABLES

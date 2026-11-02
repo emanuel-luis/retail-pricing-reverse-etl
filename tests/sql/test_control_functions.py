@@ -1,4 +1,3 @@
-# ruff: noqa: F811
 """The registry and audit functions NiFi calls."""
 
 import uuid
@@ -7,7 +6,7 @@ from typing import Any
 
 import psycopg
 import pytest
-from control_fixtures import ctl_settings, db, one  # noqa: F401
+from control_helpers import one
 from psycopg.errors import RaiseException
 
 pytestmark = pytest.mark.sql
