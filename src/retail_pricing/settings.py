@@ -2,12 +2,26 @@
 
 from pathlib import Path
 
-from pydantic import SecretStr
+from psycopg.conninfo import make_conninfo
+from pydantic import AliasChoices, Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class _Base(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+
+def _conninfo(host: str, port: int, db: str, user: str, password: SecretStr) -> str:
+    # make_conninfo quotes every value, so a password with spaces, quotes or backslashes can
+    # never break the string (a libpq parse error would echo part of it).
+    return make_conninfo(
+        host=host,
+        port=port,
+        dbname=db,
+        user=user,
+        password=password.get_secret_value(),
+        application_name="retail-pricing",
+    )
 
 
 class DataSettings(_Base):
@@ -26,7 +40,8 @@ class OltpSettings(_Base):
     model_config = SettingsConfigDict(env_prefix="OLTP_")
 
     host: str = "127.0.0.1"
-    port: int = 25432
+    # The same variable compose publishes the port with, so moving it in .env moves both.
+    port: int = Field(default=25432, validation_alias=AliasChoices("OLTP_PG_PORT", "OLTP_PORT"))
     db: str = "retail"
     owner_user: str = "oltp_owner"
     owner_password: SecretStr = SecretStr("")
@@ -38,11 +53,8 @@ class OltpSettings(_Base):
     exporter_password: SecretStr = SecretStr("")
 
     def conninfo(self, user: str, password: SecretStr) -> str:
-        """A libpq keyword/value string; the password never reaches a log line."""
-        return (
-            f"host={self.host} port={self.port} dbname={self.db} user={user} "
-            f"password={password.get_secret_value()} application_name=retail-pricing"
-        )
+        """A libpq keyword/value string, quoted by psycopg; never log it (it holds the password)."""
+        return _conninfo(self.host, self.port, self.db, user, password)
 
 
 class ControlSettings(_Base):
@@ -51,7 +63,10 @@ class ControlSettings(_Base):
     model_config = SettingsConfigDict(env_prefix="CONTROL_")
 
     host: str = "127.0.0.1"
-    port: int = 25433
+    # The same variable compose publishes the port with, so moving it in .env moves both.
+    port: int = Field(
+        default=25433, validation_alias=AliasChoices("CONTROL_PG_PORT", "CONTROL_PORT")
+    )
     db: str = "control"
     owner_user: str = "control_owner"
     owner_password: SecretStr = SecretStr("")
@@ -63,11 +78,8 @@ class ControlSettings(_Base):
     exporter_password: SecretStr = SecretStr("")
 
     def conninfo(self, user: str, password: SecretStr) -> str:
-        """A libpq keyword/value string; the password never reaches a log line."""
-        return (
-            f"host={self.host} port={self.port} dbname={self.db} user={user} "
-            f"password={password.get_secret_value()} application_name=retail-pricing"
-        )
+        """A libpq keyword/value string, quoted by psycopg; never log it (it holds the password)."""
+        return _conninfo(self.host, self.port, self.db, user, password)
 
 
 class WorkloadSettings(_Base):

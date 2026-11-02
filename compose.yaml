@@ -10,7 +10,7 @@ x-app-build: &app-build
 
 services:
   oltp:
-    image: postgres:18.6-alpine
+    image: postgres:18.6-alpine@sha256:10a5c69a83035ab5239f5620d708520e8b28f5aa1f2b20143e6024532edadfb5
     profiles: [core]
     mem_limit: 1280m
     shm_size: 256m
@@ -48,7 +48,7 @@ services:
       retries: 30
 
   control-db:
-    image: postgres:18.6-alpine
+    image: postgres:18.6-alpine@sha256:10a5c69a83035ab5239f5620d708520e8b28f5aa1f2b20143e6024532edadfb5
     profiles: [core]
     mem_limit: 256m
     command: ["postgres", "-c", "shared_buffers=32MB", "-c", "work_mem=4MB", "-c", "max_connections=40"]

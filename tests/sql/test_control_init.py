@@ -148,7 +148,9 @@ def test_nifi_role_cannot_touch_anything_else(
         nifi.execute(statement)  # type: ignore[call-overload]
 
 
-def test_grafana_role_reads_views_only(db: Conn, ctl_settings: ControlSettings) -> None:
+def test_grafana_role_reads_audit_and_registry_only(
+    db: Conn, ctl_settings: ControlSettings
+) -> None:
     s = ctl_settings
     with connect(s, s.grafana_user, s.grafana_password) as grafana:
         for view in ("v_cycle_stage_duration", "v_rows_per_stage", "v_reverse_totals", "v_sla"):
