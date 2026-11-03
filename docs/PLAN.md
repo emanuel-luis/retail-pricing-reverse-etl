@@ -472,22 +472,22 @@ Group `30 transform`:
 
 Groups `40 reverse zone_price`, `41 reverse store_override`, `42 reverse promo_price`, `43 reverse shelf_label` share one template parameterized by target. Chaining the groups enforces the order.
 - Plan: InvokeHTTP POST ClickHouse `SELECT batch_no, count() AS rows FROM reverse.rev_<target> WHERE cycle_id = ${cycle_id} GROUP BY batch_no ORDER BY batch_no FORMAT JSON`, then SplitJson `$.data.*`. Zero batches means zero items and the run succeeds.
-- Item work: ReplaceText `SELECT <stage columns> FROM reverse.rev_<target> WHERE cycle_id=… AND batch_no=… FORMAT JSONEachRow SETTINGS output_format_json_quote_64bit_integers=0` -> InvokeHTTP POST ClickHouse -> PutDatabaseRecord[oltp] (`json-reader`, INSERT_IGNORE into `pricing_apply.<target>_stage`, Max Batch Size 1000, Rollback On Failure true) -> ExecuteSQLRecord[oltp] `select * from pricing_apply.apply_batch(${cycle_id}, '<target>', ${batch_no})` -> EvaluateJsonPath(counts) -> PutSQL[control] upsert `audit.reverse_batch` -> step succeeded.
+- Item work: ReplaceText `SELECT <stage columns> FROM reverse.rev_<target> WHERE cycle_id=… AND batch_no=… FORMAT JSONEachRow` -> InvokeHTTP POST ClickHouse (`output_format_json_quote_64bit_integers=0&output_format_json_quote_decimals=1` in the URL) -> PutDatabaseRecord[oltp] (`json-reader`, INSERT_IGNORE into `pricing_apply.<target>_stage`, Max Batch Size 1000, Rollback On Failure true) -> ExecuteSQLRecord[oltp] `select * from pricing_apply.apply_batch(${cycle_id}, '<target>', ${batch_no})` -> EvaluateJsonPath(counts) -> PutSQL[control] upsert `audit.reverse_batch` -> step succeeded.
 
 Group `50 reconcile`:
 - Plan: the 4 targets.
-- Item work: InvokeHTTP POST ClickHouse `SELECT * FROM reverse.rev_reconcile_expected WHERE cycle_id=… AND target='…' FORMAT JSONEachRow` -> PutDatabaseRecord[control] UPSERT `audit.reconcile_expected` -> ExecuteSQLRecord[oltp] `pricing_apply.reconcile_actual(...)` with `json-writer` -> PutDatabaseRecord[control] UPSERT `audit.reconcile_actual`.
+- Item work: InvokeHTTP POST ClickHouse `SELECT * FROM reverse.rev_reconcile_expected WHERE cycle_id=… AND target='…' FORMAT JSONEachRow` (the `transit` check) -> PutDatabaseRecord[control] UPSERT `audit.reconcile_expected` -> ExecuteSQLRecord[oltp] `pricing_apply.reconcile_expected_applied(...)` (the `applied` check) -> PutDatabaseRecord[control] UPSERT `audit.reconcile_expected` -> ExecuteSQLRecord[oltp] `pricing_apply.reconcile_actual(...)` with `json-writer` -> PutDatabaseRecord[control] UPSERT `audit.reconcile_actual`. `wsum` is a decimal string on every hop.
 - The parent gate then runs `audit.reconcile`.
 
 Group `90 finalize`: ExecuteSQLRecord[control] `audit.finish_cycle(...)`, then terminate.
 
 Built in PR 4 (`src/retail_pricing/nifi/builder/`, one module per group): `00 trigger`, `10 extract`,
 the extract gate, `20 load`, the load gate (end_run, then commit_watermarks) and `90 finalize`.
-Step names and items are in DECISIONS 108, retries and error texts in 111. PR 5 seam: in
-`builder/__init__.py` the load gate's `success` goes straight to `90 finalize`; PR 5 inserts
-`30 transform`, `40`-`43 reverse` and `50 reconcile` there, each followed by `gate.build` (the
-reconcile gate with `audit.reconcile` as its follow-up query). Group names equal
-`registry.job.process_group_name`, which is how deploy step 8 finds them.
+Step names and items are in DECISIONS 108, retries and error texts in 111. Built in PR 5:
+`30 transform`, `40`-`43 reverse` (`reverse.py`, one template) and `50 reconcile`, chained from
+the load gate's `success`, each followed by `gate.build`; the reconcile gate calls
+`audit.reconcile` and fails the cycle at `reconcile` when a check differs (DECISIONS 120-123).
+Group names equal `registry.job.process_group_name`, which is how deploy step 8 finds them.
 
 Retry and idempotency summary: S3 keys include the extract run id, so a rerun never reads stale
 files. Raw tables are ReplacingMergeTree, so a re-load is harmless. dbt cycle models delete their
@@ -838,17 +838,13 @@ marts exist. Neither is committed outside its PR.
 
 ---
 
-### Open items found in PR 3 (owned by PR 5)
+### Open items found in PR 3 (closed in PR 5)
 
-- `rev_reconcile_expected` emits only the `transit` check, while `reconcile_actual` returns
-  `transit` and `applied` rows, and `audit.reconcile` fails a check missing on either side. PR 5
-  adds the expected `applied` check (the rows the cycle proposed, joined to the OLTP outcome
-  once extracted) or compares `applied` against the stage outcome, and records the choice.
-- The `pricing_apply` stage tables carry no `version`/`updated_at`, so they are not in the
-  extract list and `raw.pricing_apply__*` does not exist; `stg_apply_outcome` and
-  `stg_apply_conflict` return empty typed relations until then (every sent row shows as
-  `not_sent` in `mart_proposed_vs_applied`). PR 5 adds an extract path for the stage outcome and
-  conflict tables (append-only by cycle) and the matching raw tables.
+- The expected `applied` check comes from the OLTP stage outcome:
+  `pricing_apply.reconcile_expected_applied` (DECISIONS 120).
+- The `pricing_apply` stage, batch and conflict tables carry `version`/`updated_at`, are in the
+  extract list and have raw tables; `stg_apply_outcome` and `stg_apply_conflict` read them
+  (DECISIONS 121).
 
 ## 15. Low-impact decisions for docs/DECISIONS.md
 

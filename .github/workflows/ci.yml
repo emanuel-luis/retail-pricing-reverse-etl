@@ -147,7 +147,7 @@ jobs:
       - run: uv sync --locked
       - run: cp .env.example .env
       - run: make data SF=0.01
-      - run: docker compose up -d --build --wait oltp control-db s3 clickhouse nifi
+      - run: docker compose up -d --build --wait oltp control-db s3 clickhouse dbt-runner nifi
       - run: make load SF=0.01 control-init ch-init s3-init
       # ci parameters: page_rows 5000, so ExecuteSQLRecord splits the bigger tables into files
       - run: uv run retail-pricing nifi deploy --env ci --flow nifi/flows/retail-pricing.json
