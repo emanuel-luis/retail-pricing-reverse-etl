@@ -135,6 +135,25 @@ def remove_group(c: Client, gid: str) -> None:
     c.delete(f"/process-groups/{gid}", params={"version": rev, "clientId": c.client_id})
 
 
+def retarget(flow: bytes, context: str) -> bytes:
+    """Point the definition's parameter context and every group at `context`.
+
+    The upload then reuses the context step 3 wrote instead of creating one from the file.
+    """
+    d = json.loads(flow)
+    contexts = d.get("parameterContexts") or {}
+    if len(contexts) != 1:
+        return flow
+    (pc,) = contexts.values()
+    d["parameterContexts"] = {context: {**pc, "name": context}}
+    groups = [d["flowContents"]]
+    while groups:
+        g = groups.pop()
+        g["parameterContextName"] = context
+        groups += g.get("processGroups", [])
+    return json.dumps(d).encode("utf-8")
+
+
 def upload(c: Client, parent: str, flow: bytes, name: str) -> str:
     """POST the definition as multipart (step 4); returns the new group id."""
     pg = c.post(
@@ -288,7 +307,7 @@ def deploy(
 ) -> str:
     """Replace the `retail-pricing` group with `flow_path`; returns the new group id."""
     values, sensitive = load_params(params_path)  # fail on unset secrets before touching NiFi
-    flow = flow_path.read_bytes()
+    flow = retarget(flow_path.read_bytes(), f"retail-pricing-{env}")
     c.login(wait_s=wait_s)  # 1
     root = root_id(c)
     if old := child_group(c, root, GROUP):  # 2

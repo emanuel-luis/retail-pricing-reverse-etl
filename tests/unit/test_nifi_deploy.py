@@ -149,3 +149,17 @@ def test_deploy_fails_listing_each_invalid_component(
     assert "/retail-pricing/fetch: 'Table Name' is required" in str(e.value)
     assert "sink" not in str(e.value)
     assert ("PUT", "/flow/process-groups/new") not in fake.calls  # never started
+
+
+def test_retarget_points_every_group_at_the_env_context() -> None:
+    flow = {
+        "parameterContexts": {"retail-pricing-local": {"name": "retail-pricing-local", "x": 1}},
+        "flowContents": {
+            "parameterContextName": "retail-pricing-local",
+            "processGroups": [{"parameterContextName": "retail-pricing-local"}],
+        },
+    }
+    out = json.loads(d.retarget(json.dumps(flow).encode(), "retail-pricing-ci"))
+    assert out["parameterContexts"] == {"retail-pricing-ci": {"name": "retail-pricing-ci", "x": 1}}
+    assert out["flowContents"]["parameterContextName"] == "retail-pricing-ci"
+    assert out["flowContents"]["processGroups"][0]["parameterContextName"] == "retail-pricing-ci"

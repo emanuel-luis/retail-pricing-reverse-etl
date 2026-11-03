@@ -15,6 +15,7 @@ dependencies = [
     "psycopg[binary]>=3.3",
     "pyarrow>=22",
     "pydantic-settings>=2.16.1",
+    "python-dotenv>=1.2.4",
     "typer>=0.27.3",
 ]
 

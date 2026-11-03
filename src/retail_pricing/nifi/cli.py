@@ -56,6 +56,18 @@ def definitions_pull(
             typer.echo(path.as_posix())
 
 
+@app.command("build-flows")
+def build_flows(
+    out: Annotated[Path, typer.Option(help="Flow-definition JSON to write.")] = Path(
+        "nifi/flows/retail-pricing.json"
+    ),
+) -> None:
+    """Generate the flow definition from the builder (deterministic; CI diffs it)."""
+    from retail_pricing.nifi.builder import write
+
+    typer.echo(write(out).as_posix())
+
+
 class Env(StrEnum):
     local = "local"
     ci = "ci"
