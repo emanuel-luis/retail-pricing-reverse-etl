@@ -464,34 +464,37 @@ BEGIN
       USING p_cycle_id, p_target, p_batch_no;
 END $$;
 
--- Checksums per (zone, category), two checks: 'transit' = every staged row of the cycle with
--- its proposed price; 'applied' = the rows the cycle applied: stage status applied (or unchanged,
+-- Checksums per (zone, category), two checks: 'transit' = every stage row of the cycle that
+-- apply_batch processed (any status but 'staged'), with its proposed price, so a row staged but
+-- never applied (a batch lost on a rerun) makes transit differ from ClickHouse's (DECISIONS 130);
+-- 'applied' = the rows the cycle applied: stage status applied (or unchanged,
 -- an earlier attempt's apply) whose target row still has last_cycle_id = cycle (labels: the
 -- cycle's queue row). With p_proposed the applied rows carry the stage's proposed value,
 -- otherwise the target's current value. wsum = sum(((key1 * 1000003 + key2) % 1000000007) * cents).
 -- Keys: zone_price (product_id, zone_id); store_override (store_id, product_id);
 -- promo_price (promo_id, product_id * 100 + zone_id); shelf_label (store_id, product_id).
--- Every (zone, category) group with a staged row gets both checks (zeros when nothing applied).
+-- Every (zone, category) group with a stage row gets both checks (zeros when nothing applied);
+-- unprocessed rows only keep their group in the output ('staged' is never returned).
 CREATE OR REPLACE FUNCTION pricing_apply._reconcile(p_cycle_id bigint, p_target text,
                                                     p_proposed boolean)
 RETURNS TABLE (target text, zone_id smallint, category_id int, check_name text, rows bigint,
                sum_cents numeric, wsum numeric)
 LANGUAGE sql STABLE SET search_path = pg_catalog, pg_temp AS $$
     WITH checks (check_name, zone_id, product_id, k1, k2, price) AS (
-        SELECT 'transit', s.zone_id, s.product_id, s.product_id, s.zone_id::bigint, s.new_price
+        SELECT CASE WHEN s.status = 'staged' THEN 'staged' ELSE 'transit' END, s.zone_id, s.product_id, s.product_id, s.zone_id::bigint, s.new_price
           FROM pricing_apply.zone_price_stage s
          WHERE p_target = 'zone_price' AND s.cycle_id = p_cycle_id
         UNION ALL
-        SELECT 'transit', m.zone_id, s.product_id, s.store_id, s.product_id, s.new_price
+        SELECT CASE WHEN s.status = 'staged' THEN 'staged' ELSE 'transit' END, m.zone_id, s.product_id, s.store_id, s.product_id, s.new_price
           FROM pricing_apply.store_override_stage s JOIN master.store m USING (store_id)
          WHERE p_target = 'store_override' AND s.cycle_id = p_cycle_id
         UNION ALL
-        SELECT 'transit', s.zone_id, s.product_id, s.promo_id, s.product_id * 100 + s.zone_id,
+        SELECT CASE WHEN s.status = 'staged' THEN 'staged' ELSE 'transit' END, s.zone_id, s.product_id, s.promo_id, s.product_id * 100 + s.zone_id,
                s.new_price
           FROM pricing_apply.promo_price_stage s
          WHERE p_target = 'promo_price' AND s.cycle_id = p_cycle_id
         UNION ALL
-        SELECT 'transit', s.zone_id, s.product_id, s.store_id, s.product_id, s.price
+        SELECT CASE WHEN s.status = 'staged' THEN 'staged' ELSE 'transit' END, s.zone_id, s.product_id, s.store_id, s.product_id, s.price
           FROM pricing_apply.shelf_label_stage s
          WHERE p_target = 'shelf_label' AND s.cycle_id = p_cycle_id
         UNION ALL
@@ -544,7 +547,9 @@ LANGUAGE sql STABLE SET search_path = pg_catalog, pg_temp AS $$
      ORDER BY 2, 3, 4 DESC;
 $$;
 
--- The OLTP side of the reconciliation: both checks, current values.
+-- The OLTP side of the reconciliation: both checks, current values ('transit' counts only the
+-- stage rows apply_batch processed). NiFi reads it in the same statement as
+-- reconcile_expected_applied, so both share one snapshot (DECISIONS 129).
 CREATE OR REPLACE FUNCTION pricing_apply.reconcile_actual(p_cycle_id bigint, p_target text)
 RETURNS TABLE (target text, zone_id smallint, category_id int, check_name text, rows bigint,
                sum_cents numeric, wsum numeric)
