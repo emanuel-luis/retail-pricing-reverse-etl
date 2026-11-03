@@ -111,3 +111,13 @@ def test_group_names_match_registry_jobs() -> None:
     jobs = {j.process_group_name for j in JOBS}
     assert len(jobs) == 9
     assert {g["name"] for g in FLOW["flowContents"]["processGroups"]} - jobs == {"90 finalize"}
+
+
+def test_clickhouse_inserts_use_one_insert_pipeline() -> None:
+    # Two pipelines broke the 1.2 GiB etl query limit on sale_line at SF10 (DECISIONS 143).
+    urls = [
+        c["properties"]["HTTP URL"]
+        for c in components()
+        if c.get("type", "").endswith("InvokeHTTP") and "max_insert_threads" in str(c["properties"])
+    ]
+    assert urls and all("max_insert_threads=1" in u for u in urls), urls
