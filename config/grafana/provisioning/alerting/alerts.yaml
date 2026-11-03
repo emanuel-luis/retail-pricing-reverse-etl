@@ -210,7 +210,9 @@ groups:
             datasourceUid: prometheus
             model:
               refId: A
-              expr: up{job=~"nifi|clickhouse|postgres-.*"}
+              # postgres-exporter stays up (1) with pg_up 0 when its database is down, so the
+              # rule takes the lower of both per job.
+              expr: min by (job) ({__name__=~"up|pg_up", job=~"nifi|clickhouse|postgres-.*"})
               instant: true
               range: false
           - refId: C

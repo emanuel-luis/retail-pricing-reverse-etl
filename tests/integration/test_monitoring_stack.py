@@ -66,6 +66,18 @@ def running_services() -> set[str]:
     return set(out.split())
 
 
+@pytest.fixture(autouse=True, scope="module")
+def _needs_monitoring() -> None:
+    """After `make up` (core only) this module skips instead of failing on connection errors."""
+    try:
+        running = running_services()
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError):
+        # no Docker, or compose cannot read the project (an .env without the monitoring keys)
+        pytest.skip("docker compose cannot list the services")
+    if not {"prometheus", "grafana"} <= running:
+        pytest.skip("the monitoring profile is not running (make monitoring)")
+
+
 def prom(path: str, **params: str) -> Any:
     resp = httpx.get(f"{PROMETHEUS}/api/v1/{path}", params=params, timeout=30)
     resp.raise_for_status()

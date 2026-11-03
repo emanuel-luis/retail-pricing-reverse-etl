@@ -106,6 +106,22 @@ the row again from the human price. Nothing has to be resolved by hand.
 
 The NiFi UI is https://127.0.0.1:28443/nifi (self-signed certificate; credentials from `.env`).
 
+## Monitoring
+
+| Task | Command or place |
+| --- | --- |
+| Start or add the profile | `make monitoring` (`make demo` starts it too) |
+| Dashboards | Grafana http://127.0.0.1:23000 (anonymous read; admin from `.env`): pipeline overview, pricing outcomes, platform |
+| Alert rules | Grafana, Alerting: nine rules; the contact point is email with no SMTP, so a firing rule shows in Grafana and its log only |
+| Raw metrics | Prometheus http://127.0.0.1:29090, Status, Targets |
+| Change a dashboard | edit `scripts/gen_dashboards.py`, run `uv run python scripts/gen_dashboards.py`, commit the JSON with it |
+
+NiFi's metrics need its JWT: the `nifi-token` sidecar refreshes it every 6 h into a volume
+Prometheus reads. If the `nifi` target shows a TLS or 400 "Invalid SNI" error after an upgrade,
+the `nifi_conf` volume still holds a certificate issued before `hostname: nifi` existed: run
+`make down` once (DECISIONS 134). A Postgres target can be up while its database is down; the
+`TargetDown` rule also reads `pg_up`.
+
 ## Memory
 
 The default compose limits total about 7.8 GiB with every profile. On the owner's 31 GB laptop
