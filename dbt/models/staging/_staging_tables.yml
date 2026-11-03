@@ -1,0 +1,423 @@
+version: 2
+
+models:
+  - name: stg_category
+    description: "master.category as of the last extract: one row per category_id (FINAL collapses re-loads to the highest version)."
+    data_tests:
+      - unique_combination: {arguments: {columns: [category_id]}}
+    columns:
+      - name: category_id
+        data_tests: [not_null]
+      - name: category_name
+      - name: version
+      - name: updated_at
+  - name: stg_product_class
+    description: "master.product_class as of the last extract: one row per class_id (FINAL collapses re-loads to the highest version)."
+    data_tests:
+      - unique_combination: {arguments: {columns: [class_id]}}
+    columns:
+      - name: class_id
+        data_tests: [not_null]
+      - name: category_id
+      - name: class_name
+      - name: version
+      - name: updated_at
+  - name: stg_brand
+    description: "master.brand as of the last extract: one row per brand_id (FINAL collapses re-loads to the highest version)."
+    data_tests:
+      - unique_combination: {arguments: {columns: [brand_id]}}
+    columns:
+      - name: brand_id
+        data_tests: [not_null]
+      - name: brand_name
+      - name: brand_tier
+      - name: version
+      - name: updated_at
+  - name: stg_supplier
+    description: "master.supplier as of the last extract: one row per supplier_id (FINAL collapses re-loads to the highest version)."
+    data_tests:
+      - unique_combination: {arguments: {columns: [supplier_id]}}
+    columns:
+      - name: supplier_id
+        data_tests: [not_null]
+      - name: supplier_name
+      - name: version
+      - name: updated_at
+  - name: stg_product
+    description: "master.product as of the last extract: one row per product_id (FINAL collapses re-loads to the highest version)."
+    data_tests:
+      - unique_combination: {arguments: {columns: [product_id]}}
+    columns:
+      - name: product_id
+        data_tests: [not_null]
+      - name: product_code
+      - name: product_name
+      - name: class_id
+      - name: brand_id
+      - name: supplier_id
+      - name: size
+      - name: pack_units
+      - name: is_active
+      - name: version
+      - name: updated_at
+  - name: stg_price_zone
+    description: "master.price_zone as of the last extract: one row per zone_id (FINAL collapses re-loads to the highest version)."
+    data_tests:
+      - unique_combination: {arguments: {columns: [zone_id]}}
+    columns:
+      - name: zone_id
+        data_tests: [not_null]
+      - name: zone_code
+      - name: channel
+      - name: price_factor
+      - name: version
+      - name: updated_at
+  - name: stg_store
+    description: "master.store as of the last extract: one row per store_id (FINAL collapses re-loads to the highest version)."
+    data_tests:
+      - unique_combination: {arguments: {columns: [store_id]}}
+    columns:
+      - name: store_id
+        data_tests: [not_null]
+      - name: store_code
+      - name: store_name
+      - name: zone_id
+      - name: city
+      - name: state
+      - name: price_adjust_pct
+      - name: version
+      - name: updated_at
+  - name: stg_warehouse
+    description: "master.warehouse as of the last extract: one row per warehouse_id (FINAL collapses re-loads to the highest version)."
+    data_tests:
+      - unique_combination: {arguments: {columns: [warehouse_id]}}
+    columns:
+      - name: warehouse_id
+        data_tests: [not_null]
+      - name: warehouse_code
+      - name: warehouse_name
+      - name: city
+      - name: state
+      - name: version
+      - name: updated_at
+  - name: stg_customer
+    description: "master.customer as of the last extract: one row per customer_id (FINAL collapses re-loads to the highest version)."
+    columns:
+      - name: customer_id
+      - name: customer_code
+      - name: first_name
+      - name: last_name
+      - name: email
+      - name: city
+      - name: state
+      - name: zip
+      - name: version
+      - name: updated_at
+  - name: stg_price_ending_band
+    description: "rules.price_ending_band as of the last extract: one row per band_id (FINAL collapses re-loads to the highest version)."
+    data_tests:
+      - unique_combination: {arguments: {columns: [band_id]}}
+    columns:
+      - name: band_id
+        data_tests: [not_null]
+      - name: min_price
+      - name: max_price
+      - name: ending
+      - name: version
+      - name: updated_at
+  - name: stg_promotion
+    description: "pricing.promotion as of the last extract: one row per promo_id (FINAL collapses re-loads to the highest version)."
+    data_tests:
+      - unique_combination: {arguments: {columns: [promo_id]}}
+    columns:
+      - name: promo_id
+        data_tests: [not_null]
+      - name: promo_code
+      - name: start_date
+      - name: end_date
+      - name: discount_pct
+      - name: channel
+      - name: version
+      - name: updated_at
+  - name: stg_sale
+    description: "sales.sale as of the last extract: one row per sale_id (FINAL collapses re-loads to the highest version)."
+    columns:
+      - name: sale_id
+      - name: channel
+      - name: store_id
+      - name: customer_id
+      - name: business_date
+      - name: sold_at
+      - name: total_amount
+      - name: version
+      - name: updated_at
+  - name: stg_sale_line
+    description: "sales.sale_line as of the last extract: one row per sale_line_id (FINAL collapses re-loads to the highest version)."
+    columns:
+      - name: sale_line_id
+      - name: sale_id
+      - name: line_no
+      - name: product_id
+      - name: quantity
+      - name: unit_price
+      - name: discount_amount
+      - name: net_amount
+      - name: unit_cost
+      - name: promo_id
+      - name: version
+      - name: updated_at
+  - name: stg_sale_return
+    description: "sales.sale_return as of the last extract: one row per return_id (FINAL collapses re-loads to the highest version)."
+    columns:
+      - name: return_id
+      - name: sale_line_id
+      - name: quantity
+      - name: amount
+      - name: business_date
+      - name: version
+      - name: updated_at
+  - name: stg_warehouse_stock
+    description: "inventory.warehouse_stock as of the last extract: one row per warehouse_id, product_id (FINAL collapses re-loads to the highest version)."
+    data_tests:
+      - unique_combination: {arguments: {columns: [warehouse_id, product_id]}}
+    columns:
+      - name: warehouse_id
+        data_tests: [not_null]
+      - name: product_id
+        data_tests: [not_null]
+      - name: on_hand
+      - name: version
+      - name: updated_at
+  - name: stg_store_stock
+    description: "inventory.store_stock as of the last extract: one row per store_id, product_id (FINAL collapses re-loads to the highest version)."
+    data_tests:
+      - unique_combination: {arguments: {columns: [store_id, product_id]}}
+    columns:
+      - name: store_id
+        data_tests: [not_null]
+      - name: product_id
+        data_tests: [not_null]
+      - name: on_hand
+      - name: last_received_date
+      - name: version
+      - name: updated_at
+  - name: stg_stock_movement
+    description: "inventory.stock_movement as of the last extract: one row per movement_id (FINAL collapses re-loads to the highest version)."
+    columns:
+      - name: movement_id
+      - name: store_id
+      - name: product_id
+      - name: movement_type
+      - name: qty
+      - name: business_date
+      - name: version
+      - name: updated_at
+  - name: stg_kvi
+    description: "rules.kvi as of the last extract: one row per product_id (FINAL collapses re-loads to the highest version)."
+    data_tests:
+      - unique_combination: {arguments: {columns: [product_id]}}
+    columns:
+      - name: product_id
+        data_tests: [not_null]
+      - name: kvi_tier
+      - name: competitor_index_target
+      - name: version
+      - name: updated_at
+  - name: stg_category_rule
+    description: "rules.category_rule as of the last extract: one row per category_id (FINAL collapses re-loads to the highest version)."
+    data_tests:
+      - unique_combination: {arguments: {columns: [category_id]}}
+    columns:
+      - name: category_id
+        data_tests: [not_null]
+      - name: target_margin
+      - name: min_margin
+      - name: max_change_pct
+      - name: cover_min_days
+      - name: cover_max_days
+      - name: aging_max_days
+      - name: promo_policy
+      - name: version
+      - name: updated_at
+  - name: stg_ladder_group
+    description: "rules.ladder_group as of the last extract: one row per ladder_group_id (FINAL collapses re-loads to the highest version)."
+    data_tests:
+      - unique_combination: {arguments: {columns: [ladder_group_id]}}
+    columns:
+      - name: ladder_group_id
+        data_tests: [not_null]
+      - name: ladder_type
+      - name: class_id
+      - name: brand_id
+      - name: size
+      - name: version
+      - name: updated_at
+  - name: stg_ladder_member
+    description: "rules.ladder_member as of the last extract: one row per ladder_group_id, product_id (FINAL collapses re-loads to the highest version)."
+    data_tests:
+      - unique_combination: {arguments: {columns: [ladder_group_id, product_id]}}
+    columns:
+      - name: ladder_group_id
+        data_tests: [not_null]
+      - name: product_id
+        data_tests: [not_null]
+      - name: rank
+      - name: version
+      - name: updated_at
+  - name: stg_zone_price
+    description: "pricing.zone_price as of the last extract: one row per product_id, zone_id (FINAL collapses re-loads to the highest version)."
+    data_tests:
+      - unique_combination: {arguments: {columns: [product_id, zone_id]}}
+    columns:
+      - name: product_id
+        data_tests: [not_null]
+      - name: zone_id
+        data_tests: [not_null]
+      - name: price
+      - name: effective_from
+      - name: last_cycle_id
+      - name: updated_by
+      - name: version
+      - name: updated_at
+  - name: stg_store_price_override
+    description: "pricing.store_price_override as of the last extract: one row per override_id (FINAL collapses re-loads to the highest version)."
+    data_tests:
+      - unique_combination: {arguments: {columns: [override_id]}}
+    columns:
+      - name: override_id
+        data_tests: [not_null]
+      - name: store_id
+      - name: product_id
+      - name: price
+      - name: valid_from
+      - name: valid_to
+      - name: last_cycle_id
+      - name: updated_by
+      - name: version
+      - name: updated_at
+  - name: stg_promo_item
+    description: "pricing.promo_item as of the last extract: one row per promo_id, product_id (FINAL collapses re-loads to the highest version)."
+    data_tests:
+      - unique_combination: {arguments: {columns: [promo_id, product_id]}}
+    columns:
+      - name: promo_id
+        data_tests: [not_null]
+      - name: product_id
+        data_tests: [not_null]
+      - name: version
+      - name: updated_at
+  - name: stg_promo_price
+    description: "pricing.promo_price as of the last extract: one row per promo_id, product_id, zone_id (FINAL collapses re-loads to the highest version)."
+    data_tests:
+      - unique_combination: {arguments: {columns: [promo_id, product_id, zone_id]}}
+    columns:
+      - name: promo_id
+        data_tests: [not_null]
+      - name: product_id
+        data_tests: [not_null]
+      - name: zone_id
+        data_tests: [not_null]
+      - name: promo_price
+      - name: last_cycle_id
+      - name: updated_by
+      - name: version
+      - name: updated_at
+  - name: stg_supplier_cost
+    description: "pricing.supplier_cost as of the last extract: one row per product_id, valid_from (FINAL collapses re-loads to the highest version)."
+    data_tests:
+      - unique_combination: {arguments: {columns: [product_id, valid_from]}}
+    columns:
+      - name: product_id
+        data_tests: [not_null]
+      - name: valid_from
+        data_tests: [not_null]
+      - name: supplier_id
+      - name: unit_cost
+      - name: version
+      - name: updated_at
+  - name: stg_price_history
+    description: "pricing.price_history as of the last extract: one row per history_id (FINAL collapses re-loads to the highest version)."
+    data_tests:
+      - unique_combination: {arguments: {columns: [history_id]}}
+    columns:
+      - name: history_id
+        data_tests: [not_null]
+      - name: product_id
+      - name: zone_id
+      - name: price
+      - name: valid_from
+      - name: valid_to
+      - name: source
+      - name: cycle_id
+      - name: version
+      - name: updated_at
+  - name: stg_price_change
+    description: "pricing.price_change as of the last extract: one row per change_id (FINAL collapses re-loads to the highest version)."
+    data_tests:
+      - unique_combination: {arguments: {columns: [change_id]}}
+    columns:
+      - name: change_id
+        data_tests: [not_null]
+      - name: cycle_id
+      - name: target
+      - name: product_id
+      - name: zone_id
+      - name: store_id
+      - name: promo_id
+      - name: old_price
+      - name: new_price
+      - name: reason_code
+      - name: applied_at
+      - name: version
+      - name: updated_at
+  - name: stg_shelf_label_queue
+    description: "pricing.shelf_label_queue as of the last extract: one row per label_id (FINAL collapses re-loads to the highest version)."
+    data_tests:
+      - unique_combination: {arguments: {columns: [label_id]}}
+    columns:
+      - name: label_id
+        data_tests: [not_null]
+      - name: cycle_id
+      - name: store_id
+      - name: product_id
+      - name: price
+      - name: promo_price
+      - name: due_date
+      - name: status
+      - name: version
+      - name: updated_at
+  - name: stg_competitor
+    description: "market.competitor as of the last extract: one row per competitor_id (FINAL collapses re-loads to the highest version)."
+    data_tests:
+      - unique_combination: {arguments: {columns: [competitor_id]}}
+    columns:
+      - name: competitor_id
+        data_tests: [not_null]
+      - name: competitor_name
+      - name: price_bias
+      - name: version
+      - name: updated_at
+  - name: stg_competitor_price
+    description: "market.competitor_price as of the last extract: one row per observation_id (FINAL collapses re-loads to the highest version)."
+    data_tests:
+      - unique_combination: {arguments: {columns: [observation_id]}}
+    columns:
+      - name: observation_id
+        data_tests: [not_null]
+      - name: competitor_id
+      - name: product_id
+      - name: zone_id
+      - name: observed_date
+      - name: price
+      - name: version
+      - name: updated_at
+  - name: stg_business_clock
+    description: "ops.business_clock as of the last extract: one row per id (FINAL collapses re-loads to the highest version)."
+    data_tests:
+      - unique_combination: {arguments: {columns: [id]}}
+    columns:
+      - name: id
+        data_tests: [not_null]
+      - name: business_date
+      - name: version
+      - name: updated_at

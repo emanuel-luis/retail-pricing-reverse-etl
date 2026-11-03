@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  - name: stg_apply_outcome
+    description: >
+      Apply status of every pricing_apply stage row of the four targets, one row per
+      (cycle_id, target, product_id, zone_id, store_id, promo_id); key parts that do not apply
+      to a target are 0. Empty when the stage extracts are not loaded.
+    data_tests:
+      - unique_combination: {arguments: {columns: [cycle_id, target, product_id, zone_id, store_id, promo_id]}}
+    columns:
+      - name: target
+        data_tests:
+          - accepted_values: {arguments: {values: [zone_price, store_override, promo_price, shelf_label]}}
+      - name: status
+        data_tests:
+          - accepted_values: {arguments: {values: [staged, applied, unchanged, conflict, rejected]}}
+  - name: stg_apply_conflict
+    description: Version conflicts from apply_batch, one row per (cycle_id, target, key_text).
+    data_tests:
+      - unique_combination: {arguments: {columns: [cycle_id, target, key_text]}}

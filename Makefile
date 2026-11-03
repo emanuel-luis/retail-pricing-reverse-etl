@@ -4,7 +4,7 @@ SHELL := bash
 # Git Bash on Windows would rewrite container paths such as /var/lib/... into Windows paths.
 export MSYS_NO_PATHCONV := 1
 
-.PHONY: help install lint fmt test test-fast test-data test-sql data env up down ps logs load control-init workload workload-stop d2-install diagrams diagrams-check diagrams-watch
+.PHONY: help install lint fmt test test-fast test-data test-sql data env up down ps logs load control-init ch-init ch-load s3-init dbt-build test-clickhouse workload workload-stop runner-logs d2-install diagrams diagrams-check diagrams-watch
 
 # Scale factor of the TPC-DS data: 0.01 (CI), 1 (default demo), 10 (documented heavy run).
 SF ?= 1
@@ -62,12 +62,34 @@ load: ## Load the OLTP seed of scale SF into Postgres (make data first)
 control-init: ## Create the control/audit schemas, functions, roles and registry seed
 	uv run retail-pricing control init
 
+ch-init: ## Create the ClickHouse databases and raw tables (make up first)
+	uv run retail-pricing ch init
+
+ch-load: ## Load the seed Parquet into ClickHouse raw: make ch-load SF=0.01 CYCLE=1
+	uv run retail-pricing ch load-raw --sf $(SF) --cycle $(CYCLE)
+
+s3-init: ## Create the raw bucket in the S3-compatible store (idempotent)
+	uv run retail-pricing s3 init
+
+# dbt runs inside the dbt-runner container, the same way NiFi calls it.
+CYCLE ?= 1
+AS_OF ?= 2025-12-04
+dbt-build: ## Run dbt build for a cycle through the dbt runner: make dbt-build CYCLE=1 AS_OF=2025-12-04
+	uv run retail-pricing dbt-runner trigger --cycle $(CYCLE) --as-of $(AS_OF)
+
+test-clickhouse: ## ClickHouse tests (raw DDL, loads, users, bucket) against the running service
+	uv run pytest -m clickhouse
+
 # --profile on the command line replaces COMPOSE_PROFILES, so the core profile is named again.
 workload: env ## Start the OLTP workload generator (profile workload)
-	docker compose $(ALL_PROFILES) up -d --build --wait workload
+	docker compose $(ALL_PROFILES) build dbt-runner
+	docker compose $(ALL_PROFILES) up -d --wait workload
 
 workload-stop: ## Stop the workload generator
 	docker compose $(ALL_PROFILES) stop workload
+
+runner-logs: ## Follow the dbt runner logs
+	docker compose $(ALL_PROFILES) logs -f --tail 100 dbt-runner
 
 # Diagrams: docs/diagrams/<name>.d2 rendered to <name>.svg (committed). One pinned D2 everywhere.
 # Layout engine, themes and padding live in docs/diagrams/_style.d2 (d2-config), so d2 runs in a

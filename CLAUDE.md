@@ -20,19 +20,31 @@ synthetic tables. `docs/PLAN.md` is the contract and lists what each pull reques
 - `make up` / `make down`: compose services with `--wait` (copies `.env.example` to `.env` when
   missing) / every profile down with volumes. `make ps`, `make logs`. Compose project
   `retail-pricing-reverse-etl`; today: `oltp` (127.0.0.1:25432, db `retail`), `control-db`
-  (127.0.0.1:25433, db `control`), `workload` (profile `workload`, app image
-  `retail-pricing-app:local`). A stack run on the owner's machine takes the heavy lock.
+  (127.0.0.1:25433, db `control`), `clickhouse` (HTTP 127.0.0.1:28123; admin `ch_admin`,
+  users `nifi`, `dbt`, `grafana`), `s3` (RustFS, 127.0.0.1:29000), `dbt-runner`
+  (127.0.0.1:28580; builds the app image `retail-pricing-app:local`), `workload` (profile
+  `workload`, reuses the image). A stack run on the owner's machine takes the heavy lock. Bind
+  mounts point at the working copy that ran `up`: never remove a worktree whose stack runs.
 - `make load SF=<n>`: `retail-pricing oltp load --sf <n>` (`--replace` drops and reloads).
   `make control-init`: `retail-pricing control init` (idempotent; seed from the contract).
   `make test-sql`: `pytest -m sql` against the running services (OLTP loaded at SF0.01; control
   tests use their own database `control_test`). `make workload` / `make workload-stop`.
   `retail-pricing workload edit --count N --kvi --seed S`: scripted manual price edits.
+- `make ch-init` / `make s3-init`: ClickHouse databases and raw tables from the contract / the raw
+  bucket. `make ch-load SF=<n> CYCLE=<c>`: seed Parquet into raw (`use_hive_partitioning=0`).
+  `make dbt-build CYCLE=<c> AS_OF=<date>`: `retail-pricing dbt-runner trigger`, a POST to the
+  runner, polled until it ends; exit 1 unless it succeeds. dbt runs inside the runner image (the
+  optional `dbt` extra); `uv sync --locked --extra dbt` also installs it on the host.
+  `make test-clickhouse`: `pytest -m clickhouse`. `make runner-logs`.
 - `make d2-install`, `make diagrams`, `make diagrams-check`, `make diagrams-watch NAME=<name>`:
   pinned D2 (`D2_VERSION`, sha256 `D2_SHA256`, Linux x86_64). On the owner's machine render through
   WSL: `wsl -d Ubuntu -e bash -lc 'cd /mnt/d/dev/Pessoal/retail-pricing-reverse-etl && make diagrams'`.
 - Git Bash on Windows has no make: run the recipe lines by hand (`uv run ...`).
 - CI (`.github/workflows/ci.yml`): `lint` gates `test-fast` (unit plus SF0.01 data) and `sql`
-  (compose Postgres, SF0.01 load, control init, `pytest -m sql`); `diagrams` runs on its own; `UV_LOCKED=1`; actions pinned by SHA. `security.yml`: pip-audit and zizmor.
+  (compose Postgres, SF0.01 load, control init, `pytest -m sql`) and `dbt` (ClickHouse, RustFS
+  and the runner from compose, two cycles of `dbt build` through the runner,
+  `pytest -m clickhouse`); `diagrams` runs on its own; `UV_LOCKED=1`; actions pinned by SHA.
+  `security.yml`: pip-audit and zizmor.
   Dependabot is monthly with a 7-day cooldown, minor and patch grouped, majors ignored;
   `dependabot-auto-merge.yml` merges green minor and patch updates.
 
@@ -50,9 +62,17 @@ synthetic tables. `docs/PLAN.md` is the contract and lists what each pull reques
   tables and `apply_batch` / `reconcile_actual`, roles), `control/` (`init.py`, `seed.py`: jobs
   and one `extract_table` row per contract table), `sql/control/` (registry, audit, functions,
   views, grants), `workload/` (`logic.py` pure decisions, `run.py` I/O and Prometheus metrics).
-- `compose.yaml`, `docker/app.Dockerfile` (the one Python image), `.env.example`.
+- `clickhouse/` (`client.py` httpx on the HTTP interface, `ddl.py` raw tables from the contract,
+  `init.py`, `load_raw.py`), `s3/` (`s3 init`), `dbt_runner/` (`server.py` stdlib HTTP API,
+  `jobs.py` dbt subprocess and job state, `client.py` the trigger), `config/clickhouse/`
+  (`config.d`: memory, prometheus, named collection `raw_s3`; `users.d`: users and grants).
+- `dbt/`: profiles read env only; `models/{staging,intermediate,pricing,reverse,marts}` with one
+  yml per folder (grains, tests, unit tests); `tests/guardrails/g01..g10`; macros for schema
+  names, generic tests, the ending grid and the checksum.
+- `compose.yaml`, `docker/app.Dockerfile` (the one Python image, with the dbt project at
+  `/home/app/dbt`), `.env.example`.
 - `tests/unit/` (no data), `tests/slow/` (SF0.01 generation, marker `slow`), `tests/sql/`
-  (marker `sql`, compose Postgres).
+  (marker `sql`, compose Postgres), `tests/clickhouse/` (marker `clickhouse`).
 
 ## Invariants
 
@@ -70,6 +90,9 @@ synthetic tables. `docs/PLAN.md` is the contract and lists what each pull reques
   its `version` equals the extracted one; anything else is a recorded conflict, never an
   overwrite. A batch is idempotent per (cycle, target, batch). Workload edits run with
   `app.actor = 'store-ops'` and clear `last_cycle_id`.
+- dbt models never read the wall clock: only `var('cycle_id')` and `var('as_of')`; money in
+  integer cents or Decimal, never Float; cycle-scoped models delete their own cycle before
+  appending, so a rerun replaces it. Guardrail errors stop the cycle before the reverse load.
 - SECURITY DEFINER functions are owned by NOLOGIN roles with only the grants they need, never by
   the superuser the Postgres image creates.
 - Secrets come from `.env` (copied from `.env.example`, local-only values); settings hold them as

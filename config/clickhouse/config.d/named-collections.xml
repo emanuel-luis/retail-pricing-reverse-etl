@@ -1,0 +1,11 @@
+<clickhouse>
+    <named_collections>
+        <!-- s3(raw_s3, filename = '...', format = 'Parquet'); RAW_S3_URL is set by compose and
+             can point at another bucket or prefix. -->
+        <raw_s3>
+            <url from_env="RAW_S3_URL"/>
+            <access_key_id from_env="S3_ACCESS_KEY"/>
+            <secret_access_key from_env="S3_SECRET_KEY"/>
+        </raw_s3>
+    </named_collections>
+</clickhouse>

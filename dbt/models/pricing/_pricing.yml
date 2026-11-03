@@ -1,0 +1,94 @@
+version: 2
+
+# Cycle-scoped outputs: incremental append, a pre-hook deletes the cycle's own rows first.
+# Reason codes (PLAN 8.1); the primary reason is NULL on unchanged rows that are not held.
+models:
+  - name: pricing_zone_price
+    description: Every zone price of the extract per cycle x product x zone, with the proposed new price, reasons, bounds and the snapshot version.
+    data_tests:
+      - unique_combination: {arguments: {columns: [cycle_id, product_id, zone_id]}}
+    columns:
+      - {name: cycle_id, data_tests: [not_null]}
+      - name: product_id
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('stg_product'), field: product_id}}
+      - name: zone_id
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('stg_price_zone'), field: zone_id}}
+      - {name: new_price, data_tests: [not_null]}
+      - {name: expected_version, description: Version of the extracted row; apply updates only that version.}
+      - name: primary_reason
+        data_tests:
+          - accepted_values: &reasons
+              arguments:
+                values: [COST_PASS_THROUGH, MARGIN_FLOOR, FLOOR_LIMITED_BY_CAP, COMPETITOR_ALIGN_KVI,
+                         COMPETITOR_BLEND, VELOCITY_UP, VELOCITY_DOWN, LOW_COVER_UPLIFT,
+                         OVERSTOCK_MARKDOWN, AGING_MARKDOWN, SEASONAL, CAPPED, LADDER_ADJUST,
+                         ENDING_ROUND, PROMO_DEPTH_KEEP, HOLD_PROMO, HOLD_NO_COST, HOLD_INFEASIBLE,
+                         HOLD_LADDER]
+      - {name: lo, description: Lower bound (cost floor or cap); equals hi when FLOOR_LIMITED_BY_CAP.}
+      - {name: hi, description: Upper bound from the category cap.}
+
+  - name: pricing_store_override
+    description: Open store overrides per cycle x store x product, repriced with the zone price at the same ratio, capped and ending-rounded.
+    data_tests:
+      - unique_combination: {arguments: {columns: [cycle_id, store_id, product_id]}}
+    columns:
+      - {name: store_id, data_tests: [not_null]}
+      - name: product_id
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('stg_product'), field: product_id}}
+      - {name: primary_reason, data_tests: [{accepted_values: *reasons}]}
+
+  - name: pricing_promo_price
+    description: Promo prices per cycle x promo x product x zone recalculated to keep their depth after a regular price change (keep_depth categories).
+    data_tests:
+      - unique_combination: {arguments: {columns: [cycle_id, promo_id, product_id, zone_id]}}
+    columns:
+      - {name: promo_id, data_tests: [not_null]}
+      - {name: product_id, data_tests: [not_null]}
+      - name: zone_id
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('stg_price_zone'), field: zone_id}}
+      - {name: primary_reason, data_tests: [{accepted_values: *reasons}]}
+
+  - name: pricing_price_change_log
+    description: Changed rows only per cycle x target x key (key parts that do not apply are 0), with change_pct and reasons.
+    data_tests:
+      - unique_combination: {arguments: {columns: [cycle_id, target, product_id, zone_id, store_id, promo_id]}}
+    columns:
+      - name: target
+        data_tests:
+          - accepted_values: {arguments: {values: [zone_price, store_override, promo_price]}}
+      - {name: primary_reason, data_tests: [not_null, {accepted_values: *reasons}]}
+
+  - name: pricing_margin_projection
+    description: 28-day units, revenue and gross margin old vs new per cycle x product x zone, units projected with the category elasticity.
+    data_tests:
+      - unique_combination: {arguments: {columns: [cycle_id, product_id, zone_id]}}
+
+  - name: pricing_shelf_label
+    description: One label per cycle x store x stocked product whose effective shelf price changes (override if open, else zone), due as_of + label_lead_days.
+    data_tests:
+      - unique_combination: {arguments: {columns: [cycle_id, store_id, product_id]}}
+    columns:
+      - name: source_target
+        data_tests:
+          - accepted_values: {arguments: {values: [zone_price, store_override]}}
+
+  - name: pricing_price_history
+    description: SCD2 zone price history per product x zone from the OLTP trigger history (rebuilt each run, not a snapshot).
+    data_tests:
+      - unique_combination: {arguments: {columns: [history_id]}}
+      - unique_combination:
+          name: pricing_price_history_one_current
+          arguments: {columns: [product_id, zone_id]}
+          config: {where: is_current}
+    columns:
+      - name: source
+        data_tests:
+          - accepted_values: {arguments: {values: [seed, engine, manual]}}

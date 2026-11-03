@@ -16,8 +16,8 @@ contract and the table below says what exists today.
 | --- | --- |
 | TPC-DS generation and the deterministic OLTP seed | done |
 | OLTP and control databases, apply functions, workload generator | done |
-| ClickHouse, dbt pricing procedure, dbt runner | next |
-| NiFi image, flows as code, extract and load | planned |
+| ClickHouse, dbt pricing procedure, dbt runner | done |
+| NiFi image, flows as code, extract and load | next |
 | Transform, reverse load, reconciliation, `make demo` | planned |
 | Monitoring, heavy SF10 run, results | planned |
 
@@ -54,6 +54,22 @@ Source: [oltp-pricing-model.d2](docs/diagrams/oltp-pricing-model.d2).
 
 Source: [oltp-sales-model.d2](docs/diagrams/oltp-sales-model.d2).
 
+## Pricing procedure (dbt on ClickHouse)
+
+Sixty-one dbt models turn the raw OLTP snapshot into new prices in a fixed rule order. Demand
+(28/90/365-day velocity, seasonality), price elasticity per category from weekly price and
+quantity, stock cover and aging, latest cost, the competitor index and KVI alignment give a
+candidate price; holds, the margin floor, the change cap and the price-ending grid bound it;
+pack-size and brand-tier ladders make it consistent. Store overrides, promo prices (depth kept)
+and shelf labels follow from the new zone price, and the reverse diffs keep only the rows whose
+hash changed, with the version extracted for each row and a batch number. Guardrail tests (cap,
+margin, ladders, endings, depth, labels, batches) stop the cycle before anything is sent back,
+and dbt unit tests cover the rule logic. Money is computed in integer cents.
+
+![The dbt DAG: raw tables to staging views, the intermediate steps from sales and demand to the bounded and laddered price, the cycle-scoped pricing outputs, the reverse diffs NiFi reads, the reconcile checksums and the marts, with the guardrails and unit tests on the steps they check.](docs/diagrams/dbt-dag.svg)
+
+Source: [dbt-dag.d2](docs/diagrams/dbt-dag.d2).
+
 ## Data preparation
 
 ![TPC-DS is generated with DuckDB's tpcds extension into Parquet with a manifest, then DuckDB SQL maps it and the deterministic synthetic tables to the OLTP seed, also with a manifest.](docs/diagrams/data-prep.svg)
@@ -72,11 +88,16 @@ git clone https://github.com/emanuel-luis/retail-pricing-reverse-etl && cd retai
 make install
 make data SF=0.01   # TPC-DS SF0.01 plus the OLTP seed under data/ (seconds)
 make test           # unit tests plus the SF0.01 generation checks
-make up             # OLTP and control Postgres (copies .env.example to .env when missing)
+make up             # OLTP and control Postgres, ClickHouse, RustFS, the dbt runner (builds the
+                    # app image; copies .env.example to .env when missing)
 make load SF=0.01   # schema from the contract, COPY of the seed, constraints, triggers, roles
 make control-init   # job registry, audit schema and functions
 make test-sql       # apply/conflict/replay, triggers, roles, control functions, a workload run
 make workload       # concurrent sales, stock moves and manual price edits against the OLTP
+make ch-init s3-init            # ClickHouse raw tables from the contract, the raw bucket
+make ch-load SF=0.01 CYCLE=1    # the seed into ClickHouse raw (NiFi does this from PR 4 on)
+make dbt-build CYCLE=1          # the pricing procedure through the dbt runner container
+make test-clickhouse            # raw DDL, loads, users, bucket
 make down           # stop everything and delete the volumes
 ```
 
@@ -90,8 +111,11 @@ src/retail_pricing/   CLI, settings, JSON logging, data generation and build, OL
                       control init, workload generator
 src/retail_pricing/sql/   duckdb/ (TPC-DS to OLTP mapping), oltp/ (triggers, apply functions,
                       roles), control/ (registry, audit, functions, views, grants)
-compose.yaml          OLTP and control Postgres, workload (profile workload)
-tests/                unit, SF0.01 data checks (slow) and SQL tests (sql)
+compose.yaml          OLTP and control Postgres, ClickHouse, RustFS, dbt runner, workload
+config/clickhouse/    memory, Prometheus endpoint, named collection, users and grants
+dbt/                  the pricing procedure: staging, intermediate, pricing, reverse, marts
+tests/                unit, SF0.01 data checks (slow), SQL tests (sql), ClickHouse tests
+                      (clickhouse)
 docs/                 PLAN (the contract), DECISIONS, D2 diagrams
 ```
 

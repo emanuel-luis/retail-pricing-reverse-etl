@@ -1,0 +1,56 @@
+<clickhouse>
+    <profiles>
+        <etl>
+            <max_memory_usage>1288490188</max_memory_usage>
+            <max_bytes_before_external_group_by>536870912</max_bytes_before_external_group_by>
+            <max_bytes_before_external_sort>536870912</max_bytes_before_external_sort>
+            <max_threads>4</max_threads>
+            <join_algorithm>grace_hash,parallel_hash</join_algorithm>
+        </etl>
+        <dashboards>
+            <readonly>2</readonly>
+            <max_memory_usage>536870912</max_memory_usage>
+        </dashboards>
+    </profiles>
+    <users>
+        <nifi>
+            <password from_env="CLICKHOUSE_NIFI_PASSWORD"/>
+            <networks><ip>::/0</ip></networks>
+            <profile>etl</profile>
+            <quota>default</quota>
+            <grants>
+                <query>GRANT INSERT, SELECT ON raw.*</query>
+                <query>GRANT SELECT ON reverse.*</query>
+                <query>GRANT S3 ON *.*</query>
+                <!-- table functions such as s3() need it; it only creates session-scoped tables -->
+                <query>GRANT CREATE TEMPORARY TABLE ON *.*</query>
+                <query>GRANT NAMED COLLECTION ON raw_s3</query>
+            </grants>
+        </nifi>
+        <dbt>
+            <password from_env="CLICKHOUSE_DBT_PASSWORD"/>
+            <networks><ip>::/0</ip></networks>
+            <profile>etl</profile>
+            <quota>default</quota>
+            <grants>
+                <query>GRANT SELECT ON raw.*</query>
+                <query>GRANT ALL ON stg.*</query>
+                <query>GRANT ALL ON int.*</query>
+                <query>GRANT ALL ON pricing.*</query>
+                <query>GRANT ALL ON reverse.*</query>
+                <query>GRANT ALL ON marts.*</query>
+            </grants>
+        </dbt>
+        <grafana>
+            <password from_env="CLICKHOUSE_GRAFANA_PASSWORD"/>
+            <networks><ip>::/0</ip></networks>
+            <profile>dashboards</profile>
+            <quota>default</quota>
+            <grants>
+                <query>GRANT SELECT ON pricing.*</query>
+                <query>GRANT SELECT ON reverse.*</query>
+                <query>GRANT SELECT ON marts.*</query>
+            </grants>
+        </grafana>
+    </users>
+</clickhouse>

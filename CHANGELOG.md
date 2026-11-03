@@ -8,6 +8,16 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- ClickHouse 26.3 and RustFS in compose: server memory limits, Prometheus endpoint, the `raw_s3`
+  named collection, users `nifi`, `dbt` and `grafana` with least-privilege grants;
+  `retail-pricing ch init` (raw tables rendered from the contract as ReplacingMergeTree by
+  version), `ch load-raw` and `s3 init`.
+- The dbt pricing procedure (dbt-core 1.12.6, dbt-clickhouse 1.10.3): 61 models from staging to
+  the reverse diffs and marts, 139 generic tests, guardrails g01 to g10 and dbt unit tests on the
+  rule logic.
+- The dbt runner: an HTTP service that runs `dbt build` for a cycle (idempotent per cycle, job
+  state on a volume, node results shaped for the audit database, Prometheus metrics), and
+  `retail-pricing dbt-runner trigger`; the CI `dbt` job and the `dbt-dag` diagram.
 - OLTP Postgres generated from the data contract (`retail-pricing oltp load --sf N`): COPY of
   the seed, constraints, indexes, version and history triggers, the `pricing_apply` stage tables
   and functions (`apply_batch` with version checks, conflicts and replay; `reconcile_actual`

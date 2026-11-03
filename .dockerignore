@@ -9,6 +9,9 @@
 .ruff_cache
 .hypothesis
 data
+dbt/target
+dbt/logs
+dbt/dbt_packages
 runs
 docs
 tests

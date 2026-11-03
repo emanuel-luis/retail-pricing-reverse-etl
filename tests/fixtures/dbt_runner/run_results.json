@@ -1,0 +1,11 @@
+{
+  "metadata": {"dbt_version": "1.10.23"},
+  "results": [
+    {"status": "success", "unique_id": "model.retail.stg_sales", "execution_time": 0.42,
+     "failures": null, "message": "OK", "adapter_response": {"rows_affected": 120}},
+    {"status": "pass", "unique_id": "test.retail.not_null_stg_sales_id.abc", "execution_time": 0.05,
+     "failures": 0, "message": null, "adapter_response": {}},
+    {"status": "error", "unique_id": "seed.retail.zones", "execution_time": 1.5,
+     "failures": null, "message": "boom", "adapter_response": {"rows_affected": -1}}
+  ]
+}

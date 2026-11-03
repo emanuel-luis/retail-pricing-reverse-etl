@@ -1,0 +1,45 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: raw
+    description: Raw OLTP extracts (ReplacingMergeTree(version), one table per OLTP table).
+    tables:
+      - name: master__category
+      - name: master__product_class
+      - name: master__brand
+      - name: master__supplier
+      - name: master__product
+      - name: master__price_zone
+      - name: master__store
+      - name: master__warehouse
+      - name: master__customer
+      - name: rules__price_ending_band
+      - name: pricing__promotion
+      - name: sales__sale
+      - name: sales__sale_line
+      - name: sales__sale_return
+      - name: inventory__warehouse_stock
+      - name: inventory__store_stock
+      - name: inventory__stock_movement
+      - name: rules__kvi
+      - name: rules__category_rule
+      - name: rules__ladder_group
+      - name: rules__ladder_member
+      - name: pricing__zone_price
+      - name: pricing__store_price_override
+      - name: pricing__promo_item
+      - name: pricing__promo_price
+      - name: pricing__supplier_cost
+      - name: pricing__price_history
+      - name: pricing__price_change
+      - name: pricing__shelf_label_queue
+      - name: market__competitor
+      - name: market__competitor_price
+      - name: ops__business_clock
+      # pricing_apply extracts (stage status and conflicts); see macros/raw_or_empty.sql.
+      - name: pricing_apply__zone_price_stage
+      - name: pricing_apply__store_override_stage
+      - name: pricing_apply__promo_price_stage
+      - name: pricing_apply__shelf_label_stage
+      - name: pricing_apply__conflict

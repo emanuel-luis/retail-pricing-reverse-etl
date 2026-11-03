@@ -1,0 +1,102 @@
+version: 2
+
+# Intermediate tables hold the current cycle only and are rebuilt on every run.
+models:
+  - name: int_sales_daily
+    description: Units, net revenue and cost per product x zone x business_date over history_days up to as_of, returns subtracted on their own date.
+    data_tests:
+      - unique_combination: {arguments: {columns: [product_id, zone_id, business_date]}}
+    columns:
+      - {name: product_id, data_tests: [not_null]}
+      - {name: zone_id, data_tests: [not_null]}
+      - {name: business_date, data_tests: [not_null]}
+      - {name: units, description: Units sold minus units returned.}
+      - {name: avg_net_unit_price, description: net_revenue / units when units > 0.}
+
+  - name: int_demand
+    description: Demand signals per product x zone (only pairs with sales in the history).
+    data_tests:
+      - unique_combination: {arguments: {columns: [product_id, zone_id]}}
+    columns:
+      - {name: product_id, data_tests: [not_null]}
+      - {name: zone_id, data_tests: [not_null]}
+      - {name: velocity_ratio, description: rate_28 / rate_90 (units per day).}
+      - {name: seasonality_index, description: "Units in [as_of-365, as_of-337) / (units_365d * 28 / 365)."}
+
+  - name: int_weekly_price_qty
+    description: Units and average net price per product x zone x ISO week (Monday) over 52 weeks.
+    data_tests:
+      - unique_combination: {arguments: {columns: [product_id, zone_id, week_start]}}
+
+  - name: int_elasticity
+    description: >
+      Pooled log-log price elasticity per category after demeaning within product x zone,
+      clamped to [-3.0, -0.3]; -1.2 when n_obs < elasticity_min_obs or the price variance is
+      below 1e-6 (is_fallback).
+    data_tests:
+      - unique_combination: {arguments: {columns: [category_id]}}
+    columns:
+      - {name: category_id, data_tests: [not_null]}
+      - {name: elasticity, description: Decimal(18,6), used by the candidate factor., data_tests: [not_null]}
+
+  - name: int_stock_cover
+    description: On hand, days of cover, aging and the category rule flags per product x zone; the WEB zone uses warehouse stock.
+    data_tests:
+      - unique_combination: {arguments: {columns: [product_id, zone_id]}}
+
+  - name: int_cost_current
+    description: Supplier cost valid at as_of per product and its 90-day change; products without one are absent.
+    data_tests:
+      - unique_combination: {arguments: {columns: [product_id]}}
+
+  - name: int_competitor_index
+    description: Exact median competitor price per product x zone over 14 days (28-day fallback), competitor count and price index.
+    data_tests:
+      - unique_combination: {arguments: {columns: [product_id, zone_id]}}
+
+  - name: int_current_state
+    description: >
+      The extracted zone price and version per product x zone, with the category rule, KVI
+      tier, the active or upcoming promotion within label_lead_days (deepest, then lowest id),
+      open overrides in the zone and ladder membership.
+    data_tests:
+      - unique_combination: {arguments: {columns: [product_id, zone_id]}}
+    columns:
+      - name: product_id
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('stg_product'), field: product_id}}
+      - name: zone_id
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('stg_price_zone'), field: zone_id}}
+      - {name: current_version, description: The snapshot version; becomes expected_version.}
+
+  - name: int_price_grid
+    description: "One row: the price-ending grid in closed form, per band the ending and its first and last grid price in cents (band_ending, band_first, band_top), from rules.price_ending_band."
+
+  - name: int_price_candidate
+    description: Unbounded candidate price (Decimal) per product x zone, with its component reasons and weights and the largest component.
+    data_tests:
+      - unique_combination: {arguments: {columns: [product_id, zone_id]}}
+
+  - name: int_price_bounded
+    description: >
+      Holds, bounds and ending per product x zone, in Int64 cents: HOLD_PROMO, HOLD_NO_COST;
+      lo = greatest(cost floor, cap low), hi = cap high; FLOOR_LIMITED_BY_CAP when the floor is
+      above hi; the nearest grid price inside [lo, hi], else HOLD_INFEASIBLE.
+    data_tests:
+      - unique_combination: {arguments: {columns: [product_id, zone_id]}}
+
+  - name: int_price_laddered
+    description: >
+      Final zone price per product x zone after the PACK and TIER ladder passes; a class whose
+      ladders cannot hold in a zone holds all its ladder members there (HOLD_LADDER).
+    data_tests:
+      - unique_combination: {arguments: {columns: [product_id, zone_id]}}
+    columns:
+      - name: hold_reason
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['', HOLD_PROMO, HOLD_NO_COST, HOLD_INFEASIBLE, HOLD_LADDER]

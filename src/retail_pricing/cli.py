@@ -21,13 +21,19 @@ app.add_typer(data_app, name="data")
 
 def _register_subcommands() -> None:
     """Sub-apps live next to their implementations; their modules import nothing heavy."""
+    from retail_pricing.clickhouse.cli import app as ch_app
     from retail_pricing.control.cli import app as control_app
+    from retail_pricing.dbt_runner.cli import app as dbt_runner_app
     from retail_pricing.oltp.cli import app as oltp_app
+    from retail_pricing.s3.cli import app as s3_app
     from retail_pricing.workload.cli import app as workload_app
 
     app.add_typer(oltp_app, name="oltp")
+    app.add_typer(ch_app, name="ch")
+    app.add_typer(s3_app, name="s3")
     app.add_typer(control_app, name="control")
     app.add_typer(workload_app, name="workload")
+    app.add_typer(dbt_runner_app, name="dbt-runner")
 
 
 _register_subcommands()
