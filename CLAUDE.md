@@ -36,6 +36,16 @@ synthetic tables. `docs/PLAN.md` is the contract and lists what each pull reques
   runner, polled until it ends; exit 1 unless it succeeds. dbt runs inside the runner image (the
   optional `dbt` extra); `uv sync --locked --extra dbt` also installs it on the host.
   `make test-clickhouse`: `pytest -m clickhouse`. `make runner-logs`.
+- `make flows`: `retail-pricing nifi build-flows` writes `nifi/flows/retail-pricing.json`
+  (deterministic; `tests/unit/test_flows.py` regenerates and diffs it and checks every property
+  against `nifi/definitions/`). `make deploy`: `nifi deploy --env local --flow ...` (secrets from
+  env, fails on any invalid component, writes the group ids into `registry.job`). `make cycle
+  MODE=full|incremental`: `retail-pricing cycle trigger --wait` (exit 0 succeeded, 1 failed,
+  2 timeout); `retail-pricing cycle status`. `make test-integration`: `pytest -m integration`
+  against the deployed flow (it switches the cycle schedule off while it runs). `retail-pricing
+  nifi definitions pull` refreshes the processor definitions from a running NiFi; `nifi token`
+  writes a JWT to a file. NiFi UI and API: https://127.0.0.1:28443/nifi (self-signed), trigger
+  http://127.0.0.1:28081/cycles.
 - `make d2-install`, `make diagrams`, `make diagrams-check`, `make diagrams-watch NAME=<name>`:
   pinned D2 (`D2_VERSION`, sha256 `D2_SHA256`, Linux x86_64). On the owner's machine render through
   WSL: `wsl -d Ubuntu -e bash -lc 'cd /mnt/d/dev/Pessoal/retail-pricing-reverse-etl && make diagrams'`.
@@ -43,7 +53,9 @@ synthetic tables. `docs/PLAN.md` is the contract and lists what each pull reques
 - CI (`.github/workflows/ci.yml`): `lint` gates `test-fast` (unit plus SF0.01 data) and `sql`
   (compose Postgres, SF0.01 load, control init, `pytest -m sql`) and `dbt` (ClickHouse, RustFS
   and the runner from compose, two cycles of `dbt build` through the runner,
-  `pytest -m clickhouse`); `diagrams` runs on its own; `UV_LOCKED=1`; actions pinned by SHA.
+  `pytest -m clickhouse`) and `e2e` (the core stack without the runner, SF0.01, deploy,
+  `pytest -m integration`, NiFi's log as an artifact on failure); `diagrams` runs on its own;
+  `UV_LOCKED=1`; actions pinned by SHA.
   `security.yml`: pip-audit and zizmor.
   Dependabot is monthly with a 7-day cooldown, minor and patch grouped, majors ignored;
   `dependabot-auto-merge.yml` merges green minor and patch updates.
@@ -69,10 +81,18 @@ synthetic tables. `docs/PLAN.md` is the contract and lists what each pull reques
 - `dbt/`: profiles read env only; `models/{staging,intermediate,pricing,reverse,marts}` with one
   yml per folder (grains, tests, unit tests); `tests/guardrails/g01..g10`; macros for schema
   names, generic tests, the ending grid and the checksum.
+- `nifi/` package: `client.py` (httpx; bearer only, never the login cookie; TLS check off only
+  for the local NiFi), `definitions.py`, `deploy.py`, `builder/` (`dsl.py` and one module per
+  group: `trigger`, `extract`, `load`, `gate`, `finalize`); `cycle.py` (trigger, wait, status).
+  Repo folder `nifi/`: `flows/` (generated, never edited by hand), `params/{local,ci}.json`
+  (sensitive entries name env vars), `definitions/` (pulled from NiFi 2.12), `spike/` (the
+  reference export that pinned the format). `scripts/nifi_spike.py` reruns the spike.
 - `compose.yaml`, `docker/app.Dockerfile` (the one Python image, with the dbt project at
-  `/home/app/dbt`), `.env.example`.
+  `/home/app/dbt`), `docker/nifi.Dockerfile` (NiFi 2.12 plus the Parquet NARs and the PostgreSQL
+  JDBC driver, sha256-checked), `.env.example`.
 - `tests/unit/` (no data), `tests/slow/` (SF0.01 generation, marker `slow`), `tests/sql/`
-  (marker `sql`, compose Postgres), `tests/clickhouse/` (marker `clickhouse`).
+  (marker `sql`, compose Postgres), `tests/clickhouse/` (marker `clickhouse`),
+  `tests/integration/` (marker `integration`, deployed NiFi flow).
 
 ## Invariants
 
@@ -86,6 +106,11 @@ synthetic tables. `docs/PLAN.md` is the contract and lists what each pull reques
 - The OLTP seed Parquet columns are exactly `data/contract.py`, in order; change the contract, the
   build SQL and (later) the DDL together.
 - DuckDB stays on 2.0.x: a minor update can change the generated rows (Dependabot ignores it).
+- The NiFi flow JSON is generated: change the builder, run `make flows`, commit both. Every group
+  sets its parameter context; every component carries `propertyDescriptors`; ids are uuid5 from
+  the component path. Stage groups are barriers (Single FlowFile Per Node + Batch Output); item
+  status lives in the audit database; watermarks commit only after a good load. PR 5 inserts
+  transform, reverse and reconcile between the load gate and finalize (PLAN 6.5).
 - The OLTP applies engine prices only through `pricing_apply.apply_batch`: a row changes only when
   its `version` equals the extracted one; anything else is a recorded conflict, never an
   overwrite. A batch is idempotent per (cycle, target, batch). Workload edits run with

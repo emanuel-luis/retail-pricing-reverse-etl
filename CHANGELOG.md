@@ -8,6 +8,16 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Apache NiFi 2.12 in compose (custom image with the Parquet NARs and the PostgreSQL JDBC driver,
+  sha256-checked), a REST client, `retail-pricing nifi definitions pull`, `nifi token` and
+  `nifi deploy` (secrets from env, refuses invalid components).
+- Flows as code: `retail-pricing nifi build-flows` generates the trigger, extract, load, gate and
+  finalize groups deterministically; a unit test diffs the committed JSON and checks every
+  property against the NiFi processor definitions. The spike export and its results pin the
+  format and the behaviors the design relies on (DECISIONS 96 to 106).
+- `retail-pricing cycle trigger|wait|status`, Make targets `flows`, `deploy`, `cycle`,
+  `test-integration`, integration tests for full, incremental and failed cycles, the CI `e2e`
+  job and the `nifi-flow` diagram.
 - ClickHouse 26.3 and RustFS in compose: server memory limits, Prometheus endpoint, the `raw_s3`
   named collection, users `nifi`, `dbt` and `grafana` with least-privilege grants;
   `retail-pricing ch init` (raw tables rendered from the contract as ReplacingMergeTree by

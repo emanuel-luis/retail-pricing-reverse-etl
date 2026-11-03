@@ -3,7 +3,8 @@
 # ClickHouse, the S3-compatible store, the dbt runner and NiFi (profile core), and the workload
 # generator (profile workload). Measured on 2026-11-02 at SF0.01: oltp 119 MiB, control-db 95 MiB,
 # workload 47 MiB (20 sales/s); clickhouse 719 MiB, s3 133 MiB and dbt-runner 61 MiB after two
-# dbt builds (largest dbt query 166 MiB).
+# dbt builds (largest dbt query 166 MiB). On 2026-11-03 at SF1 (full extract and load of 4.7M
+# rows): nifi 0.94 GiB idle and 1.9 GiB peak of its 2 GiB, clickhouse 637 MiB, oltp 804 MiB.
 name: retail-pricing-reverse-etl
 
 x-app-build: &app-build
