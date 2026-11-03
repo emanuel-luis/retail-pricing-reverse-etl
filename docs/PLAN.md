@@ -284,7 +284,7 @@ with `last_cycle_id = cycle`. Otherwise it is rejected with `price_not_applied`.
 `shelf_label_queue` ON CONFLICT DO NOTHING.
 
 `pricing_apply.reconcile_actual(p_cycle_id bigint, p_target text) RETURNS TABLE(target, zone_id, category_id, check_name, rows bigint, sum_cents numeric, wsum numeric)` returns two checks per group:
-- `transit`: all staged rows with their proposed values.
+- `transit`: the stage rows `apply_batch` processed (any status but `staged`) with their proposed values.
 - `applied`: target rows with `last_cycle_id = cycle`, current values, joined to stage rows with status applied.
 
 The checksum works the same in both engines: rows, `sum(price_cents)`,
@@ -476,7 +476,7 @@ Groups `40 reverse zone_price`, `41 reverse store_override`, `42 reverse promo_p
 
 Group `50 reconcile`:
 - Plan: the 4 targets.
-- Item work: InvokeHTTP POST ClickHouse `SELECT * FROM reverse.rev_reconcile_expected WHERE cycle_id=… AND target='…' FORMAT JSONEachRow` (the `transit` check) -> PutDatabaseRecord[control] UPSERT `audit.reconcile_expected` -> ExecuteSQLRecord[oltp] `pricing_apply.reconcile_expected_applied(...)` (the `applied` check) -> PutDatabaseRecord[control] UPSERT `audit.reconcile_expected` -> ExecuteSQLRecord[oltp] `pricing_apply.reconcile_actual(...)` with `json-writer` -> PutDatabaseRecord[control] UPSERT `audit.reconcile_actual`. `wsum` is a decimal string on every hop.
+- Item work: InvokeHTTP POST ClickHouse `SELECT * FROM reverse.rev_reconcile_expected WHERE cycle_id=… AND target='…' FORMAT JSONEachRow` (the `transit` check) -> PutDatabaseRecord[control] UPSERT `audit.reconcile_expected` -> ExecuteSQLRecord[oltp] one statement, `pricing_apply.reconcile_expected_applied(...)` (the `applied` check) UNION ALL `pricing_apply.reconcile_actual(...)`, tagged by `side`, so both share one snapshot -> EvaluateJsonPath (expected rows to an attribute, actual rows as content) -> PutDatabaseRecord[control] UPSERT `audit.reconcile_actual` -> ReplaceText (expected rows as content) -> PutDatabaseRecord[control] UPSERT `audit.reconcile_expected` (DECISIONS 129). `wsum` is a decimal string on every hop.
 - The parent gate then runs `audit.reconcile`.
 
 Group `90 finalize`: ExecuteSQLRecord[control] `audit.finish_cycle(...)`, then terminate.

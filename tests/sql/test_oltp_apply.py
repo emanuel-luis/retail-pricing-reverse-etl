@@ -368,3 +368,69 @@ def test_expected_applied_matches_actual_and_follows_later_edits(
     expected = _checks(conn, "reconcile_expected_applied", cycle)
     assert expected == {k: v for k, v in actual.items() if k[2] == "applied"}
     assert sum(v[0] for v in expected.values()) == 2
+
+
+def test_transit_leaves_out_rows_staged_but_never_applied(
+    oltp_owner: psycopg.Connection, cycle: int
+) -> None:
+    """A stage row apply_batch never processed (a batch lost on a rerun) is not in 'transit',
+    so the OLTP transit differs from ClickHouse's, which counts every row it sent."""
+    conn, zone = oltp_owner, _store_zone(oltp_owner)
+    rows = _zone_rows(conn, 3, zone)
+    staged = [(p, zone, pr + Decimal("0.40"), v) for p, pr, v in rows]
+    _stage_zone(conn, cycle, staged)
+    none = _checks(conn, "reconcile_actual", cycle)
+    assert {k[2] for k in none} == {"transit", "applied"}  # the groups stay, with zeros
+    assert all(v == (0, 0, 0) for v in none.values())
+
+    _apply(conn, cycle, "zone_price")
+    applied = _checks(conn, "reconcile_actual", cycle)
+    assert sum(v[0] for k, v in applied.items() if k[2] == "transit") == 3
+
+
+def test_one_statement_reads_both_sides_from_one_snapshot(
+    oltp_owner: psycopg.Connection, oltp_settings: OltpSettings, cycle: int
+) -> None:
+    """The flow's single OLTP statement (DECISIONS 129) while edits clear last_cycle_id: the
+    expected and actual 'applied' sides always agree. Both functions are STABLE, so they run on
+    the statement's snapshot; an edit that commits mid-statement is in neither side or both."""
+    from retail_pricing.nifi.builder.reconcile import OLTP_SQL
+
+    conn, zone = oltp_owner, _store_zone(oltp_owner)
+    rows = _zone_rows(conn, 40, zone)
+    _stage_zone(conn, cycle, [(p, zone, pr + Decimal("0.30"), v) for p, pr, v in rows])
+    _apply(conn, cycle, "zone_price")
+    sql = OLTP_SQL.replace("${cycle_id}", str(cycle)).replace("${target}", "zone_price")
+    s = oltp_settings
+    first_read = threading.Event()
+
+    def edit() -> None:
+        with psycopg.connect(s.conninfo(s.owner_user, s.owner_password), autocommit=True) as c:
+            c.execute("SET app.actor = 'store-ops'")
+            first_read.wait(30)
+            for p, _, _ in rows:
+                c.execute(
+                    "UPDATE pricing.zone_price SET price = price + 1"
+                    " WHERE product_id = %s AND zone_id = %s",
+                    (p, zone),
+                )
+
+    t = threading.Thread(target=edit)
+    t.start()
+    seen = set()
+    try:
+        while True:
+            alive = t.is_alive()
+            sides: dict[str, dict[tuple[Any, ...], Any]] = {"expected": {}, "actual": {}}
+            for side, _, _, z, c, check, n, cents, w in conn.execute(sql.encode()).fetchall():
+                if check == "applied":
+                    sides[side][(z, c)] = (n, cents, w)
+            assert sides["expected"] == sides["actual"]
+            seen.add(sum(v[0] for v in sides["actual"].values()))
+            first_read.set()
+            if not alive:
+                break
+    finally:
+        first_read.set()
+        t.join()
+    assert {0, 40} <= seen and len(seen) > 1  # the edits ran while the statement was read
