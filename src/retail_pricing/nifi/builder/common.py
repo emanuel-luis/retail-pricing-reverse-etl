@@ -87,7 +87,9 @@ def attrs(g: Group, name: str, paths: dict[str, str], auto: tuple[str, ...] = ()
 
 def put_sql(g: Group, name: str, sql: str, auto: tuple[str, ...] = ()) -> Ref:
     # SplitJson leaves fragment.* attributes behind: as a fragmented transaction PutSQL would
-    # wait for every sibling, so that support is off.
+    # wait for every sibling, so that support is off. Batch Size 1: each step event is its own
+    # statement, so one refused event (a constraint, a trigger, a lost connection) never fails
+    # the events of other items that happened to share its batch. Step events are few.
     return g.proc(
         "PutSQL",
         name,
@@ -95,6 +97,7 @@ def put_sql(g: Group, name: str, sql: str, auto: tuple[str, ...] = ()) -> Ref:
             "JDBC Connection Pool": CONTROL,
             "SQL Statement": sql,
             "Support Fragmented Transactions": "false",
+            "Batch Size": "1",
         },
         auto=auto,
     )

@@ -5410,11 +5410,19 @@
               "y": 220.0
             },
             "properties": {
+              "Batch Size": "1",
               "JDBC Connection Pool": "cbf9569a-b4c8-55f8-813e-147b1f5ba802",
               "SQL Statement": "INSERT INTO audit.step_event (run_id, step_id, step_name, item, event, rows, bytes, detail) VALUES ('${run_id}', '${step_id}', 'extract', '${item:replace(\"'\", \"''\")}', 'failed', NULL, NULL, jsonb_build_object('error', '${step.error:replaceNull(${executesql.error.message:replaceNull(${s3.errorMessage:replaceNull(${s3.exception:replaceNull(${invokehttp.response.body:replaceNull(${invokehttp.status.message:replaceNull('see the NiFi bulletins')})})})})}):replace(\"'\", \"''\")}'))",
               "Support Fragmented Transactions": "false"
             },
             "propertyDescriptors": {
+              "Batch Size": {
+                "displayName": "Batch Size",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Batch Size",
+                "sensitive": false
+              },
               "JDBC Connection Pool": {
                 "displayName": "JDBC Connection Pool",
                 "dynamic": false,
@@ -6168,11 +6176,19 @@
               "y": 660.0
             },
             "properties": {
+              "Batch Size": "1",
               "JDBC Connection Pool": "cbf9569a-b4c8-55f8-813e-147b1f5ba802",
               "SQL Statement": "INSERT INTO audit.step_event (run_id, step_id, step_name, item, event, rows, bytes, detail) VALUES ('${run_id}', '${step_id}', 'extract.table', '${item:replace(\"'\", \"''\")}', 'started', NULL, NULL, NULL)",
               "Support Fragmented Transactions": "false"
             },
             "propertyDescriptors": {
+              "Batch Size": {
+                "displayName": "Batch Size",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Batch Size",
+                "sensitive": false
+              },
               "JDBC Connection Pool": {
                 "displayName": "JDBC Connection Pool",
                 "dynamic": false,
@@ -6484,11 +6500,19 @@
               "y": 880.0
             },
             "properties": {
+              "Batch Size": "1",
               "JDBC Connection Pool": "cbf9569a-b4c8-55f8-813e-147b1f5ba802",
               "SQL Statement": "INSERT INTO audit.step_event (run_id, step_id, step_name, item, event, rows, bytes, detail) VALUES ('${run_id}', '${step_id}', 'extract.table', '${item:replace(\"'\", \"''\")}', 'succeeded', NULL, NULL, NULL)",
               "Support Fragmented Transactions": "false"
             },
             "propertyDescriptors": {
+              "Batch Size": {
+                "displayName": "Batch Size",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Batch Size",
+                "sensitive": false
+              },
               "JDBC Connection Pool": {
                 "displayName": "JDBC Connection Pool",
                 "dynamic": false,
@@ -6900,11 +6924,19 @@
               "y": 1100.0
             },
             "properties": {
+              "Batch Size": "1",
               "JDBC Connection Pool": "cbf9569a-b4c8-55f8-813e-147b1f5ba802",
               "SQL Statement": "INSERT INTO audit.step_event (run_id, step_id, step_name, item, event, rows, bytes, detail) VALUES ('${run_id}', '${step_id}', 'extract.file', '${item:replace(\"'\", \"''\")}', 'succeeded', ${executesql.row.count}, ${executesql.row.count:equals('0'):ifElse('0', ${fileSize})}, jsonb_build_object('s3_key', NULLIF('${s3.key}', '')))",
               "Support Fragmented Transactions": "false"
             },
             "propertyDescriptors": {
+              "Batch Size": {
+                "displayName": "Batch Size",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Batch Size",
+                "sensitive": false
+              },
               "JDBC Connection Pool": {
                 "displayName": "JDBC Connection Pool",
                 "dynamic": false,
@@ -7012,11 +7044,19 @@
               "y": 1100.0
             },
             "properties": {
+              "Batch Size": "1",
               "JDBC Connection Pool": "cbf9569a-b4c8-55f8-813e-147b1f5ba802",
               "SQL Statement": "INSERT INTO audit.step_event (run_id, step_id, step_name, item, event, rows, bytes, detail) VALUES ('${run_id}', '${step_id}', 'extract.table', '${item:replace(\"'\", \"''\")}', 'retried', NULL, NULL, jsonb_build_object('error', '${step.error:replaceNull(${executesql.error.message:replaceNull(${s3.errorMessage:replaceNull(${s3.exception:replaceNull(${invokehttp.response.body:replaceNull(${invokehttp.status.message:replaceNull('see the NiFi bulletins')})})})})}):replace(\"'\", \"''\")}'))",
               "Support Fragmented Transactions": "false"
             },
             "propertyDescriptors": {
+              "Batch Size": {
+                "displayName": "Batch Size",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Batch Size",
+                "sensitive": false
+              },
               "JDBC Connection Pool": {
                 "displayName": "JDBC Connection Pool",
                 "dynamic": false,
@@ -7124,11 +7164,19 @@
               "y": 1100.0
             },
             "properties": {
+              "Batch Size": "1",
               "JDBC Connection Pool": "cbf9569a-b4c8-55f8-813e-147b1f5ba802",
               "SQL Statement": "INSERT INTO audit.step_event (run_id, step_id, step_name, item, event, rows, bytes, detail) VALUES ('${run_id}', '${step_id}', 'extract.table', '${item:replace(\"'\", \"''\")}', 'retried', NULL, NULL, jsonb_build_object('error', '${step.error:replaceNull(${executesql.error.message:replaceNull(${s3.errorMessage:replaceNull(${s3.exception:replaceNull(${invokehttp.response.body:replaceNull(${invokehttp.status.message:replaceNull('see the NiFi bulletins')})})})})}):replace(\"'\", \"''\")}'))",
               "Support Fragmented Transactions": "false"
             },
             "propertyDescriptors": {
+              "Batch Size": {
+                "displayName": "Batch Size",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Batch Size",
+                "sensitive": false
+              },
               "JDBC Connection Pool": {
                 "displayName": "JDBC Connection Pool",
                 "dynamic": false,
@@ -7236,11 +7284,19 @@
               "y": 1320.0
             },
             "properties": {
+              "Batch Size": "1",
               "JDBC Connection Pool": "cbf9569a-b4c8-55f8-813e-147b1f5ba802",
               "SQL Statement": "INSERT INTO audit.step_event (run_id, step_id, step_name, item, event, rows, bytes, detail) VALUES ('${run_id}', '${step_id}', 'extract.table', '${item:replace(\"'\", \"''\")}', 'retried', NULL, NULL, jsonb_build_object('error', '${step.error:replaceNull(${executesql.error.message:replaceNull(${s3.errorMessage:replaceNull(${s3.exception:replaceNull(${invokehttp.response.body:replaceNull(${invokehttp.status.message:replaceNull('see the NiFi bulletins')})})})})}):replace(\"'\", \"''\")}'))",
               "Support Fragmented Transactions": "false"
             },
             "propertyDescriptors": {
+              "Batch Size": {
+                "displayName": "Batch Size",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Batch Size",
+                "sensitive": false
+              },
               "JDBC Connection Pool": {
                 "displayName": "JDBC Connection Pool",
                 "dynamic": false,
@@ -7348,11 +7404,19 @@
               "y": 1320.0
             },
             "properties": {
+              "Batch Size": "1",
               "JDBC Connection Pool": "cbf9569a-b4c8-55f8-813e-147b1f5ba802",
               "SQL Statement": "INSERT INTO audit.step_event (run_id, step_id, step_name, item, event, rows, bytes, detail) VALUES ('${run_id}', '${step_id}', 'extract.table', '${item:replace(\"'\", \"''\")}', 'retried', NULL, NULL, jsonb_build_object('error', '${step.error:replaceNull(${executesql.error.message:replaceNull(${s3.errorMessage:replaceNull(${s3.exception:replaceNull(${invokehttp.response.body:replaceNull(${invokehttp.status.message:replaceNull('see the NiFi bulletins')})})})})}):replace(\"'\", \"''\")}'))",
               "Support Fragmented Transactions": "false"
             },
             "propertyDescriptors": {
+              "Batch Size": {
+                "displayName": "Batch Size",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Batch Size",
+                "sensitive": false
+              },
               "JDBC Connection Pool": {
                 "displayName": "JDBC Connection Pool",
                 "dynamic": false,
@@ -7460,11 +7524,19 @@
               "y": 1320.0
             },
             "properties": {
+              "Batch Size": "1",
               "JDBC Connection Pool": "cbf9569a-b4c8-55f8-813e-147b1f5ba802",
               "SQL Statement": "INSERT INTO audit.step_event (run_id, step_id, step_name, item, event, rows, bytes, detail) VALUES ('${run_id}', '${step_id}', 'extract.file', '${item:replace(\"'\", \"''\")}', 'retried', NULL, NULL, jsonb_build_object('error', '${step.error:replaceNull(${executesql.error.message:replaceNull(${s3.errorMessage:replaceNull(${s3.exception:replaceNull(${invokehttp.response.body:replaceNull(${invokehttp.status.message:replaceNull('see the NiFi bulletins')})})})})}):replace(\"'\", \"''\")}'))",
               "Support Fragmented Transactions": "false"
             },
             "propertyDescriptors": {
+              "Batch Size": {
+                "displayName": "Batch Size",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Batch Size",
+                "sensitive": false
+              },
               "JDBC Connection Pool": {
                 "displayName": "JDBC Connection Pool",
                 "dynamic": false,
@@ -7572,11 +7644,19 @@
               "y": 1540.0
             },
             "properties": {
+              "Batch Size": "1",
               "JDBC Connection Pool": "cbf9569a-b4c8-55f8-813e-147b1f5ba802",
               "SQL Statement": "INSERT INTO audit.step_event (run_id, step_id, step_name, item, event, rows, bytes, detail) VALUES ('${run_id}', '${step_id}', 'extract.file', '${item:replace(\"'\", \"''\")}', 'retried', NULL, NULL, jsonb_build_object('error', '${step.error:replaceNull(${executesql.error.message:replaceNull(${s3.errorMessage:replaceNull(${s3.exception:replaceNull(${invokehttp.response.body:replaceNull(${invokehttp.status.message:replaceNull('see the NiFi bulletins')})})})})}):replace(\"'\", \"''\")}'))",
               "Support Fragmented Transactions": "false"
             },
             "propertyDescriptors": {
+              "Batch Size": {
+                "displayName": "Batch Size",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Batch Size",
+                "sensitive": false
+              },
               "JDBC Connection Pool": {
                 "displayName": "JDBC Connection Pool",
                 "dynamic": false,
@@ -9280,11 +9360,19 @@
               "y": 220.0
             },
             "properties": {
+              "Batch Size": "1",
               "JDBC Connection Pool": "cbf9569a-b4c8-55f8-813e-147b1f5ba802",
               "SQL Statement": "INSERT INTO audit.step_event (run_id, step_id, step_name, item, event, rows, bytes, detail) VALUES ('${run_id}', '${step_id}', 'load', '${item:replace(\"'\", \"''\")}', 'failed', NULL, NULL, jsonb_build_object('error', '${step.error:replaceNull(${executesql.error.message:replaceNull(${s3.errorMessage:replaceNull(${s3.exception:replaceNull(${invokehttp.response.body:replaceNull(${invokehttp.status.message:replaceNull('see the NiFi bulletins')})})})})}):replace(\"'\", \"''\")}'))",
               "Support Fragmented Transactions": "false"
             },
             "propertyDescriptors": {
+              "Batch Size": {
+                "displayName": "Batch Size",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Batch Size",
+                "sensitive": false
+              },
               "JDBC Connection Pool": {
                 "displayName": "JDBC Connection Pool",
                 "dynamic": false,
@@ -9834,11 +9922,19 @@
               "y": 440.0
             },
             "properties": {
+              "Batch Size": "1",
               "JDBC Connection Pool": "cbf9569a-b4c8-55f8-813e-147b1f5ba802",
               "SQL Statement": "INSERT INTO audit.step_event (run_id, step_id, step_name, item, event, rows, bytes, detail) VALUES ('${run_id}', '${step_id}', 'load.table', '${item:replace(\"'\", \"''\")}', 'started', NULL, NULL, NULL)",
               "Support Fragmented Transactions": "false"
             },
             "propertyDescriptors": {
+              "Batch Size": {
+                "displayName": "Batch Size",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Batch Size",
+                "sensitive": false
+              },
               "JDBC Connection Pool": {
                 "displayName": "JDBC Connection Pool",
                 "dynamic": false,
@@ -10174,11 +10270,19 @@
               "y": 660.0
             },
             "properties": {
+              "Batch Size": "1",
               "JDBC Connection Pool": "cbf9569a-b4c8-55f8-813e-147b1f5ba802",
               "SQL Statement": "INSERT INTO audit.step_event (run_id, step_id, step_name, item, event, rows, bytes, detail) VALUES ('${run_id}', '${step_id}', 'load.table', '${item:replace(\"'\", \"''\")}', 'succeeded', ${written_rows}, NULL, jsonb_build_object('prefix', '${prefix}', 'files', ${file_count}))",
               "Support Fragmented Transactions": "false"
             },
             "propertyDescriptors": {
+              "Batch Size": {
+                "displayName": "Batch Size",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Batch Size",
+                "sensitive": false
+              },
               "JDBC Connection Pool": {
                 "displayName": "JDBC Connection Pool",
                 "dynamic": false,
@@ -10286,11 +10390,19 @@
               "y": 880.0
             },
             "properties": {
+              "Batch Size": "1",
               "JDBC Connection Pool": "cbf9569a-b4c8-55f8-813e-147b1f5ba802",
               "SQL Statement": "INSERT INTO audit.step_event (run_id, step_id, step_name, item, event, rows, bytes, detail) VALUES ('${run_id}', '${step_id}', 'load.table', '${item:replace(\"'\", \"''\")}', 'retried', NULL, NULL, jsonb_build_object('error', '${step.error:replaceNull(${executesql.error.message:replaceNull(${s3.errorMessage:replaceNull(${s3.exception:replaceNull(${invokehttp.response.body:replaceNull(${invokehttp.status.message:replaceNull('see the NiFi bulletins')})})})})}):replace(\"'\", \"''\")}'))",
               "Support Fragmented Transactions": "false"
             },
             "propertyDescriptors": {
+              "Batch Size": {
+                "displayName": "Batch Size",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Batch Size",
+                "sensitive": false
+              },
               "JDBC Connection Pool": {
                 "displayName": "JDBC Connection Pool",
                 "dynamic": false,
@@ -10398,11 +10510,19 @@
               "y": 880.0
             },
             "properties": {
+              "Batch Size": "1",
               "JDBC Connection Pool": "cbf9569a-b4c8-55f8-813e-147b1f5ba802",
               "SQL Statement": "INSERT INTO audit.step_event (run_id, step_id, step_name, item, event, rows, bytes, detail) VALUES ('${run_id}', '${step_id}', 'load.table', '${item:replace(\"'\", \"''\")}', 'retried', NULL, NULL, jsonb_build_object('error', '${step.error:replaceNull(${executesql.error.message:replaceNull(${s3.errorMessage:replaceNull(${s3.exception:replaceNull(${invokehttp.response.body:replaceNull(${invokehttp.status.message:replaceNull('see the NiFi bulletins')})})})})}):replace(\"'\", \"''\")}'))",
               "Support Fragmented Transactions": "false"
             },
             "propertyDescriptors": {
+              "Batch Size": {
+                "displayName": "Batch Size",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Batch Size",
+                "sensitive": false
+              },
               "JDBC Connection Pool": {
                 "displayName": "JDBC Connection Pool",
                 "dynamic": false,
@@ -10510,11 +10630,19 @@
               "y": 880.0
             },
             "properties": {
+              "Batch Size": "1",
               "JDBC Connection Pool": "cbf9569a-b4c8-55f8-813e-147b1f5ba802",
               "SQL Statement": "INSERT INTO audit.step_event (run_id, step_id, step_name, item, event, rows, bytes, detail) VALUES ('${run_id}', '${step_id}', 'load.table', '${item:replace(\"'\", \"''\")}', 'retried', NULL, NULL, jsonb_build_object('error', '${step.error:replaceNull(${executesql.error.message:replaceNull(${s3.errorMessage:replaceNull(${s3.exception:replaceNull(${invokehttp.response.body:replaceNull(${invokehttp.status.message:replaceNull('see the NiFi bulletins')})})})})}):replace(\"'\", \"''\")}'))",
               "Support Fragmented Transactions": "false"
             },
             "propertyDescriptors": {
+              "Batch Size": {
+                "displayName": "Batch Size",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Batch Size",
+                "sensitive": false
+              },
               "JDBC Connection Pool": {
                 "displayName": "JDBC Connection Pool",
                 "dynamic": false,

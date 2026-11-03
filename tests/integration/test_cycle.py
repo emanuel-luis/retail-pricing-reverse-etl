@@ -296,7 +296,10 @@ def test_an_item_lost_before_its_first_event_fails_the_cycle(incremental: dict[s
         ).fetchone()
     assert cycle == ("failed", "extract")
     assert run is not None and run[0] == "failed"
-    assert f"never started: {table}" in run[1]
+    # Other items may fail too (their events can meet the same fault); the guarantee is that
+    # the table whose events were all refused is named as never started.
+    assert "never started:" in run[1]
+    assert table in run[1].split("never started:", 1)[1]
     assert steps == (0,)
     assert after == before
     assert moved == (0,)
