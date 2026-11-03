@@ -29,3 +29,13 @@ def test_wait_lists_failed_steps() -> None:
 
 def test_wait_times_out() -> None:
     assert wait_cycle(7, 0, lambda _: snap("running"), lambda _: None, every_s=0) == TIMEOUT
+
+
+def test_wait_stage_returns_once_the_stage_run_exists() -> None:
+    from retail_pricing.cycle import wait_stage
+
+    later = snap("running", runs=[{"job_id": "extract"}, {"job_id": "transform"}])
+    seq = iter([None, snap("running"), later])
+    assert wait_stage(7, "transform", 60, lambda _: next(seq), every_s=0) == SUCCEEDED
+    assert wait_stage(7, "transform", 60, lambda _: snap("failed"), every_s=0) == FAILED
+    assert wait_stage(7, "transform", 0, lambda _: snap("running"), every_s=0) == TIMEOUT

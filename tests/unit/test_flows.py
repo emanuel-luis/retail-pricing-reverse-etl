@@ -8,6 +8,7 @@ import pytest
 
 from retail_pricing.nifi.builder import OUT, build, render
 from retail_pricing.nifi.builder.dsl import load_definitions
+from retail_pricing.nifi.builder.reverse import TARGETS
 
 DEFS = load_definitions()
 BY_TYPE = {d["type"]: d for d in DEFS.values()}
@@ -96,7 +97,10 @@ def test_connections_join_components_of_the_flow() -> None:
 def test_every_group_has_the_context_and_stage_groups_are_barriers() -> None:
     by_name = {g["name"]: g for g in groups()}
     assert all(g["parameterContextName"] == "retail-pricing-local" for g in by_name.values())
-    for name in ("10 extract", "20 load"):
+    stages = {"10 extract", "20 load", "30 transform", "50 reconcile"}
+    stages |= {f"{40 + i} reverse {t}" for i, t in enumerate(TARGETS)}
+    assert stages <= set(by_name)
+    for name in stages:
         assert by_name[name]["flowFileConcurrency"] == "SINGLE_FLOWFILE_PER_NODE"
         assert by_name[name]["flowFileOutboundPolicy"] == "BATCH_OUTPUT"
 
@@ -105,5 +109,5 @@ def test_group_names_match_registry_jobs() -> None:
     from retail_pricing.control.seed import JOBS
 
     jobs = {j.process_group_name for j in JOBS}
-    assert {"00 trigger", "10 extract", "20 load"} <= jobs
+    assert len(jobs) == 9
     assert {g["name"] for g in FLOW["flowContents"]["processGroups"]} - jobs == {"90 finalize"}
