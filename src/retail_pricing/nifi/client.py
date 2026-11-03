@@ -19,8 +19,9 @@ from retail_pricing.settings import NifiSettings
 logging.getLogger("httpx").setLevel(logging.WARNING)  # its INFO lines echo every request
 log = logging.getLogger(__name__)
 
-# NiFi's certificate is self-signed, so verification is off only for a NiFi on this machine.
-_LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1"}
+# NiFi's certificate is self-signed, so verification is off only for a NiFi on this machine:
+# the loopback interface, or the compose service `nifi` (the nifi-token sidecar).
+_LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1", "nifi"}
 # Status codes NiFi answers while it is still starting (or the port is not open yet).
 _BOOTING = {409, 502, 503, 504}
 
