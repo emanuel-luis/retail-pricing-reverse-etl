@@ -367,7 +367,7 @@ pinned in the Dockerfile ARGs, recorded at first download and cross-checked with
 published checksum. The final stage is `FROM apache/nifi:2.12.0@sha256:...`. It copies the jar to
 `/opt/nifi/nifi-current/jdbc/` and the NARs to `/opt/nifi/nifi-current/lib/` (loaded at boot,
 with no autoload race), with `--chown=nifi:nifi`, and runs as the image's non-root user.
-HEALTHCHECK: `bash -c '</dev/tcp/127.0.0.1/8443'` (no curl dependency). API readiness is checked
+HEALTHCHECK: `bash -c '</dev/tcp/$(hostname)/8443'` (the image binds HTTPS to the container hostname) (no curl dependency). API readiness is checked
 by deploy. Env: SINGLE_USER_CREDENTIALS_USERNAME/PASSWORD, NIFI_SENSITIVE_PROPS_KEY,
 NIFI_WEB_PROXY_HOST=`127.0.0.1:28443,localhost:28443`, and heap. Volumes: conf, state, content,
 flowfile, provenance and database repositories.
@@ -391,6 +391,8 @@ from GET `/flow/processor-definition/{group}/{artifact}/{version}/{type}` by
 `retail-pricing nifi definitions pull`. This catches typos offline.
 
 ### 6.2 First spike (start of PR 4; can run locally any time after PR 1)
+Done in PR 4 with `scripts/nifi_spike.py`; results in DECISIONS 96-106. The reference flow is `nifi/spike/reference-flow.json`.
+
 In a running custom image, build by hand a mini group with every processor type the builder uses,
 then export it (GET `/process-groups/{id}/download`) to `nifi/spike/reference-flow.json`. Verify
 and record each result in DECISIONS:
@@ -405,7 +407,7 @@ and record each result in DECISIONS:
 - (i) ExecuteSQLRecord with Max Rows Per Flow File, Set Auto Commit false and Fetch Size streams from Postgres.
 
 ### 6.3 Parameter context `retail-pricing-<env>`
-`oltp_jdbc_url`, `oltp_user`, `oltp_password` (S), `control_jdbc_url`, `control_user`,
+`oltp_jdbc_url` (both JDBC URLs end in `?stringtype=unspecified`, spike (h)), `oltp_user`, `oltp_password` (S), `control_jdbc_url`, `control_user`,
 `control_password` (S), `jdbc_driver_dir`, `s3_endpoint=http://s3:9000`, `s3_bucket`,
 `s3_access_key` (S), `s3_secret_key` (S), `ch_url=http://clickhouse:8123`, `ch_user`,
 `ch_password` (S), `dbt_runner_url=http://dbt-runner:8580`, `trigger_port=8081`,
@@ -458,7 +460,7 @@ Group `10 extract`:
 
 Group `20 load`:
 - Plan: ExecuteSQLRecord[control] `audit.load_plan(cycle_id, extract_run_id)`.
-- Item work: ReplaceText body `INSERT INTO raw.${table_name} SELECT *, ${cycle_id}, now64(3) FROM s3(raw_s3, url='http://s3:9000/#{s3_bucket}/${prefix}*.parquet', format='Parquet')` -> InvokeHTTP POST `#{ch_url}/?wait_end_of_query=1&max_insert_threads=2` (basic auth `#{ch_user}`/`#{ch_password}`, read timeout `#{ch_read_timeout}`) -> UpdateAttribute (`written_rows=${X-ClickHouse-Summary:jsonPath('$.written_rows')}`) -> RouteOnAttribute (`written_rows` equals `expected_rows`, else failed with detail).
+- Item work: ReplaceText body `INSERT INTO raw.${table_name} SELECT *, ${cycle_id}, now64(3) FROM s3(raw_s3, filename='${prefix}*.parquet', format='Parquet') SETTINGS use_hive_partitioning=0` (spike: overriding `url` needs SHOW NAMED COLLECTIONS SECRETS; `filename` is relative to the collection URL) -> InvokeHTTP POST `#{ch_url}/?wait_end_of_query=1&max_insert_threads=2` (basic auth `#{ch_user}`/`#{ch_password}`, read timeout `#{ch_read_timeout}`) -> UpdateAttribute (`written_rows=${X-ClickHouse-Summary:jsonPath('$.written_rows')}`) -> RouteOnAttribute (`written_rows` equals `expected_rows`, else failed with detail).
 - InvokeHTTP Retry and Failure go to RetryFlowFile; No Retry goes straight to failed.
 
 Group `30 transform`:
