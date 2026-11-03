@@ -1,10 +1,10 @@
-{{ config(order_by='(product_id, zone_id, business_date)') }}
+{{ config(order_by='(product_id, zone_id, business_date)', query_settings={'max_threads': 2}) }}
 -- product x zone x business_date over history_days up to as_of. Returns are subtracted on their
 -- own business date. Store sales take the store's zone, web sales the WEB zone. The big table
 -- (sale lines) stays on the left of each join; the right sides are the hash tables.
 -- One aggregation over the union of line rows and negated return rows: aggregating each side and
 -- then the union kept two large GROUP BY states alive at once, which broke the 1.2 GiB query
--- limit at SF10 (DECISIONS 144).
+-- limit at SF10 (DECISIONS 144). Two threads keep the spill files, and so the merge, small.
 with
 -- dbt-clickhouse sets join_use_nulls=1, so the left join makes zone_id Nullable; sales without a
 -- zone are dropped here, so the group key is not Nullable.
