@@ -88,7 +88,8 @@ git clone https://github.com/emanuel-luis/retail-pricing-reverse-etl && cd retai
 make install
 make data SF=0.01   # TPC-DS SF0.01 plus the OLTP seed under data/ (seconds)
 make test           # unit tests plus the SF0.01 generation checks
-make up             # OLTP and control Postgres (copies .env.example to .env when missing)
+make up             # OLTP and control Postgres, ClickHouse, RustFS, the dbt runner (builds the
+                    # app image; copies .env.example to .env when missing)
 make load SF=0.01   # schema from the contract, COPY of the seed, constraints, triggers, roles
 make control-init   # job registry, audit schema and functions
 make test-sql       # apply/conflict/replay, triggers, roles, control functions, a workload run

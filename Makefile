@@ -71,7 +71,7 @@ ch-load: ## Load the seed Parquet into ClickHouse raw: make ch-load SF=0.01 CYCL
 s3-init: ## Create the raw bucket in the S3-compatible store (idempotent)
 	uv run retail-pricing s3 init
 
-# dbt runs inside the dbt-runner container (the dbt extra conflicts with the dev tools on the host).
+# dbt runs inside the dbt-runner container, the same way NiFi calls it.
 CYCLE ?= 1
 AS_OF ?= 2025-12-04
 dbt-build: ## Run dbt build for a cycle through the dbt runner: make dbt-build CYCLE=1 AS_OF=2025-12-04

@@ -33,8 +33,8 @@ synthetic tables. `docs/PLAN.md` is the contract and lists what each pull reques
 - `make ch-init` / `make s3-init`: ClickHouse databases and raw tables from the contract / the raw
   bucket. `make ch-load SF=<n> CYCLE=<c>`: seed Parquet into raw (`use_hive_partitioning=0`).
   `make dbt-build CYCLE=<c> AS_OF=<date>`: `retail-pricing dbt-runner trigger`, a POST to the
-  runner, polled until it ends; exit 1 unless it succeeds. dbt itself runs only inside the runner
-  image: the `dbt` extra conflicts with the dev group (pathspec), see `[tool.uv] conflicts`.
+  runner, polled until it ends; exit 1 unless it succeeds. dbt runs inside the runner image (the
+  optional `dbt` extra); `uv sync --locked --extra dbt` also installs it on the host.
   `make test-clickhouse`: `pytest -m clickhouse`. `make runner-logs`.
 - `make d2-install`, `make diagrams`, `make diagrams-check`, `make diagrams-watch NAME=<name>`:
   pinned D2 (`D2_VERSION`, sha256 `D2_SHA256`, Linux x86_64). On the owner's machine render through

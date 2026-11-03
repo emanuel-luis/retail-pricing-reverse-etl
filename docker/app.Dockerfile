@@ -29,7 +29,8 @@ RUN groupadd --system --gid 10001 app \
 COPY --from=build /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:${PATH}" \
     PYTHONUNBUFFERED=1
-# The dbt project, read-only at run time. The runner's
+# The dbt project. The runner sends dbt targets and logs to its state volume; the folder stays
+# owned by the app user because dbt may write .user.yml next to profiles.yml. The runner's
 # state, dbt targets and logs live on a volume that inherits this directory's owner.
 COPY --chown=app:app dbt /home/app/dbt
 RUN mkdir /var/lib/dbt-runner && chown app:app /var/lib/dbt-runner

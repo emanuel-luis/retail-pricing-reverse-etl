@@ -12,7 +12,7 @@ All notable changes to this project are documented here. The format follows
   named collection, users `nifi`, `dbt` and `grafana` with least-privilege grants;
   `retail-pricing ch init` (raw tables rendered from the contract as ReplacingMergeTree by
   version), `ch load-raw` and `s3 init`.
-- The dbt pricing procedure (dbt-core 1.10.23, dbt-clickhouse 1.10.3): 61 models from staging to
+- The dbt pricing procedure (dbt-core 1.12.6, dbt-clickhouse 1.10.3): 61 models from staging to
   the reverse diffs and marts, 139 generic tests, guardrails g01 to g10 and dbt unit tests on the
   rule logic.
 - The dbt runner: an HTTP service that runs `dbt build` for a cycle (idempotent per cycle, job
