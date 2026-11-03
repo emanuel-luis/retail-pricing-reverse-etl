@@ -227,3 +227,20 @@ def test_http_returns_409_for_another_running_cycle(
 
 def test_settings_defaults() -> None:
     assert DbtRunnerSettings().threads == 2
+
+
+def test_retry_never_reports_the_previous_attempts_results(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("FAKE_DBT_FAIL", "1")
+    m = manager(tmp_path)
+    req = parse_request(body())
+    first = m.start(req)
+    m.join()
+    assert status_of(m, first["job_id"])["counts"]  # the first attempt wrote results
+    monkeypatch.setenv("FAKE_DBT_EARLY", "1")  # the retry fails before dbt writes anything
+    second = m.start(req)
+    m.join()
+    retry = status_of(m, second["job_id"])
+    assert retry["status"] == "failed" and retry["counts"] == {}
+    assert m.results(req.cycle_id, req.run_id) is None

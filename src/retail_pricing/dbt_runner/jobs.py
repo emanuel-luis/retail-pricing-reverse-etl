@@ -228,6 +228,9 @@ class JobManager:
         try:
             env = {**os.environ, "DBT_THREADS": str(self.threads)}
             log_file = self.state_dir / "jobs" / f"{job_id}.log"
+            # A retried cycle reuses its target folder: an attempt that fails before dbt writes
+            # results must not report the previous attempt's nodes as its own.
+            (self.target_path(req.cycle_id) / "run_results.json").unlink(missing_ok=True)
             with log_file.open("wb") as out:
                 # Argument list, no shell: request text never reaches one.
                 proc = subprocess.run(
