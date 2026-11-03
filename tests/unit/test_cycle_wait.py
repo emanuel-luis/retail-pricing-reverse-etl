@@ -1,6 +1,6 @@
 from typing import Any
 
-from retail_pricing.cycle import FAILED, SUCCEEDED, TIMEOUT, wait_cycle
+from retail_pricing.cycle import FAILED, SUCCEEDED, TIMEOUT, wait_cycle, wait_stage
 
 
 def snap(status: str, **extra: Any) -> dict[str, Any]:
@@ -39,3 +39,21 @@ def test_wait_stage_returns_once_the_stage_run_exists() -> None:
     assert wait_stage(7, "transform", 60, lambda _: next(seq), every_s=0) == SUCCEEDED
     assert wait_stage(7, "transform", 60, lambda _: snap("failed"), every_s=0) == FAILED
     assert wait_stage(7, "transform", 0, lambda _: snap("running"), every_s=0) == TIMEOUT
+
+
+def test_wait_stage_returns_once_the_stage_has_a_run() -> None:
+    transform = {"job_id": "transform", "status": "running", "rows_out": None, "seconds": 1.0}
+    seq = iter([snap("running"), snap("running", runs=[transform])])
+    lines: list[str] = []
+    assert wait_stage(7, "transform", 60, lambda _: next(seq), lines.append, every_s=0) == SUCCEEDED
+    assert lines == ["cycle 7: stage transform started"]
+
+
+def test_wait_stage_fails_when_the_cycle_ended_without_the_stage() -> None:
+    lines: list[str] = []
+    assert wait_stage(7, "transform", 60, lambda _: snap("failed"), lines.append, 0) == FAILED
+    assert "without running stage transform" in lines[0]
+
+
+def test_wait_stage_times_out() -> None:
+    assert wait_stage(7, "transform", 0, lambda _: snap("running"), lambda _: None, 0) == TIMEOUT

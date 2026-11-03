@@ -109,22 +109,28 @@ def wait_cycle(
 
 def wait_stage(
     cycle_id: int | None,
-    job: str,
+    stage: str,
     timeout_s: float,
     fetch: Callable[[int | None], Snapshot | None] = snapshot,
-    every_s: float = 1.0,
+    echo: Callable[[str], None] = typer.echo,
+    every_s: float = POLL_S,
 ) -> int:
-    """Poll until the cycle's current attempt has started a run of `job`: 0 once it has, 1 when
-    the cycle ended without one, 2 on timeout. The previous stages are done by then."""
+    """Poll until job `stage` has a run in the cycle (running or ended); the exit code.
+
+    0 when the stage has started, 1 when the cycle ended without ever running it, 2 on timeout.
+    """
     deadline = time.monotonic() + timeout_s
     while True:
         snap = fetch(cycle_id)
         if snap is not None:
-            if any(r["job_id"] == job for r in snap["runs"]):
+            if any(r["job_id"] == stage for r in snap["runs"]):
+                echo(f"cycle {cycle_id}: stage {stage} started")
                 return SUCCEEDED
             if snap["status"] != "running":
+                echo(f"cycle {cycle_id} {snap['status']} without running stage {stage}")
                 return FAILED
         if time.monotonic() >= deadline:
+            echo(f"cycle {cycle_id}: stage {stage} not started after {timeout_s:.0f} s")
             return TIMEOUT
         time.sleep(every_s)
 
@@ -166,14 +172,12 @@ def wait_cmd(
 
 @app.command("wait-stage")
 def wait_stage_cmd(
-    job: Annotated[str, typer.Argument(help="Job id of the stage, e.g. transform.")],
+    stage: Annotated[str, typer.Option(help="Job id of the stage, e.g. transform.")],
     cycle: Annotated[int | None, typer.Option(help="Cycle id (default: the latest).")] = None,
     timeout: TimeoutOption = 3600.0,
 ) -> None:
-    """Wait until a running cycle reaches a stage (its run of the job has started)."""
-    code = wait_stage(cycle, job, timeout)
-    typer.echo({SUCCEEDED: f"{job} started", FAILED: "cycle ended first"}.get(code, "timeout"))
-    raise typer.Exit(code)
+    """Wait until a stage of the cycle has started (e.g. to inject edits during transform)."""
+    raise typer.Exit(wait_stage(cycle, stage, timeout))
 
 
 @app.command("status")
