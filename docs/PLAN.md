@@ -328,8 +328,8 @@ Functions, called by NiFi with ExecuteSQLRecord on the cycle token (token conten
 - `registry.extract_plan(p_cycle_id, p_wm_high timestamptz, p_business_date date, p_mode) RETURNS SETOF plan rows`. Idempotent: if a plan exists for the cycle it returns it, so a rerun extracts the same window. `wm_low = watermark - overlap (default 2 minutes)`. Mode is full when there is no watermark. It also sets `cycle.business_date`.
 - `audit.load_plan(p_cycle_id, p_extract_run_id)`: per table, the S3 prefix, expected rows (sum of extract step rows) and file count, only for tables with rows.
 - `audit.stage_plan(p_cycle_id, p_job_id)`: the generic one-item plan for transform and the 4-target plan for reconcile.
-- `audit.end_run(p_run_id) RETURNS (status, failed_steps, open_steps)`: a run fails if any step failed or is still open. It fills rows/bytes and raises `alert` (kind stage_failed) on failure.
-- `registry.commit_watermarks(p_cycle_id)`: called only after load succeeds.
+- `audit.end_run(p_run_id) RETURNS (status, failed_steps, open_steps)`: a run fails if any step failed or is still open, or if a planned item has no step at all (extract: every `audit.extract_plan` table of the cycle needs an `extract.table` step; load: every `audit.load_plan` table a `load.table` step). It fills rows/bytes and raises `alert` (kind stage_failed) on failure.
+- `registry.commit_watermarks(p_cycle_id)`: called only after load succeeds. It advances a table only when its `extract.table` step succeeded in the latest succeeded extract run and its `load.table` step in the latest succeeded load run; a table with no rows in the window (absent from `load_plan`) needs no load step.
 - `audit.reconcile(p_cycle_id) RETURNS (passed bool, failed_checks int)`: compares expected and actual per check and writes `reconcile_result`. Failure raises alert kind reconcile_failed.
 - `audit.finish_cycle(p_cycle_id, p_status, p_failed_stage, p_error)`
 
@@ -367,7 +367,7 @@ pinned in the Dockerfile ARGs, recorded at first download and cross-checked with
 published checksum. The final stage is `FROM apache/nifi:2.12.0@sha256:...`. It copies the jar to
 `/opt/nifi/nifi-current/jdbc/` and the NARs to `/opt/nifi/nifi-current/lib/` (loaded at boot,
 with no autoload race), with `--chown=nifi:nifi`, and runs as the image's non-root user.
-HEALTHCHECK: `bash -c '</dev/tcp/127.0.0.1/8443'` (no curl dependency). API readiness is checked
+HEALTHCHECK: `bash -c '</dev/tcp/$(hostname)/8443'` (the image binds HTTPS to the container hostname) (no curl dependency). API readiness is checked
 by deploy. Env: SINGLE_USER_CREDENTIALS_USERNAME/PASSWORD, NIFI_SENSITIVE_PROPS_KEY,
 NIFI_WEB_PROXY_HOST=`127.0.0.1:28443,localhost:28443`, and heap. Volumes: conf, state, content,
 flowfile, provenance and database repositories.
@@ -381,7 +381,7 @@ configured local NiFi URL, because NiFi's certificate is self-signed.
 5. Enable the controller services (PUT `/flow/process-groups/{id}/controller-services` ENABLED), poll until all are ENABLED, and print the validation errors of any INVALID one.
 6. Fail if any component in the tree is invalid, listing each component's validationErrors.
 7. Start the group (PUT `/flow/process-groups/{id}` RUNNING) and wait until the trigger port accepts TCP.
-8. Write the process group ids into `registry.job.nifi_process_group_id`.
+8. Write the process group ids into `registry.job.nifi_process_group_id`. The deploy fails when the control DB is unreachable, `registry.job` is missing, or fewer rows change than the flow has groups named after a seed job; `--no-registry` skips the step (a flow whose groups are not jobs, like the spike's reference flow).
 
 `retail-pricing nifi build-flows` writes the definition deterministically: uuid5 ids from the
 component path, sorted keys, fixed positions on a grid. `tests/unit/test_flows.py` regenerates it
@@ -391,6 +391,8 @@ from GET `/flow/processor-definition/{group}/{artifact}/{version}/{type}` by
 `retail-pricing nifi definitions pull`. This catches typos offline.
 
 ### 6.2 First spike (start of PR 4; can run locally any time after PR 1)
+Done in PR 4 with `scripts/nifi_spike.py`; results in DECISIONS 96-106. The reference flow is `nifi/spike/reference-flow.json`.
+
 In a running custom image, build by hand a mini group with every processor type the builder uses,
 then export it (GET `/process-groups/{id}/download`) to `nifi/spike/reference-flow.json`. Verify
 and record each result in DECISIONS:
@@ -405,7 +407,7 @@ and record each result in DECISIONS:
 - (i) ExecuteSQLRecord with Max Rows Per Flow File, Set Auto Commit false and Fetch Size streams from Postgres.
 
 ### 6.3 Parameter context `retail-pricing-<env>`
-`oltp_jdbc_url`, `oltp_user`, `oltp_password` (S), `control_jdbc_url`, `control_user`,
+`oltp_jdbc_url` (both JDBC URLs end in `?stringtype=unspecified`, spike (h)), `oltp_user`, `oltp_password` (S), `control_jdbc_url`, `control_user`,
 `control_password` (S), `jdbc_driver_dir`, `s3_endpoint=http://s3:9000`, `s3_bucket`,
 `s3_access_key` (S), `s3_secret_key` (S), `ch_url=http://clickhouse:8123`, `ch_user`,
 `ch_password` (S), `dbt_runner_url=http://dbt-runner:8580`, `trigger_port=8081`,
@@ -425,10 +427,11 @@ Each stage group follows one template, generated by a builder function:
 ```
 in -> ExecuteSQLRecord[control] start_run -> EvaluateJsonPath(run_id) -> <plan query> -> SplitJson($.*)
    SplitJson.original -> out            (held by Batch Output until the group is empty)
-   SplitJson.split    -> EvaluateJsonPath(item attrs) -> PutSQL step_event started -> <item work>
-        -> PutSQL step_event succeeded -> auto-terminate
+   SplitJson.split    -> UpdateAttribute(step_id, stand-in item) -> EvaluateJsonPath(item attrs)
+        -> PutSQL step_event started -> <item work> -> PutSQL step_event succeeded -> auto-terminate
    any failure -> RetryFlowFile(max #{retry_max}, penalty #{retry_penalty}) -> retry: back to the failed processor
-        retries_exceeded -> PutSQL step_event failed -> auto-terminate
+        retries_exceeded -> PutSQL step_event failed (retried) -> auto-terminate
+            when it cannot be written -> LogMessage at ERROR; end_run still fails the run
 ```
 
 Group settings: FlowFile Concurrency `Single FlowFile Per Node`, Outbound Policy `Batch Output`.
@@ -458,7 +461,7 @@ Group `10 extract`:
 
 Group `20 load`:
 - Plan: ExecuteSQLRecord[control] `audit.load_plan(cycle_id, extract_run_id)`.
-- Item work: ReplaceText body `INSERT INTO raw.${table_name} SELECT *, ${cycle_id}, now64(3) FROM s3(raw_s3, url='http://s3:9000/#{s3_bucket}/${prefix}*.parquet', format='Parquet')` -> InvokeHTTP POST `#{ch_url}/?wait_end_of_query=1&max_insert_threads=2` (basic auth `#{ch_user}`/`#{ch_password}`, read timeout `#{ch_read_timeout}`) -> UpdateAttribute (`written_rows=${X-ClickHouse-Summary:jsonPath('$.written_rows')}`) -> RouteOnAttribute (`written_rows` equals `expected_rows`, else failed with detail).
+- Item work: ReplaceText body `INSERT INTO raw.${table_name} SELECT *, ${cycle_id}, now64(3) FROM s3(raw_s3, filename='${prefix}*.parquet', format='Parquet') SETTINGS use_hive_partitioning=0` (spike: overriding `url` needs SHOW NAMED COLLECTIONS SECRETS; `filename` is relative to the collection URL) -> InvokeHTTP POST `#{ch_url}/?wait_end_of_query=1&max_insert_threads=2` (basic auth `#{ch_user}`/`#{ch_password}`, read timeout `#{ch_read_timeout}`) -> UpdateAttribute (`written_rows=${X-ClickHouse-Summary:jsonPath('$.written_rows')}`) -> RouteOnAttribute (`written_rows` equals `expected_rows`, else failed with detail).
 - InvokeHTTP Retry and Failure go to RetryFlowFile; No Retry goes straight to failed.
 
 Group `30 transform`:
@@ -477,6 +480,14 @@ Group `50 reconcile`:
 - The parent gate then runs `audit.reconcile`.
 
 Group `90 finalize`: ExecuteSQLRecord[control] `audit.finish_cycle(...)`, then terminate.
+
+Built in PR 4 (`src/retail_pricing/nifi/builder/`, one module per group): `00 trigger`, `10 extract`,
+the extract gate, `20 load`, the load gate (end_run, then commit_watermarks) and `90 finalize`.
+Step names and items are in DECISIONS 108, retries and error texts in 111. PR 5 seam: in
+`builder/__init__.py` the load gate's `success` goes straight to `90 finalize`; PR 5 inserts
+`30 transform`, `40`-`43 reverse` and `50 reconcile` there, each followed by `gate.build` (the
+reconcile gate with `audit.reconcile` as its follow-up query). Group names equal
+`registry.job.process_group_name`, which is how deploy step 8 finds them.
 
 Retry and idempotency summary: S3 keys include the extract run id, so a rerun never reads stale
 files. Raw tables are ReplacingMergeTree, so a re-load is harmless. dbt cycle models delete their
@@ -740,6 +751,10 @@ event and ref.
 | `sql (Postgres functions)` | `docker compose up -d --wait oltp control-db`, `data` SF0.01, `oltp load`, `control init`, `pytest -m sql` | 4 min | 2 |
 | `dbt (ClickHouse, SF0.01)` | section 8.4, artifacts run_results.json on failure | 6 min | 3 |
 | `e2e (compose loop, SF0.01)` | `make demo SF=0.01` with the `ci` params, then `pytest -m integration`; logs on failure; `make down` always | 15-25 min, timeout 40 | 4 (extract and load), 5 (full loop), 6 (monitoring) |
+
+Until `make demo` exists (PR 5), e2e runs the steps itself: `make data SF=0.01`, compose up of
+oltp, control-db, s3, clickhouse and nifi, `make load control-init ch-init s3-init`, `nifi deploy
+--env ci`, `make test-integration`; on failure it uploads NiFi's `logs/nifi-app.log`.
 
 The DuckDB extension directory is cached by key `duckdb-2.0.0-tpcds`. `security.yml` stays as
 is. After each PR merges, add its new job to branch protection (job names never change once

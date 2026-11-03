@@ -1,9 +1,10 @@
 # Memory limits are sized so the whole loop fits a laptop Docker VM (docs/PLAN.md section 1).
 # This file grows with each pull request; today: the OLTP and the control/audit Postgres,
-# ClickHouse, the S3-compatible store and the dbt runner (profile core), and the workload
+# ClickHouse, the S3-compatible store, the dbt runner and NiFi (profile core), and the workload
 # generator (profile workload). Measured on 2026-11-02 at SF0.01: oltp 119 MiB, control-db 95 MiB,
 # workload 47 MiB (20 sales/s); clickhouse 719 MiB, s3 133 MiB and dbt-runner 61 MiB after two
-# dbt builds (largest dbt query 166 MiB).
+# dbt builds (largest dbt query 166 MiB). On 2026-11-03 at SF1 (full extract and load of 4.7M
+# rows): nifi 0.94 GiB idle and 1.9 GiB peak of its 2 GiB, clickhouse 637 MiB, oltp 804 MiB.
 name: retail-pricing-reverse-etl
 
 x-app-build: &app-build
@@ -161,6 +162,33 @@ services:
       retries: 6
       start_period: 5s
 
+  nifi:
+    build:
+      context: docker
+      dockerfile: nifi.Dockerfile
+    image: retail-pricing-nifi:local
+    profiles: [core]
+    mem_limit: 2048m
+    # No depends_on: flows retry their own connections, and NiFi boots slower than the rest.
+    environment:
+      SINGLE_USER_CREDENTIALS_USERNAME: ${NIFI_USERNAME:-nifi_admin}
+      SINGLE_USER_CREDENTIALS_PASSWORD: ${NIFI_PASSWORD:?set NIFI_PASSWORD in .env (12+ characters)}
+      NIFI_SENSITIVE_PROPS_KEY: ${NIFI_SENSITIVE_PROPS_KEY:?set NIFI_SENSITIVE_PROPS_KEY in .env (12+ characters)}
+      NIFI_WEB_PROXY_HOST: 127.0.0.1:${NIFI_HTTPS_PORT:-28443},localhost:${NIFI_HTTPS_PORT:-28443}
+      NIFI_JVM_HEAP_INIT: 1280m
+      NIFI_JVM_HEAP_MAX: 1280m
+    ports:
+      - "127.0.0.1:${NIFI_HTTPS_PORT:-28443}:8443"
+      - "127.0.0.1:${NIFI_TRIGGER_PORT:-28081}:8081"
+    volumes:
+      - nifi_conf:/opt/nifi/nifi-current/conf
+      - nifi_state:/opt/nifi/nifi-current/state
+      - nifi_content:/opt/nifi/nifi-current/content_repository
+      - nifi_flowfile:/opt/nifi/nifi-current/flowfile_repository
+      - nifi_provenance:/opt/nifi/nifi-current/provenance_repository
+      - nifi_database:/opt/nifi/nifi-current/database_repository
+    # The image HEALTHCHECK is a TCP probe on 8443; NiFi needs about a minute to open it.
+
   workload:
     # Reuses the image dbt-runner builds; `docker compose --profile core build dbt-runner` first.
     image: retail-pricing-app:local
@@ -196,3 +224,9 @@ volumes:
   s3_data:
   clickhouse_data:
   dbt_runner_state:
+  nifi_conf:
+  nifi_state:
+  nifi_content:
+  nifi_flowfile:
+  nifi_provenance:
+  nifi_database:

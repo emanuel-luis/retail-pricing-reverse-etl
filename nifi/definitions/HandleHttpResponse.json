@@ -1,0 +1,132 @@
+{
+  "additionalDetails": true,
+  "artifact": "nifi-standard-nar",
+  "buildInfo": {
+    "revision": "1"
+  },
+  "defaultBulletinLevel": "WARN",
+  "defaultConcurrentTasksBySchedulingStrategy": {
+    "CRON_DRIVEN": 1,
+    "TIMER_DRIVEN": 1
+  },
+  "defaultPenaltyDuration": "30 sec",
+  "defaultSchedulingPeriodBySchedulingStrategy": {
+    "CRON_DRIVEN": "* * * * * ?",
+    "TIMER_DRIVEN": "0 sec"
+  },
+  "defaultSchedulingStrategy": "TIMER_DRIVEN",
+  "defaultYieldDuration": "1 sec",
+  "dynamicProperties": [
+    {
+      "description": "These HTTPHeaders are set in the HTTP Response",
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "name": "An HTTP header name",
+      "value": "An HTTP header value"
+    }
+  ],
+  "group": "org.apache.nifi",
+  "inputRequirement": "INPUT_REQUIRED",
+  "multiProcessorUseCases": [],
+  "primaryNodeOnly": false,
+  "propertyDescriptors": {
+    "Attributes for HTTP Response": {
+      "description": "Specifies the Regular Expression that determines the names of FlowFile attributes that should be added to the HTTP response",
+      "displayName": "Attributes for HTTP Response",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Attributes for HTTP Response",
+      "required": false,
+      "sensitive": false
+    },
+    "HTTP Context Map": {
+      "description": "The HTTP Context Map Controller Service to use for caching the HTTP Request Information",
+      "displayName": "HTTP Context Map",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "HTTP Context Map",
+      "required": true,
+      "sensitive": false,
+      "typeProvidedByValue": {
+        "artifact": "nifi-standard-services-api-nar",
+        "group": "org.apache.nifi",
+        "type": "org.apache.nifi.http.HttpContextMap",
+        "version": "2.12.0"
+      }
+    },
+    "HTTP Status Code": {
+      "description": "The HTTP Status Code to use when responding to the HTTP Request. See Section 10 of RFC 2616 for more information.",
+      "displayName": "HTTP Status Code",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "HTTP Status Code",
+      "required": true,
+      "sensitive": false
+    }
+  },
+  "readsAttributes": [
+    {
+      "description": "The value of this attribute is used to lookup the HTTP Response so that the proper message can be sent back to the requestor. If this attribute is missing, the FlowFile will be routed to 'failure.'",
+      "name": "http.context.identifier"
+    },
+    {
+      "description": "Value of the URI requested by the client. Used for provenance event.",
+      "name": "http.request.uri"
+    },
+    {
+      "description": "IP address of the client. Used for provenance event.",
+      "name": "http.remote.host"
+    },
+    {
+      "description": "IP address/hostname of the server. Used for provenance event.",
+      "name": "http.local.name"
+    },
+    {
+      "description": "Listening port of the server. Used for provenance event.",
+      "name": "http.server.port"
+    },
+    {
+      "description": "SSL distinguished name (if any). Used for provenance event.",
+      "name": "http.subject.dn"
+    }
+  ],
+  "seeAlso": [
+    "org.apache.nifi.http.StandardHttpContextMap",
+    "org.apache.nifi.processors.standard.HandleHttpRequest"
+  ],
+  "sideEffectFree": false,
+  "supportedRelationships": [
+    {
+      "description": "FlowFiles will be routed to this Relationship if the Processor is unable to respond to the requestor. This may happen, for instance, if the connection times out or if NiFi is restarted before responding to the HTTP Request.",
+      "name": "failure"
+    },
+    {
+      "description": "FlowFiles will be routed to this Relationship after the response has been successfully sent to the requestor",
+      "name": "success"
+    }
+  ],
+  "supportedSchedulingStrategies": [
+    "TIMER_DRIVEN",
+    "CRON_DRIVEN"
+  ],
+  "supportsBatching": false,
+  "supportsDynamicProperties": true,
+  "supportsDynamicRelationships": false,
+  "supportsSensitiveDynamicProperties": false,
+  "tags": [
+    "egress",
+    "http",
+    "https",
+    "response",
+    "web service"
+  ],
+  "triggerSerially": false,
+  "triggerWhenAnyDestinationAvailable": false,
+  "triggerWhenEmpty": false,
+  "type": "org.apache.nifi.processors.standard.HandleHttpResponse",
+  "typeDescription": "Sends an HTTP Response to the Requestor that generated a FlowFile. This Processor is designed to be used in conjunction with the HandleHttpRequest in order to create a web service.",
+  "useCases": [],
+  "version": "2.12.0"
+}

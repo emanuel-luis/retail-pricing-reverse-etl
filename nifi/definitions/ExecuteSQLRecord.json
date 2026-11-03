@@ -1,0 +1,340 @@
+{
+  "additionalDetails": false,
+  "artifact": "nifi-standard-nar",
+  "buildInfo": {
+    "revision": "1"
+  },
+  "defaultBulletinLevel": "WARN",
+  "defaultConcurrentTasksBySchedulingStrategy": {
+    "CRON_DRIVEN": 1,
+    "TIMER_DRIVEN": 1
+  },
+  "defaultPenaltyDuration": "30 sec",
+  "defaultSchedulingPeriodBySchedulingStrategy": {
+    "CRON_DRIVEN": "* * * * * ?",
+    "TIMER_DRIVEN": "0 sec"
+  },
+  "defaultSchedulingStrategy": "TIMER_DRIVEN",
+  "defaultYieldDuration": "1 sec",
+  "dynamicProperties": [
+    {
+      "description": "Incoming FlowFiles are expected to be parametrized SQL statements. The type of each Parameter is specified as an integer that represents the JDBC Type of the parameter. The following types are accepted: [LONGNVARCHAR: -16], [BIT: -7], [BOOLEAN: 16], [TINYINT: -6], [BIGINT: -5], [LONGVARBINARY: -4], [VARBINARY: -3], [BINARY: -2], [LONGVARCHAR: -1], [CHAR: 1], [NUMERIC: 2], [DECIMAL: 3], [INTEGER: 4], [SMALLINT: 5] [FLOAT: 6], [REAL: 7], [DOUBLE: 8], [VARCHAR: 12], [DATE: 91], [TIME: 92], [TIMESTAMP: 93], [VARCHAR: 12], [CLOB: 2005], [NCLOB: 2011]",
+      "expressionLanguageScope": "NONE",
+      "name": "sql.args.N.type",
+      "value": "SQL type argument to be supplied"
+    },
+    {
+      "description": "Incoming FlowFiles are expected to be parametrized SQL statements. The value of the Parameters are specified as sql.args.1.value, sql.args.2.value, sql.args.3.value, and so on. The type of the sql.args.1.value Parameter is specified by the sql.args.1.type attribute.",
+      "expressionLanguageScope": "NONE",
+      "name": "sql.args.N.value",
+      "value": "Argument to be supplied"
+    },
+    {
+      "description": "This attribute is always optional, but default options may not always work for your data. Incoming FlowFiles are expected to be parametrized SQL statements. In some cases a format option needs to be specified, currently this is only applicable for binary data types, dates, times and timestamps. Binary Data Types (defaults to 'ascii') - ascii: each string character in your attribute value represents a single byte. This is the format provided by Avro Processors. base64: the string is a Base64 encoded string that can be decoded to bytes. hex: the string is hex encoded with all letters in upper case and no '0x' at the beginning. Dates/Times/Timestamps - Date, Time and Timestamp formats all support both custom formats or named format ('yyyy-MM-dd','ISO_OFFSET_DATE_TIME') as specified according to java.time.format.DateTimeFormatter. If not specified, a long value input is expected to be an unix epoch (milli seconds from 1970/1/1), or a string value in 'yyyy-MM-dd' format for Date, 'HH:mm:ss.SSS' for Time (some database engines e.g. Derby or MySQL do not support milliseconds and will truncate milliseconds), 'yyyy-MM-dd HH:mm:ss.SSS' for Timestamp is used.",
+      "expressionLanguageScope": "NONE",
+      "name": "sql.args.N.format",
+      "value": "SQL format argument to be supplied"
+    }
+  ],
+  "group": "org.apache.nifi",
+  "inputRequirement": "INPUT_ALLOWED",
+  "multiProcessorUseCases": [],
+  "primaryNodeOnly": false,
+  "propertyDescriptors": {
+    "Database Connection Pooling Service": {
+      "description": "The Controller Service that is used to obtain connection to database",
+      "displayName": "Database Connection Pooling Service",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Database Connection Pooling Service",
+      "required": true,
+      "sensitive": false,
+      "typeProvidedByValue": {
+        "artifact": "nifi-standard-services-api-nar",
+        "group": "org.apache.nifi",
+        "type": "org.apache.nifi.dbcp.DBCPService",
+        "version": "2.12.0"
+      }
+    },
+    "Default Decimal Precision": {
+      "defaultValue": "10",
+      "description": "When a DECIMAL/NUMBER value is written as a 'decimal' Avro logical type, a specific 'precision' denoting number of available digits is required. Generally, precision is defined by column data type definition or database engines default. However undefined precision (0) can be returned from some database engines. 'Default Decimal Precision' is used when writing those undefined precision numbers.",
+      "displayName": "Default Decimal Precision",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Default Decimal Precision",
+      "required": true,
+      "sensitive": false
+    },
+    "Default Decimal Scale": {
+      "defaultValue": "0",
+      "description": "When a DECIMAL/NUMBER value is written as a 'decimal' Avro logical type, a specific 'scale' denoting number of available decimal digits is required. Generally, scale is defined by column data type definition or database engines default. However when undefined precision (0) is returned, scale can also be uncertain with some database engines. 'Default Decimal Scale' is used when writing those undefined numbers. If a value has more decimals than specified scale, then the value will be rounded-up, e.g. 1.53 becomes 2 with scale 0, and 1.5 with scale 1.",
+      "displayName": "Default Decimal Scale",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Default Decimal Scale",
+      "required": true,
+      "sensitive": false
+    },
+    "Fetch Size": {
+      "defaultValue": "0",
+      "description": "The number of result rows to be fetched from the result set at a time. This is a hint to the database driver and may not be honored and/or exact. If the value specified is zero, then the hint is ignored.",
+      "displayName": "Fetch Size",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Fetch Size",
+      "required": true,
+      "sensitive": false
+    },
+    "Max Rows Per FlowFile": {
+      "defaultValue": "0",
+      "description": "The maximum number of result rows that will be included in a single FlowFile. This will allow you to break up very large result sets into multiple FlowFiles. If the value specified is zero, then all rows are returned in a single FlowFile.",
+      "displayName": "Max Rows Per FlowFile",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Max Rows Per FlowFile",
+      "required": true,
+      "sensitive": false
+    },
+    "Max Wait Time": {
+      "defaultValue": "0 seconds",
+      "description": "The maximum amount of time allowed for a running SQL select query  , zero means there is no limit. Max time less than 1 second will be equal to zero.",
+      "displayName": "Max Wait Time",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Max Wait Time",
+      "required": true,
+      "sensitive": false
+    },
+    "Normalize Table/Column Names": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "true",
+          "value": "true"
+        },
+        {
+          "description": "",
+          "displayName": "false",
+          "value": "false"
+        }
+      ],
+      "defaultValue": "false",
+      "description": "Whether to change characters in column names. For example, colons and periods will be changed to underscores.",
+      "displayName": "Normalize Table/Column Names",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Normalize Table/Column Names",
+      "required": true,
+      "sensitive": false
+    },
+    "Output Batch Size": {
+      "defaultValue": "0",
+      "description": "The number of output FlowFiles to queue before committing the process session. When set to zero, the session will be committed when all result set rows have been processed and the output FlowFiles are ready for transfer to the downstream relationship. For large result sets, this can cause a large burst of FlowFiles to be transferred at the end of processor execution. If this property is set, then when the specified number of FlowFiles are ready for transfer, then the session will be committed, thus releasing the FlowFiles to the downstream relationship. NOTE: The fragment.count attribute will not be set on FlowFiles when this property is set.",
+      "displayName": "Output Batch Size",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Output Batch Size",
+      "required": true,
+      "sensitive": false
+    },
+    "Record Writer": {
+      "description": "Specifies the Controller Service to use for writing results to a FlowFile. The Record Writer may use Inherit Schema to emulate the inferred schema behavior, i.e. an explicit schema need not be defined in the writer, and will be supplied by the same logic used to infer the schema from the column types.",
+      "displayName": "Record Writer",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Record Writer",
+      "required": true,
+      "sensitive": false,
+      "typeProvidedByValue": {
+        "artifact": "nifi-standard-services-api-nar",
+        "group": "org.apache.nifi",
+        "type": "org.apache.nifi.serialization.RecordSetWriterFactory",
+        "version": "2.12.0"
+      }
+    },
+    "SQL Post-Query": {
+      "description": "A semicolon-delimited list of queries executed after the main SQL query is executed. Example like setting session properties after main query. It's possible to include semicolons in the statements themselves by escaping them with a backslash ('\\;'). Results/outputs from these queries will be suppressed if there are no errors.",
+      "displayName": "SQL Post-Query",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "SQL Post-Query",
+      "required": false,
+      "sensitive": false
+    },
+    "SQL Pre-Query": {
+      "description": "A semicolon-delimited list of queries executed before the main SQL query is executed. For example, set session properties before main query. It's possible to include semicolons in the statements themselves by escaping them with a backslash ('\\;'). Results/outputs from these queries will be suppressed if there are no errors.",
+      "displayName": "SQL Pre-Query",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "SQL Pre-Query",
+      "required": false,
+      "sensitive": false
+    },
+    "SQL Query": {
+      "description": "The SQL query to execute. The query can be empty, a constant value, or built from attributes using Expression Language. If this property is specified, it will be used regardless of the content of incoming FlowFiles. If this property is empty, the content of the incoming FlowFile is expected to contain a valid SQL query, to be issued by the processor to the database. Note that Expression Language is not evaluated for FlowFile contents.",
+      "displayName": "SQL Query",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "SQL Query",
+      "required": false,
+      "sensitive": false
+    },
+    "Set Auto Commit": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "true",
+          "value": "true"
+        },
+        {
+          "description": "",
+          "displayName": "false",
+          "value": "false"
+        }
+      ],
+      "defaultValue": "true",
+      "description": "Enables or disables the auto commit functionality of the DB connection. Default value is 'true'. The default value can be used with most of the JDBC drivers and this functionality doesn't have any impact in most of the cases since this processor is used to read data. However, for some JDBC drivers such as PostgreSQL driver, it is required to disable the auto committing functionality to limit the number of result rows fetching at a time. When auto commit is enabled, postgreSQL driver loads whole result set to memory at once. This could lead for a large amount of memory usage when executing queries which fetch large data sets. More Details of this behaviour in PostgreSQL driver can be found in https://jdbc.postgresql.org//documentation/head/query.html. ",
+      "displayName": "Set Auto Commit",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Set Auto Commit",
+      "required": true,
+      "sensitive": false
+    },
+    "Use Avro Logical Types": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "true",
+          "value": "true"
+        },
+        {
+          "description": "",
+          "displayName": "false",
+          "value": "false"
+        }
+      ],
+      "defaultValue": "false",
+      "description": "Whether to use Avro Logical Types for DECIMAL/NUMBER, DATE, TIME and TIMESTAMP columns. If disabled, written as string. If enabled, Logical types are used and written as its underlying type, specifically, DECIMAL/NUMBER as logical 'decimal': written as bytes with additional precision and scale meta data, DATE as logical 'date-millis': written as int denoting days since Unix epoch (1970-01-01), TIME as logical 'time-millis': written as int denoting milliseconds since Unix epoch, and TIMESTAMP as logical 'timestamp-millis': written as long denoting milliseconds since Unix epoch. If a reader of written Avro records also knows these logical types, then these values can be deserialized with more context depending on reader implementation.",
+      "displayName": "Use Avro Logical Types",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Use Avro Logical Types",
+      "required": true,
+      "sensitive": false
+    }
+  },
+  "readsAttributes": [
+    {
+      "description": "Incoming FlowFiles are expected to be parametrized SQL statements. The type of each Parameter is specified as an integer that represents the JDBC Type of the parameter. The following types are accepted: [LONGNVARCHAR: -16], [BIT: -7], [BOOLEAN: 16], [TINYINT: -6], [BIGINT: -5], [LONGVARBINARY: -4], [VARBINARY: -3], [BINARY: -2], [LONGVARCHAR: -1], [CHAR: 1], [NUMERIC: 2], [DECIMAL: 3], [INTEGER: 4], [SMALLINT: 5] [FLOAT: 6], [REAL: 7], [DOUBLE: 8], [VARCHAR: 12], [DATE: 91], [TIME: 92], [TIMESTAMP: 93], [VARCHAR: 12], [CLOB: 2005], [NCLOB: 2011]",
+      "name": "sql.args.N.type"
+    },
+    {
+      "description": "Incoming FlowFiles are expected to be parametrized SQL statements. The value of the Parameters are specified as sql.args.1.value, sql.args.2.value, sql.args.3.value, and so on. The type of the sql.args.1.value Parameter is specified by the sql.args.1.type attribute.",
+      "name": "sql.args.N.value"
+    },
+    {
+      "description": "This attribute is always optional, but default options may not always work for your data. Incoming FlowFiles are expected to be parametrized SQL statements. In some cases a format option needs to be specified, currently this is only applicable for binary data types, dates, times and timestamps. Binary Data Types (defaults to 'ascii') - ascii: each string character in your attribute value represents a single byte. This is the format provided by Avro Processors. base64: the string is a Base64 encoded string that can be decoded to bytes. hex: the string is hex encoded with all letters in upper case and no '0x' at the beginning. Dates/Times/Timestamps - Date, Time and Timestamp formats all support both custom formats or named format ('yyyy-MM-dd','ISO_OFFSET_DATE_TIME') as specified according to java.time.format.DateTimeFormatter. If not specified, a long value input is expected to be an unix epoch (milli seconds from 1970/1/1), or a string value in 'yyyy-MM-dd' format for Date, 'HH:mm:ss.SSS' for Time (some database engines e.g. Derby or MySQL do not support milliseconds and will truncate milliseconds), 'yyyy-MM-dd HH:mm:ss.SSS' for Timestamp is used.",
+      "name": "sql.args.N.format"
+    }
+  ],
+  "sideEffectFree": false,
+  "supportedRelationships": [
+    {
+      "description": "SQL query execution failed. Incoming FlowFile will be penalized and routed to this relationship",
+      "name": "failure"
+    },
+    {
+      "description": "Successfully created FlowFile from SQL query result set.",
+      "name": "success"
+    }
+  ],
+  "supportedSchedulingStrategies": [
+    "TIMER_DRIVEN",
+    "CRON_DRIVEN"
+  ],
+  "supportsBatching": false,
+  "supportsDynamicProperties": true,
+  "supportsDynamicRelationships": false,
+  "supportsSensitiveDynamicProperties": true,
+  "tags": [
+    "database",
+    "jdbc",
+    "query",
+    "record",
+    "select",
+    "sql"
+  ],
+  "triggerSerially": false,
+  "triggerWhenAnyDestinationAvailable": false,
+  "triggerWhenEmpty": false,
+  "type": "org.apache.nifi.processors.standard.ExecuteSQLRecord",
+  "typeDescription": "Executes provided SQL select query. Query result will be converted to the format specified by a Record Writer. Streaming is used so arbitrarily large result sets are supported. This processor can be scheduled to run on a timer, or cron expression, using the standard scheduling methods, or it can be triggered by an incoming FlowFile. If it is triggered by an incoming FlowFile, then attributes of that FlowFile will be available when evaluating the select query, and the query may use the ? to escape parameters. In this case, the parameters to use must exist as FlowFile attributes with the naming convention sql.args.N.type and sql.args.N.value, where N is a positive integer. The sql.args.N.type is expected to be a number indicating the JDBC Type. The content of the FlowFile is expected to be in UTF-8 format. FlowFile attribute 'executesql.row.count' indicates how many rows were selected.",
+  "useCases": [],
+  "version": "2.12.0",
+  "writesAttributes": [
+    {
+      "description": "Contains the number of rows returned in the select query",
+      "name": "executesql.row.count"
+    },
+    {
+      "description": "Combined duration of the query execution time and fetch time in milliseconds",
+      "name": "executesql.query.duration"
+    },
+    {
+      "description": "Duration of the query execution time in milliseconds",
+      "name": "executesql.query.executiontime"
+    },
+    {
+      "description": "Duration of the result set fetch time in milliseconds",
+      "name": "executesql.query.fetchtime"
+    },
+    {
+      "description": "Assuming multiple result sets are returned, the zero based index of this result set.",
+      "name": "executesql.resultset.index"
+    },
+    {
+      "description": "If processing an incoming FlowFile causes an Exception, the FlowFile is routed to failure and this attribute is set to the exception message.",
+      "name": "executesql.error.message"
+    },
+    {
+      "description": "If 'Max Rows Per FlowFile' is set then all FlowFiles from the same query result set will have the same value for the fragment.identifier attribute. This can then be used to correlate the results.",
+      "name": "fragment.identifier"
+    },
+    {
+      "description": "If 'Max Rows Per FlowFile' is set then this is the total number of  FlowFiles produced by a single ResultSet. This can be used in conjunction with the fragment.identifier attribute in order to know how many FlowFiles belonged to the same incoming ResultSet. If Output Batch Size is set, then this attribute will not be populated.",
+      "name": "fragment.count"
+    },
+    {
+      "description": "If 'Max Rows Per FlowFile' is set then the position of this FlowFile in the list of outgoing FlowFiles that were all derived from the same result set FlowFile. This can be used in conjunction with the fragment.identifier attribute to know which FlowFiles originated from the same query result set and in what order  FlowFiles were produced",
+      "name": "fragment.index"
+    },
+    {
+      "description": "If the processor has an incoming connection, outgoing FlowFiles will have this attribute set to the value of the input FlowFile's UUID. If there is no incoming connection, the attribute will not be added.",
+      "name": "input.flowfile.uuid"
+    },
+    {
+      "description": "Sets the mime.type attribute to the MIME Type specified by the Record Writer.",
+      "name": "mime.type"
+    },
+    {
+      "description": "The number of records output by the Record Writer.",
+      "name": "record.count"
+    }
+  ]
+}

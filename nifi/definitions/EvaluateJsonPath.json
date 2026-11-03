@@ -1,0 +1,190 @@
+{
+  "additionalDetails": true,
+  "artifact": "nifi-standard-nar",
+  "buildInfo": {
+    "revision": "1"
+  },
+  "defaultBulletinLevel": "WARN",
+  "defaultConcurrentTasksBySchedulingStrategy": {
+    "CRON_DRIVEN": 1,
+    "TIMER_DRIVEN": 1
+  },
+  "defaultPenaltyDuration": "30 sec",
+  "defaultSchedulingPeriodBySchedulingStrategy": {
+    "CRON_DRIVEN": "* * * * * ?",
+    "TIMER_DRIVEN": "0 sec"
+  },
+  "defaultSchedulingStrategy": "TIMER_DRIVEN",
+  "defaultYieldDuration": "1 sec",
+  "dynamicProperties": [
+    {
+      "description": "If <Destination>='flowfile-attribute' then that FlowFile attribute will be set to any JSON objects that match the JsonPath.  If <Destination>='flowfile-content' then the FlowFile content will be updated to any JSON objects that match the JsonPath.",
+      "expressionLanguageScope": "NONE",
+      "name": "A FlowFile attribute(if <Destination> is set to 'flowfile-attribute')",
+      "value": "A JsonPath expression"
+    }
+  ],
+  "group": "org.apache.nifi",
+  "inputRequirement": "INPUT_REQUIRED",
+  "multiProcessorUseCases": [],
+  "primaryNodeOnly": false,
+  "propertyDescriptors": {
+    "Destination": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "flowfile-content",
+          "value": "flowfile-content"
+        },
+        {
+          "description": "",
+          "displayName": "flowfile-attribute",
+          "value": "flowfile-attribute"
+        }
+      ],
+      "defaultValue": "flowfile-content",
+      "description": "Indicates whether the results of the JsonPath evaluation are written to the FlowFile content or a FlowFile attribute; if using attribute, must specify the Attribute Name property. If set to flowfile-content, only one JsonPath may be specified, and the property name is ignored.",
+      "displayName": "Destination",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Destination",
+      "required": true,
+      "sensitive": false
+    },
+    "Max String Length": {
+      "defaultValue": "20 MB",
+      "description": "The maximum allowed length of a string value when parsing the JSON document",
+      "displayName": "Max String Length",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Max String Length",
+      "required": true,
+      "sensitive": false
+    },
+    "Null Value Representation": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "empty string",
+          "value": "empty string"
+        },
+        {
+          "description": "",
+          "displayName": "the string 'null'",
+          "value": "the string 'null'"
+        }
+      ],
+      "defaultValue": "empty string",
+      "description": "Indicates the desired representation of JSON Path expressions resulting in a null value.",
+      "displayName": "Null Value Representation",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Null Value Representation",
+      "required": true,
+      "sensitive": false
+    },
+    "Path Not Found Behavior": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "warn",
+          "value": "warn"
+        },
+        {
+          "description": "",
+          "displayName": "ignore",
+          "value": "ignore"
+        },
+        {
+          "description": "",
+          "displayName": "skip",
+          "value": "skip"
+        }
+      ],
+      "defaultValue": "ignore",
+      "dependencies": [
+        {
+          "dependentValues": [
+            "flowfile-attribute"
+          ],
+          "propertyDisplayName": "Destination",
+          "propertyName": "Destination"
+        }
+      ],
+      "description": "Indicates how to handle missing JSON path expressions when destination is set to 'flowfile-attribute'. Selecting 'warn' will generate a warning when a JSON path expression is not found. Selecting 'skip' will omit attributes for any unmatched JSON path expressions.",
+      "displayName": "Path Not Found Behavior",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Path Not Found Behavior",
+      "required": true,
+      "sensitive": false
+    },
+    "Return Type": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "auto-detect",
+          "value": "auto-detect"
+        },
+        {
+          "description": "",
+          "displayName": "json",
+          "value": "json"
+        },
+        {
+          "description": "",
+          "displayName": "scalar",
+          "value": "scalar"
+        }
+      ],
+      "defaultValue": "auto-detect",
+      "description": "Indicates the desired return type of the JSON Path expressions.  Selecting 'auto-detect' will set the return type to 'json' for a Destination of 'flowfile-content', and 'scalar' for a Destination of 'flowfile-attribute'.",
+      "displayName": "Return Type",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Return Type",
+      "required": true,
+      "sensitive": false
+    }
+  },
+  "sideEffectFree": true,
+  "supportedRelationships": [
+    {
+      "description": "FlowFiles are routed to this relationship when the JsonPath cannot be evaluated against the content of the FlowFile; for instance, if the FlowFile is not valid JSON",
+      "name": "failure"
+    },
+    {
+      "description": "FlowFiles are routed to this relationship when the JsonPath is successfully evaluated and the FlowFile is modified as a result",
+      "name": "matched"
+    },
+    {
+      "description": "FlowFiles are routed to this relationship when the JsonPath does not match the content of the FlowFile and the Destination is set to flowfile-content",
+      "name": "unmatched"
+    }
+  ],
+  "supportedSchedulingStrategies": [
+    "TIMER_DRIVEN",
+    "CRON_DRIVEN"
+  ],
+  "supportsBatching": true,
+  "supportsDynamicProperties": true,
+  "supportsDynamicRelationships": false,
+  "supportsSensitiveDynamicProperties": false,
+  "tags": [
+    "JSON",
+    "JsonPath",
+    "evaluate"
+  ],
+  "triggerSerially": false,
+  "triggerWhenAnyDestinationAvailable": false,
+  "triggerWhenEmpty": false,
+  "type": "org.apache.nifi.processors.standard.EvaluateJsonPath",
+  "typeDescription": "Evaluates one or more JsonPath expressions against the content of a FlowFile. The results of those expressions are assigned to FlowFile Attributes or are written to the content of the FlowFile itself, depending on configuration of the Processor. JsonPaths are entered by adding user-defined properties; the name of the property maps to the Attribute Name into which the result will be placed (if the Destination is flowfile-attribute; otherwise, the property name is ignored). The value of the property must be a valid JsonPath expression. A Return Type of 'auto-detect' will make a determination based off the configured destination. When 'Destination' is set to 'flowfile-attribute,' a return type of 'scalar' will be used. When 'Destination' is set to 'flowfile-content,' a return type of 'JSON' will be used.If the JsonPath evaluates to a JSON array or JSON object and the Return Type is set to 'scalar' the FlowFile will be unmodified and will be routed to failure. A Return Type of JSON can return scalar values if the provided JsonPath evaluates to the specified value and will be routed as a match.If Destination is 'flowfile-content' and the JsonPath does not evaluate to a defined path, the FlowFile will be routed to 'unmatched' without having its contents modified. If Destination is 'flowfile-attribute' and the expression matches nothing, attributes will be created with empty strings as the value unless 'Path Not Found Behaviour' is set to 'skip', and the FlowFile will always be routed to 'matched.'",
+  "useCases": [],
+  "version": "2.12.0"
+}

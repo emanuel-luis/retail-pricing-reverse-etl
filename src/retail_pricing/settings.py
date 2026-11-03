@@ -160,3 +160,20 @@ class DbtRunnerSettings(_Base):
     state_dir: Path = Path("runs/dbt-runner")
     dbt_bin: str = "dbt"
     threads: int = Field(default=2, validation_alias="DBT_THREADS")
+
+
+class NifiSettings(_Base):
+    """The NiFi HTTPS API and its single-user login (`NIFI_*`)."""
+
+    model_config = SettingsConfigDict(env_prefix="NIFI_")
+
+    host: str = "127.0.0.1"
+    # The same variables compose publishes the ports with, so moving them in .env moves both.
+    https_port: int = 28443
+    trigger_port: int = 28081
+    username: str = "nifi_admin"
+    password: SecretStr = SecretStr("")
+
+    @property
+    def url(self) -> str:
+        return f"https://{self.host}:{self.https_port}/nifi-api"

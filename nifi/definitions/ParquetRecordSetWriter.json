@@ -1,0 +1,490 @@
+{
+  "additionalDetails": false,
+  "artifact": "nifi-parquet-nar",
+  "buildInfo": {
+    "revision": "1"
+  },
+  "group": "org.apache.nifi",
+  "propertyDescriptors": {
+    "Avro Add List Element Records": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "true",
+          "value": "true"
+        },
+        {
+          "description": "",
+          "displayName": "false",
+          "value": "false"
+        }
+      ],
+      "defaultValue": "true",
+      "description": "Specifies the value for 'parquet.avro.add-list-element-records' in the underlying Parquet library",
+      "displayName": "Avro Add List Element Records",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Avro Add List Element Records",
+      "required": true,
+      "sensitive": false
+    },
+    "Avro Write Old List Structure": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "true",
+          "value": "true"
+        },
+        {
+          "description": "",
+          "displayName": "false",
+          "value": "false"
+        }
+      ],
+      "defaultValue": "true",
+      "description": "Specifies the value for 'parquet.avro.write-old-list-structure' in the underlying Parquet library",
+      "displayName": "Avro Write Old List Structure",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Avro Write Old List Structure",
+      "required": true,
+      "sensitive": false
+    },
+    "Cache Size": {
+      "defaultValue": "1000",
+      "description": "Specifies how many Schemas should be cached",
+      "displayName": "Cache Size",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Cache Size",
+      "required": true,
+      "sensitive": false
+    },
+    "Compression Type": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "UNCOMPRESSED",
+          "value": "UNCOMPRESSED"
+        },
+        {
+          "description": "",
+          "displayName": "SNAPPY",
+          "value": "SNAPPY"
+        },
+        {
+          "description": "",
+          "displayName": "GZIP",
+          "value": "GZIP"
+        },
+        {
+          "description": "",
+          "displayName": "LZO",
+          "value": "LZO"
+        },
+        {
+          "description": "",
+          "displayName": "BROTLI",
+          "value": "BROTLI"
+        },
+        {
+          "description": "",
+          "displayName": "LZ4",
+          "value": "LZ4"
+        },
+        {
+          "description": "",
+          "displayName": "ZSTD",
+          "value": "ZSTD"
+        },
+        {
+          "description": "",
+          "displayName": "LZ4_RAW",
+          "value": "LZ4_RAW"
+        }
+      ],
+      "defaultValue": "UNCOMPRESSED",
+      "description": "The type of compression for the file being written.",
+      "displayName": "Compression Type",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Compression Type",
+      "required": true,
+      "sensitive": false
+    },
+    "Dictionary Page Size": {
+      "description": "The dictionary page size used by the Parquet writer. The value is specified in the format of <Data Size> <Data Unit> where Data Unit is one of B, KB, MB, GB, TB.",
+      "displayName": "Dictionary Page Size",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Dictionary Page Size",
+      "required": false,
+      "sensitive": false
+    },
+    "Enable Dictionary Encoding": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "true",
+          "value": "true"
+        },
+        {
+          "description": "",
+          "displayName": "false",
+          "value": "false"
+        }
+      ],
+      "description": "Specifies whether dictionary encoding should be enabled for the Parquet writer",
+      "displayName": "Enable Dictionary Encoding",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Enable Dictionary Encoding",
+      "required": false,
+      "sensitive": false
+    },
+    "Enable Validation": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "true",
+          "value": "true"
+        },
+        {
+          "description": "",
+          "displayName": "false",
+          "value": "false"
+        }
+      ],
+      "description": "Specifies whether validation should be enabled for the Parquet writer",
+      "displayName": "Enable Validation",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Enable Validation",
+      "required": false,
+      "sensitive": false
+    },
+    "INT96 Fields": {
+      "description": "List of fields with full path that should be treated as INT96 timestamps.",
+      "displayName": "INT96 Fields",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "INT96 Fields",
+      "required": false,
+      "sensitive": false
+    },
+    "Max Padding Size": {
+      "description": "The maximum amount of padding that will be used to align row groups with blocks in the underlying filesystem. If the underlying filesystem is not a block filesystem like HDFS, this has no effect. The value is specified in the format of <Data Size> <Data Unit> where Data Unit is one of B, KB, MB, GB, TB.",
+      "displayName": "Max Padding Size",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Max Padding Size",
+      "required": false,
+      "sensitive": false
+    },
+    "Page Size": {
+      "description": "The page size used by the Parquet writer. The value is specified in the format of <Data Size> <Data Unit> where Data Unit is one of B, KB, MB, GB, TB.",
+      "displayName": "Page Size",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Page Size",
+      "required": false,
+      "sensitive": false
+    },
+    "Row Group Size": {
+      "description": "The row group size used by the Parquet writer. The value is specified in the format of <Data Size> <Data Unit> where Data Unit is one of B, KB, MB, GB, TB.",
+      "displayName": "Row Group Size",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Row Group Size",
+      "required": false,
+      "sensitive": false
+    },
+    "Schema Access Strategy": {
+      "allowableValues": [
+        {
+          "description": "The schema used to write records will be the same schema that was given to the Record when the Record was created.",
+          "displayName": "Inherit Record Schema",
+          "value": "inherit-record-schema"
+        },
+        {
+          "description": "The name of the Schema to use is specified by the 'Schema Name' Property. The value of this property is used to lookup the Schema in the configured Schema Registry service.",
+          "displayName": "Use 'Schema Name' Property",
+          "value": "schema-name"
+        },
+        {
+          "description": "The text of the Schema itself is specified by the 'Schema Text' Property. The value of this property must be a valid Avro Schema. If Expression Language is used, the value of the 'Schema Text' property must be valid after substituting the expressions.",
+          "displayName": "Use 'Schema Text' Property",
+          "value": "schema-text-property"
+        }
+      ],
+      "defaultValue": "inherit-record-schema",
+      "description": "Specifies how to obtain the schema that is to be used for interpreting the data.",
+      "displayName": "Schema Access Strategy",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Schema Access Strategy",
+      "required": true,
+      "sensitive": false
+    },
+    "Schema Branch": {
+      "dependencies": [
+        {
+          "dependentValues": [
+            "schema-name"
+          ],
+          "propertyDisplayName": "Schema Access Strategy",
+          "propertyName": "Schema Access Strategy"
+        }
+      ],
+      "description": "Specifies the name of the branch to use when looking up the schema in the Schema Registry property. If the chosen Schema Registry does not support branching, this value will be ignored.",
+      "displayName": "Schema Branch",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Schema Branch",
+      "required": false,
+      "sensitive": false
+    },
+    "Schema Cache": {
+      "description": "Specifies a Schema Cache to add the Record Schema to so that Record Readers can quickly lookup the schema.",
+      "displayName": "Schema Cache",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Schema Cache",
+      "required": false,
+      "sensitive": false,
+      "typeProvidedByValue": {
+        "artifact": "nifi-standard-services-api-nar",
+        "group": "org.apache.nifi",
+        "type": "org.apache.nifi.serialization.RecordSchemaCacheService",
+        "version": "2.12.0"
+      }
+    },
+    "Schema Name": {
+      "defaultValue": "${schema.name}",
+      "dependencies": [
+        {
+          "dependentValues": [
+            "schema-name"
+          ],
+          "propertyDisplayName": "Schema Access Strategy",
+          "propertyName": "Schema Access Strategy"
+        }
+      ],
+      "description": "Specifies the name of the schema to lookup in the Schema Registry property",
+      "displayName": "Schema Name",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Schema Name",
+      "required": false,
+      "sensitive": false
+    },
+    "Schema Reference Reader": {
+      "dependencies": [
+        {
+          "dependentValues": [
+            "schema-reference-reader"
+          ],
+          "propertyDisplayName": "Schema Access Strategy",
+          "propertyName": "Schema Access Strategy"
+        }
+      ],
+      "description": "Service implementation responsible for reading FlowFile attributes or content to determine the Schema Reference Identifier",
+      "displayName": "Schema Reference Reader",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Schema Reference Reader",
+      "required": true,
+      "sensitive": false,
+      "typeProvidedByValue": {
+        "artifact": "nifi-standard-services-api-nar",
+        "group": "org.apache.nifi",
+        "type": "org.apache.nifi.schemaregistry.services.SchemaReferenceReader",
+        "version": "2.12.0"
+      }
+    },
+    "Schema Reference Writer": {
+      "dependencies": [
+        {
+          "dependentValues": [
+            "schema-reference-writer"
+          ],
+          "propertyDisplayName": "Schema Write Strategy",
+          "propertyName": "Schema Write Strategy"
+        }
+      ],
+      "description": "Service implementation responsible for writing FlowFile attributes or content header with Schema reference information",
+      "displayName": "Schema Reference Writer",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Schema Reference Writer",
+      "required": true,
+      "sensitive": false,
+      "typeProvidedByValue": {
+        "artifact": "nifi-standard-services-api-nar",
+        "group": "org.apache.nifi",
+        "type": "org.apache.nifi.schemaregistry.services.SchemaReferenceWriter",
+        "version": "2.12.0"
+      }
+    },
+    "Schema Registry": {
+      "dependencies": [
+        {
+          "dependentValues": [
+            "schema-name",
+            "schema-reference-reader"
+          ],
+          "propertyDisplayName": "Schema Access Strategy",
+          "propertyName": "Schema Access Strategy"
+        }
+      ],
+      "description": "Specifies the Controller Service to use for the Schema Registry",
+      "displayName": "Schema Registry",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Schema Registry",
+      "required": false,
+      "sensitive": false,
+      "typeProvidedByValue": {
+        "artifact": "nifi-standard-services-api-nar",
+        "group": "org.apache.nifi",
+        "type": "org.apache.nifi.schemaregistry.services.SchemaRegistry",
+        "version": "2.12.0"
+      }
+    },
+    "Schema Text": {
+      "defaultValue": "${avro.schema}",
+      "dependencies": [
+        {
+          "dependentValues": [
+            "schema-text-property"
+          ],
+          "propertyDisplayName": "Schema Access Strategy",
+          "propertyName": "Schema Access Strategy"
+        }
+      ],
+      "description": "The text of an Avro-formatted Schema",
+      "displayName": "Schema Text",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Schema Text",
+      "required": false,
+      "sensitive": false
+    },
+    "Schema Version": {
+      "dependencies": [
+        {
+          "dependentValues": [
+            "schema-name"
+          ],
+          "propertyDisplayName": "Schema Access Strategy",
+          "propertyName": "Schema Access Strategy"
+        }
+      ],
+      "description": "Specifies the version of the schema to lookup in the Schema Registry. If not specified then the latest version of the schema will be retrieved.",
+      "displayName": "Schema Version",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Schema Version",
+      "required": false,
+      "sensitive": false
+    },
+    "Schema Write Strategy": {
+      "allowableValues": [
+        {
+          "description": "Do not add any schema-related information to the FlowFile.",
+          "displayName": "Do Not Write Schema",
+          "value": "no-schema"
+        },
+        {
+          "description": "The FlowFile will be given an attribute named 'schema.name' and this attribute will indicate the name of the schema in the Schema Registry. Note that ifthe schema for a record is not obtained from a Schema Registry, then no attribute will be added.",
+          "displayName": "Set 'schema.name' Attribute",
+          "value": "schema-name"
+        },
+        {
+          "description": "The FlowFile will be given an attribute named 'avro.schema' and this attribute will contain the Avro Schema that describes the records in the FlowFile. The contents of the FlowFile need not be Avro, but the text of the schema will be used.",
+          "displayName": "Set 'avro.schema' Attribute",
+          "value": "full-schema-attribute"
+        },
+        {
+          "description": "The schema reference information will be written through a configured Schema Reference Writer service implementation.",
+          "displayName": "Schema Reference Writer",
+          "value": "schema-reference-writer"
+        }
+      ],
+      "defaultValue": "no-schema",
+      "description": "Specifies how the schema for a Record should be added to the data.",
+      "displayName": "Schema Write Strategy",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Schema Write Strategy",
+      "required": true,
+      "sensitive": false
+    },
+    "Writer Version": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "PARQUET_1_0",
+          "value": "PARQUET_1_0"
+        },
+        {
+          "description": "",
+          "displayName": "PARQUET_2_0",
+          "value": "PARQUET_2_0"
+        }
+      ],
+      "description": "Specifies the version used by Parquet writer",
+      "displayName": "Writer Version",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Writer Version",
+      "required": false,
+      "sensitive": false
+    }
+  },
+  "providedApiImplementations": [
+    {
+      "artifact": "nifi-standard-services-api-nar",
+      "group": "org.apache.nifi",
+      "type": "org.apache.nifi.serialization.RecordSetWriterFactory",
+      "version": "2.12.0"
+    }
+  ],
+  "supportsDynamicProperties": false,
+  "supportsSensitiveDynamicProperties": false,
+  "tags": [
+    "parquet",
+    "record",
+    "recordset",
+    "result",
+    "row",
+    "serializer",
+    "set",
+    "writer"
+  ],
+  "type": "org.apache.nifi.parquet.ParquetRecordSetWriter",
+  "typeDescription": "Writes the contents of a RecordSet in Parquet format.",
+  "version": "2.12.0"
+}

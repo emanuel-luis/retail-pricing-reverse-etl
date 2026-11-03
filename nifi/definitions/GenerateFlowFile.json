@@ -1,0 +1,166 @@
+{
+  "additionalDetails": true,
+  "artifact": "nifi-standard-nar",
+  "buildInfo": {
+    "revision": "1"
+  },
+  "defaultBulletinLevel": "WARN",
+  "defaultConcurrentTasksBySchedulingStrategy": {
+    "CRON_DRIVEN": 1,
+    "TIMER_DRIVEN": 1
+  },
+  "defaultPenaltyDuration": "30 sec",
+  "defaultSchedulingPeriodBySchedulingStrategy": {
+    "CRON_DRIVEN": "* * * * * ?",
+    "TIMER_DRIVEN": "1 min"
+  },
+  "defaultSchedulingStrategy": "TIMER_DRIVEN",
+  "defaultYieldDuration": "1 sec",
+  "dynamicProperties": [
+    {
+      "description": "Specifies an attribute on generated FlowFiles defined by the Dynamic Property's key and value. If Expression Language is used, evaluation will be performed only once per batch of generated FlowFiles.",
+      "expressionLanguageScope": "ENVIRONMENT",
+      "name": "Generated FlowFile attribute name",
+      "value": "Generated FlowFile attribute value"
+    }
+  ],
+  "group": "org.apache.nifi",
+  "inputRequirement": "INPUT_FORBIDDEN",
+  "multiProcessorUseCases": [],
+  "primaryNodeOnly": false,
+  "propertyDescriptors": {
+    "Batch Size": {
+      "defaultValue": "1",
+      "description": "The number of FlowFiles to be transferred in each invocation",
+      "displayName": "Batch Size",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Batch Size",
+      "required": true,
+      "sensitive": false
+    },
+    "Character Set": {
+      "defaultValue": "UTF-8",
+      "description": "Specifies the character set to use when writing the bytes of Custom Text to a FlowFile.",
+      "displayName": "Character Set",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Character Set",
+      "required": true,
+      "sensitive": false
+    },
+    "Custom Text": {
+      "description": "If Data Format is text and if Unique FlowFiles is false, then this custom text will be used as content of the generated FlowFiles and the File Size will be ignored. Finally, if Expression Language is used, evaluation will be performed only once per batch of generated FlowFiles",
+      "displayName": "Custom Text",
+      "dynamic": false,
+      "expressionLanguageScope": "ENVIRONMENT",
+      "expressionLanguageScopeDescription": "Environment variables defined at JVM level and system properties",
+      "name": "Custom Text",
+      "required": false,
+      "sensitive": false
+    },
+    "Data Format": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "Binary",
+          "value": "Binary"
+        },
+        {
+          "description": "",
+          "displayName": "Text",
+          "value": "Text"
+        }
+      ],
+      "defaultValue": "Text",
+      "description": "Specifies whether the data should be Text or Binary",
+      "displayName": "Data Format",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Data Format",
+      "required": true,
+      "sensitive": false
+    },
+    "File Size": {
+      "defaultValue": "0B",
+      "description": "The size of the file that will be used",
+      "displayName": "File Size",
+      "dynamic": false,
+      "expressionLanguageScope": "ENVIRONMENT",
+      "expressionLanguageScopeDescription": "Environment variables defined at JVM level and system properties",
+      "name": "File Size",
+      "required": true,
+      "sensitive": false
+    },
+    "Mime Type": {
+      "description": "Specifies the value to set for the \"mime.type\" attribute.",
+      "displayName": "Mime Type",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Mime Type",
+      "required": false,
+      "sensitive": false
+    },
+    "Unique FlowFiles": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "true",
+          "value": "true"
+        },
+        {
+          "description": "",
+          "displayName": "false",
+          "value": "false"
+        }
+      ],
+      "defaultValue": "false",
+      "description": "If true, each FlowFile that is generated will be unique. If false, all generated FlowFiles will have the same content. When Unique FlowFiles is false, the first FlowFile in a batch is written and additional FlowFiles clone that content.",
+      "displayName": "Unique FlowFiles",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Unique FlowFiles",
+      "required": true,
+      "sensitive": false
+    }
+  },
+  "sideEffectFree": false,
+  "supportedRelationships": [
+    {
+      "description": "",
+      "name": "success"
+    }
+  ],
+  "supportedSchedulingStrategies": [
+    "TIMER_DRIVEN",
+    "CRON_DRIVEN"
+  ],
+  "supportsBatching": true,
+  "supportsDynamicProperties": true,
+  "supportsDynamicRelationships": false,
+  "supportsSensitiveDynamicProperties": false,
+  "tags": [
+    "generate",
+    "load",
+    "random",
+    "test"
+  ],
+  "triggerSerially": false,
+  "triggerWhenAnyDestinationAvailable": false,
+  "triggerWhenEmpty": false,
+  "type": "org.apache.nifi.processors.standard.GenerateFlowFile",
+  "typeDescription": "This processor creates FlowFiles with random data or custom content. GenerateFlowFile is useful for load testing, configuration, and simulation. Also see DuplicateFlowFile for additional load testing.",
+  "useCases": [],
+  "version": "2.12.0",
+  "writesAttributes": [
+    {
+      "description": "Sets the MIME type of the output if the 'Mime Type' property is set",
+      "name": "mime.type"
+    }
+  ]
+}

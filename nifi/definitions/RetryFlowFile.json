@@ -1,0 +1,179 @@
+{
+  "additionalDetails": false,
+  "artifact": "nifi-standard-nar",
+  "buildInfo": {
+    "revision": "1"
+  },
+  "defaultBulletinLevel": "WARN",
+  "defaultConcurrentTasksBySchedulingStrategy": {
+    "CRON_DRIVEN": 1,
+    "TIMER_DRIVEN": 1
+  },
+  "defaultPenaltyDuration": "30 sec",
+  "defaultSchedulingPeriodBySchedulingStrategy": {
+    "CRON_DRIVEN": "* * * * * ?",
+    "TIMER_DRIVEN": "0 sec"
+  },
+  "defaultSchedulingStrategy": "TIMER_DRIVEN",
+  "defaultYieldDuration": "1 sec",
+  "dynamicProperties": [
+    {
+      "description": "One or more dynamic properties can be used to add attributes to FlowFiles passed to the 'retries_exceeded' relationship",
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "name": "Exceeded FlowFile Attribute Key",
+      "value": "The value of the attribute added to the FlowFile"
+    }
+  ],
+  "group": "org.apache.nifi",
+  "inputRequirement": "INPUT_REQUIRED",
+  "multiProcessorUseCases": [],
+  "primaryNodeOnly": false,
+  "propertyDescriptors": {
+    "Fail on Nonnumerical Overwrite": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "true",
+          "value": "true"
+        },
+        {
+          "description": "",
+          "displayName": "false",
+          "value": "false"
+        }
+      ],
+      "defaultValue": "false",
+      "description": "If the FlowFile already has the attribute defined in 'Retry Attribute' that is *not* a number, fail the FlowFile instead of resetting that value to '1'",
+      "displayName": "Fail on Nonnumerical Overwrite",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Fail on Nonnumerical Overwrite",
+      "required": true,
+      "sensitive": false
+    },
+    "Maximum Retries": {
+      "defaultValue": "3",
+      "description": "The maximum number of times a FlowFile can be retried before being passed to the 'retries_exceeded' relationship",
+      "displayName": "Maximum Retries",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Maximum Retries",
+      "required": true,
+      "sensitive": false
+    },
+    "Penalize Retries": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "true",
+          "value": "true"
+        },
+        {
+          "description": "",
+          "displayName": "false",
+          "value": "false"
+        }
+      ],
+      "defaultValue": "true",
+      "description": "If set to 'true', this Processor will penalize input FlowFiles before passing them to the 'retry' relationship. This does not apply to the 'retries_exceeded' relationship.",
+      "displayName": "Penalize Retries",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Penalize Retries",
+      "required": true,
+      "sensitive": false
+    },
+    "Retry Attribute": {
+      "defaultValue": "flowfile.retries",
+      "description": "The name of the attribute that contains the current retry count for the FlowFile. WARNING: If the name matches an attribute already on the FlowFile that does not contain a numerical value, the processor will either overwrite that attribute with '1' or fail based on configuration.",
+      "displayName": "Retry Attribute",
+      "dynamic": false,
+      "expressionLanguageScope": "ENVIRONMENT",
+      "expressionLanguageScopeDescription": "Environment variables defined at JVM level and system properties",
+      "name": "Retry Attribute",
+      "required": true,
+      "sensitive": false
+    },
+    "Reuse Mode": {
+      "allowableValues": [
+        {
+          "description": "If the RetryFlowFile's UUID does not match the FlowFile's retry UUID, fail the FlowFile regardless of current retry count",
+          "displayName": "Fail on Reuse",
+          "value": "fail"
+        },
+        {
+          "description": "If the RetryFlowFile's UUID does not match the FlowFile's retry UUID, log a warning message before resetting the retry attribute and UUID for this instance",
+          "displayName": "Warn on Reuse",
+          "value": "warn"
+        },
+        {
+          "description": "If the RetryFlowFile's UUID does not match the FlowFile's retry UUID, log a debug message before resetting the retry attribute and UUID for this instance",
+          "displayName": "Reset Reuse",
+          "value": "reset"
+        }
+      ],
+      "defaultValue": "fail",
+      "description": "Defines how the Processor behaves if the retry FlowFile has a different retry UUID than the instance that received the FlowFile. This generally means that the attribute was not reset after being successfully retried by a previous instance of this processor.",
+      "displayName": "Reuse Mode",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Reuse Mode",
+      "required": true,
+      "sensitive": false
+    }
+  },
+  "readsAttributes": [
+    {
+      "description": "Will read the attribute or attribute expression language result as defined in 'Retry Attribute'",
+      "name": "Retry Attribute"
+    }
+  ],
+  "sideEffectFree": true,
+  "supportedRelationships": [
+    {
+      "description": "The processor is configured such that a non-numerical value on 'Retry Attribute' results in a failure instead of resetting that value to '1'. This will immediately terminate the limited feedback loop. Might also include when 'Maximum Retries' contains attribute expression language that does not resolve to an Integer.",
+      "name": "failure"
+    },
+    {
+      "description": "Input FlowFile has exceeded the configured maximum retry count, do not pass this relationship back to the input Processor to terminate the limited feedback loop.",
+      "name": "retries_exceeded"
+    },
+    {
+      "description": "Input FlowFile has not exceeded the configured maximum retry count, pass this relationship back to the input Processor to create a limited feedback loop.",
+      "name": "retry"
+    }
+  ],
+  "supportedSchedulingStrategies": [
+    "TIMER_DRIVEN",
+    "CRON_DRIVEN"
+  ],
+  "supportsBatching": true,
+  "supportsDynamicProperties": true,
+  "supportsDynamicRelationships": false,
+  "supportsSensitiveDynamicProperties": false,
+  "tags": [
+    "FlowFile",
+    "Retry"
+  ],
+  "triggerSerially": false,
+  "triggerWhenAnyDestinationAvailable": false,
+  "triggerWhenEmpty": false,
+  "type": "org.apache.nifi.processors.standard.RetryFlowFile",
+  "typeDescription": "FlowFiles passed to this Processor have a 'Retry Attribute' value checked against a configured 'Maximum Retries' value. If the current attribute value is below the configured maximum, the FlowFile is passed to a retry relationship. The FlowFile may or may not be penalized in that condition. If the FlowFile's attribute value exceeds the configured maximum, the FlowFile will be passed to a 'retries_exceeded' relationship. WARNING: If the incoming FlowFile has a non-numeric value in the configured 'Retry Attribute' attribute, it will be reset to '1'. You may choose to fail the FlowFile instead of performing the reset. Additional dynamic properties can be defined for any attributes you wish to add to the FlowFiles transferred to 'retries_exceeded'. These attributes support attribute expression language.",
+  "useCases": [],
+  "version": "2.12.0",
+  "writesAttributes": [
+    {
+      "description": "User defined retry attribute is updated with the current retry count",
+      "name": "Retry Attribute"
+    },
+    {
+      "description": "User defined retry attribute with .uuid that determines what processor retried the FlowFile last",
+      "name": "Retry Attribute .uuid"
+    }
+  ]
+}

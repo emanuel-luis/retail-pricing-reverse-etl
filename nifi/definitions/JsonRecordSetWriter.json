@@ -1,0 +1,566 @@
+{
+  "additionalDetails": false,
+  "artifact": "nifi-record-serialization-services-nar",
+  "buildInfo": {
+    "revision": "1"
+  },
+  "group": "org.apache.nifi",
+  "propertyDescriptors": {
+    "Allow Scientific Notation": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "true",
+          "value": "true"
+        },
+        {
+          "description": "",
+          "displayName": "false",
+          "value": "false"
+        }
+      ],
+      "defaultValue": "false",
+      "description": "Specifies whether or not scientific notation should be used when writing numbers",
+      "displayName": "Allow Scientific Notation",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Allow Scientific Notation",
+      "required": true,
+      "sensitive": false
+    },
+    "Compression Format": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "none",
+          "value": "none"
+        },
+        {
+          "description": "",
+          "displayName": "gzip",
+          "value": "gzip"
+        },
+        {
+          "description": "",
+          "displayName": "bzip2",
+          "value": "bzip2"
+        },
+        {
+          "description": "",
+          "displayName": "xz-lzma2",
+          "value": "xz-lzma2"
+        },
+        {
+          "description": "",
+          "displayName": "snappy",
+          "value": "snappy"
+        },
+        {
+          "description": "",
+          "displayName": "snappy framed",
+          "value": "snappy framed"
+        },
+        {
+          "description": "",
+          "displayName": "zstd",
+          "value": "zstd"
+        }
+      ],
+      "defaultValue": "none",
+      "description": "The compression format to use. Valid values are: GZIP, BZIP2, ZSTD, XZ-LZMA2, LZMA, Snappy, and Snappy Framed",
+      "displayName": "Compression Format",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Compression Format",
+      "required": true,
+      "sensitive": false
+    },
+    "Compression Level": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "0",
+          "value": "0"
+        },
+        {
+          "description": "",
+          "displayName": "1",
+          "value": "1"
+        },
+        {
+          "description": "",
+          "displayName": "2",
+          "value": "2"
+        },
+        {
+          "description": "",
+          "displayName": "3",
+          "value": "3"
+        },
+        {
+          "description": "",
+          "displayName": "4",
+          "value": "4"
+        },
+        {
+          "description": "",
+          "displayName": "5",
+          "value": "5"
+        },
+        {
+          "description": "",
+          "displayName": "6",
+          "value": "6"
+        },
+        {
+          "description": "",
+          "displayName": "7",
+          "value": "7"
+        },
+        {
+          "description": "",
+          "displayName": "8",
+          "value": "8"
+        },
+        {
+          "description": "",
+          "displayName": "9",
+          "value": "9"
+        }
+      ],
+      "defaultValue": "1",
+      "dependencies": [
+        {
+          "dependentValues": [
+            "gzip"
+          ],
+          "propertyDisplayName": "Compression Format",
+          "propertyName": "Compression Format"
+        }
+      ],
+      "description": "The compression level to use; this is valid only when using GZIP compression. A lower value results in faster processing but less compression; a value of 0 indicates no compression but simply archiving",
+      "displayName": "Compression Level",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Compression Level",
+      "required": true,
+      "sensitive": false
+    },
+    "Date Format": {
+      "description": "Specifies the format to use when reading/writing Date fields. If not specified, Date fields will be assumed to be number of milliseconds since epoch (Midnight, Jan 1, 1970 GMT). If specified, the value must match the Java java.time.format.DateTimeFormatter format (for example, MM/dd/yyyy for a two-digit month, followed by a two-digit day, followed by a four-digit year, all separated by '/' characters, as in 01/01/2017).",
+      "displayName": "Date Format",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Date Format",
+      "required": false,
+      "sensitive": false
+    },
+    "Output Grouping": {
+      "allowableValues": [
+        {
+          "description": "Output records as a JSON array",
+          "displayName": "Array",
+          "value": "output-array"
+        },
+        {
+          "description": "Output records with one JSON object per line, delimited by a newline character",
+          "displayName": "One Line Per Object",
+          "value": "output-oneline"
+        }
+      ],
+      "defaultValue": "output-array",
+      "description": "Specifies how the writer should output the JSON records (as an array or one object per line, e.g.) Note that if 'One Line Per Object' is selected, then Pretty Print JSON must be false.",
+      "displayName": "Output Grouping",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Output Grouping",
+      "required": true,
+      "sensitive": false
+    },
+    "Pretty Print JSON": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "true",
+          "value": "true"
+        },
+        {
+          "description": "",
+          "displayName": "false",
+          "value": "false"
+        }
+      ],
+      "defaultValue": "false",
+      "description": "Specifies whether or not the JSON should be pretty printed",
+      "displayName": "Pretty Print JSON",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Pretty Print JSON",
+      "required": true,
+      "sensitive": false
+    },
+    "Schema Access Strategy": {
+      "allowableValues": [
+        {
+          "description": "The schema used to write records will be the same schema that was given to the Record when the Record was created.",
+          "displayName": "Inherit Record Schema",
+          "value": "inherit-record-schema"
+        },
+        {
+          "description": "The name of the Schema to use is specified by the 'Schema Name' Property. The value of this property is used to lookup the Schema in the configured Schema Registry service.",
+          "displayName": "Use 'Schema Name' Property",
+          "value": "schema-name"
+        },
+        {
+          "description": "The text of the Schema itself is specified by the 'Schema Text' Property. The value of this property must be a valid Avro Schema. If Expression Language is used, the value of the 'Schema Text' property must be valid after substituting the expressions.",
+          "displayName": "Use 'Schema Text' Property",
+          "value": "schema-text-property"
+        }
+      ],
+      "defaultValue": "inherit-record-schema",
+      "description": "Specifies how to obtain the schema that is to be used for interpreting the data.",
+      "displayName": "Schema Access Strategy",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Schema Access Strategy",
+      "required": true,
+      "sensitive": false
+    },
+    "Schema Branch": {
+      "dependencies": [
+        {
+          "dependentValues": [
+            "schema-name"
+          ],
+          "propertyDisplayName": "Schema Access Strategy",
+          "propertyName": "Schema Access Strategy"
+        }
+      ],
+      "description": "Specifies the name of the branch to use when looking up the schema in the Schema Registry property. If the chosen Schema Registry does not support branching, this value will be ignored.",
+      "displayName": "Schema Branch",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Schema Branch",
+      "required": false,
+      "sensitive": false
+    },
+    "Schema Cache": {
+      "description": "Specifies a Schema Cache to add the Record Schema to so that Record Readers can quickly lookup the schema.",
+      "displayName": "Schema Cache",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Schema Cache",
+      "required": false,
+      "sensitive": false,
+      "typeProvidedByValue": {
+        "artifact": "nifi-standard-services-api-nar",
+        "group": "org.apache.nifi",
+        "type": "org.apache.nifi.serialization.RecordSchemaCacheService",
+        "version": "2.12.0"
+      }
+    },
+    "Schema Name": {
+      "defaultValue": "${schema.name}",
+      "dependencies": [
+        {
+          "dependentValues": [
+            "schema-name"
+          ],
+          "propertyDisplayName": "Schema Access Strategy",
+          "propertyName": "Schema Access Strategy"
+        }
+      ],
+      "description": "Specifies the name of the schema to lookup in the Schema Registry property",
+      "displayName": "Schema Name",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Schema Name",
+      "required": false,
+      "sensitive": false
+    },
+    "Schema Reference Reader": {
+      "dependencies": [
+        {
+          "dependentValues": [
+            "schema-reference-reader"
+          ],
+          "propertyDisplayName": "Schema Access Strategy",
+          "propertyName": "Schema Access Strategy"
+        }
+      ],
+      "description": "Service implementation responsible for reading FlowFile attributes or content to determine the Schema Reference Identifier",
+      "displayName": "Schema Reference Reader",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Schema Reference Reader",
+      "required": true,
+      "sensitive": false,
+      "typeProvidedByValue": {
+        "artifact": "nifi-standard-services-api-nar",
+        "group": "org.apache.nifi",
+        "type": "org.apache.nifi.schemaregistry.services.SchemaReferenceReader",
+        "version": "2.12.0"
+      }
+    },
+    "Schema Reference Writer": {
+      "dependencies": [
+        {
+          "dependentValues": [
+            "schema-reference-writer"
+          ],
+          "propertyDisplayName": "Schema Write Strategy",
+          "propertyName": "Schema Write Strategy"
+        }
+      ],
+      "description": "Service implementation responsible for writing FlowFile attributes or content header with Schema reference information",
+      "displayName": "Schema Reference Writer",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Schema Reference Writer",
+      "required": true,
+      "sensitive": false,
+      "typeProvidedByValue": {
+        "artifact": "nifi-standard-services-api-nar",
+        "group": "org.apache.nifi",
+        "type": "org.apache.nifi.schemaregistry.services.SchemaReferenceWriter",
+        "version": "2.12.0"
+      }
+    },
+    "Schema Registry": {
+      "dependencies": [
+        {
+          "dependentValues": [
+            "schema-name",
+            "schema-reference-reader"
+          ],
+          "propertyDisplayName": "Schema Access Strategy",
+          "propertyName": "Schema Access Strategy"
+        }
+      ],
+      "description": "Specifies the Controller Service to use for the Schema Registry",
+      "displayName": "Schema Registry",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Schema Registry",
+      "required": false,
+      "sensitive": false,
+      "typeProvidedByValue": {
+        "artifact": "nifi-standard-services-api-nar",
+        "group": "org.apache.nifi",
+        "type": "org.apache.nifi.schemaregistry.services.SchemaRegistry",
+        "version": "2.12.0"
+      }
+    },
+    "Schema Text": {
+      "defaultValue": "${avro.schema}",
+      "dependencies": [
+        {
+          "dependentValues": [
+            "schema-text-property"
+          ],
+          "propertyDisplayName": "Schema Access Strategy",
+          "propertyName": "Schema Access Strategy"
+        }
+      ],
+      "description": "The text of an Avro-formatted Schema",
+      "displayName": "Schema Text",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Schema Text",
+      "required": false,
+      "sensitive": false
+    },
+    "Schema Version": {
+      "dependencies": [
+        {
+          "dependentValues": [
+            "schema-name"
+          ],
+          "propertyDisplayName": "Schema Access Strategy",
+          "propertyName": "Schema Access Strategy"
+        }
+      ],
+      "description": "Specifies the version of the schema to lookup in the Schema Registry. If not specified then the latest version of the schema will be retrieved.",
+      "displayName": "Schema Version",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Schema Version",
+      "required": false,
+      "sensitive": false
+    },
+    "Schema Write Strategy": {
+      "allowableValues": [
+        {
+          "description": "Do not add any schema-related information to the FlowFile.",
+          "displayName": "Do Not Write Schema",
+          "value": "no-schema"
+        },
+        {
+          "description": "The FlowFile will be given an attribute named 'schema.name' and this attribute will indicate the name of the schema in the Schema Registry. Note that ifthe schema for a record is not obtained from a Schema Registry, then no attribute will be added.",
+          "displayName": "Set 'schema.name' Attribute",
+          "value": "schema-name"
+        },
+        {
+          "description": "The FlowFile will be given an attribute named 'avro.schema' and this attribute will contain the Avro Schema that describes the records in the FlowFile. The contents of the FlowFile need not be Avro, but the text of the schema will be used.",
+          "displayName": "Set 'avro.schema' Attribute",
+          "value": "full-schema-attribute"
+        },
+        {
+          "description": "The schema reference information will be written through a configured Schema Reference Writer service implementation.",
+          "displayName": "Schema Reference Writer",
+          "value": "schema-reference-writer"
+        }
+      ],
+      "defaultValue": "no-schema",
+      "description": "Specifies how the schema for a Record should be added to the data.",
+      "displayName": "Schema Write Strategy",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Schema Write Strategy",
+      "required": true,
+      "sensitive": false
+    },
+    "Serialized JSON Input Handling": {
+      "allowableValues": [
+        {
+          "description": "The writer may emit the input reader's original JSON bytes verbatim when it can do so safely, as a throughput optimization. Timestamp Format, Date Format, Time Format, and Suppress Null Values may not be applied to those records.",
+          "displayName": "Enabled",
+          "value": "ENABLED"
+        },
+        {
+          "description": "The writer re-serializes every record from typed field values, so Timestamp Format, Date Format, Time Format, and Suppress Null Values are honored uniformly.",
+          "displayName": "Disabled",
+          "value": "DISABLED"
+        }
+      ],
+      "defaultValue": "ENABLED",
+      "description": "When enabled, the writer may emit the input reader's original JSON bytes verbatim when it can do so safely, as a throughput optimization. In that case, the Timestamp Format, Date Format, Time Format, and Suppress Null Values properties may not be applied to those records. When disabled, the writer re-serializes every record so that these properties are honored uniformly.",
+      "displayName": "Serialized JSON Input Handling",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Serialized JSON Input Handling",
+      "required": true,
+      "sensitive": false
+    },
+    "Suppress Null Values": {
+      "allowableValues": [
+        {
+          "description": "Fields that are missing (present in the schema but not in the record), or that have a value of null, will be written out as a null value",
+          "displayName": "Never Suppress",
+          "value": "never-suppress"
+        },
+        {
+          "description": "Fields that are missing (present in the schema but not in the record), or that have a value of null, will not be written out",
+          "displayName": "Always Suppress",
+          "value": "always-suppress"
+        },
+        {
+          "description": "When a field has a value of null, it will be written out. However, if a field is defined in the schema and not present in the record, the field will not be written out.",
+          "displayName": "Suppress Missing Values",
+          "value": "suppress-missing"
+        }
+      ],
+      "defaultValue": "never-suppress",
+      "description": "Specifies how the writer should handle a null field",
+      "displayName": "Suppress Null Values",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Suppress Null Values",
+      "required": true,
+      "sensitive": false
+    },
+    "Time Format": {
+      "description": "Specifies the format to use when reading/writing Time fields. If not specified, Time fields will be assumed to be number of milliseconds since epoch (Midnight, Jan 1, 1970 GMT). If specified, the value must match the Java java.time.format.DateTimeFormatter format (for example, HH:mm:ss for a two-digit hour in 24-hour format, followed by a two-digit minute, followed by a two-digit second, all separated by ':' characters, as in 18:04:15).",
+      "displayName": "Time Format",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Time Format",
+      "required": false,
+      "sensitive": false
+    },
+    "Timestamp Format": {
+      "description": "Specifies the format to use when reading/writing Timestamp fields. If not specified, Timestamp fields will be assumed to be number of milliseconds since epoch (Midnight, Jan 1, 1970 GMT). If specified, the value must match the Java java.time.format.DateTimeFormatter format (for example, MM/dd/yyyy HH:mm:ss for a two-digit month, followed by a two-digit day, followed by a four-digit year, all separated by '/' characters; and then followed by a two-digit hour in 24-hour format, followed by a two-digit minute, followed by a two-digit second, all separated by ':' characters, as in 01/01/2017 18:04:15).",
+      "displayName": "Timestamp Format",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Timestamp Format",
+      "required": false,
+      "sensitive": false
+    },
+    "Timestamp Representation": {
+      "allowableValues": [
+        {
+          "description": "Uses the configured Timestamp Format when present, otherwise writes epoch milliseconds",
+          "displayName": "Automatic",
+          "value": "AUTO"
+        },
+        {
+          "description": "Writes timestamps as strings using the configured Timestamp Format",
+          "displayName": "Formatted String",
+          "value": "FORMATTED_STRING"
+        },
+        {
+          "description": "Writes timestamps as integer JSON numbers containing milliseconds since the Unix epoch",
+          "displayName": "Epoch Milliseconds",
+          "value": "EPOCH_MILLISECONDS"
+        },
+        {
+          "description": "Writes timestamps as decimal JSON numbers containing seconds since the Unix epoch with millisecond precision",
+          "displayName": "Epoch Seconds",
+          "value": "EPOCH_SECONDS"
+        }
+      ],
+      "defaultValue": "AUTO",
+      "description": "Specifies how Timestamp logical fields are represented in JSON. Date and Time logical fields are not affected.",
+      "displayName": "Timestamp Representation",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Timestamp Representation",
+      "required": true,
+      "sensitive": false
+    }
+  },
+  "providedApiImplementations": [
+    {
+      "artifact": "nifi-standard-services-api-nar",
+      "group": "org.apache.nifi",
+      "type": "org.apache.nifi.serialization.RecordSetWriterFactory",
+      "version": "2.12.0"
+    }
+  ],
+  "supportsDynamicProperties": false,
+  "supportsSensitiveDynamicProperties": false,
+  "tags": [
+    "json",
+    "record",
+    "recordset",
+    "resultset",
+    "row",
+    "serialize",
+    "writer"
+  ],
+  "type": "org.apache.nifi.json.JsonRecordSetWriter",
+  "typeDescription": "Writes the results of a RecordSet as either a JSON Array or one JSON object per line. If using Array output, then even if the RecordSet consists of a single row, it will be written as an array with a single element. If using One Line Per Object output, the JSON objects cannot be pretty-printed.",
+  "version": "2.12.0"
+}

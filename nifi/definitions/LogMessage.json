@@ -1,0 +1,82 @@
+{
+  "additionalDetails": false,
+  "artifact": "nifi-standard-nar",
+  "buildInfo": {
+    "revision": "1"
+  },
+  "defaultBulletinLevel": "WARN",
+  "defaultConcurrentTasksBySchedulingStrategy": {
+    "CRON_DRIVEN": 1,
+    "TIMER_DRIVEN": 1
+  },
+  "defaultPenaltyDuration": "30 sec",
+  "defaultSchedulingPeriodBySchedulingStrategy": {
+    "CRON_DRIVEN": "* * * * * ?",
+    "TIMER_DRIVEN": "0 sec"
+  },
+  "defaultSchedulingStrategy": "TIMER_DRIVEN",
+  "defaultYieldDuration": "1 sec",
+  "group": "org.apache.nifi",
+  "inputRequirement": "INPUT_REQUIRED",
+  "multiProcessorUseCases": [],
+  "primaryNodeOnly": false,
+  "propertyDescriptors": {
+    "Log Level": {
+      "defaultValue": "info",
+      "description": "The Log Level to use when logging the message: trace, debug, info, warn, error (case-insensitive)",
+      "displayName": "Log Level",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Log Level",
+      "required": true,
+      "sensitive": false
+    },
+    "Log Message": {
+      "description": "The log message to emit",
+      "displayName": "Log Message",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Log Message",
+      "required": false,
+      "sensitive": false
+    },
+    "Log Prefix": {
+      "description": "Log prefix appended to the log lines. It helps to distinguish the output of multiple LogMessage processors.",
+      "displayName": "Log Prefix",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Log Prefix",
+      "required": false,
+      "sensitive": false
+    }
+  },
+  "sideEffectFree": true,
+  "supportedRelationships": [
+    {
+      "description": "All FlowFiles are routed to this relationship",
+      "name": "success"
+    }
+  ],
+  "supportedSchedulingStrategies": [
+    "TIMER_DRIVEN",
+    "CRON_DRIVEN"
+  ],
+  "supportsBatching": true,
+  "supportsDynamicProperties": false,
+  "supportsDynamicRelationships": false,
+  "supportsSensitiveDynamicProperties": false,
+  "tags": [
+    "attributes",
+    "logging"
+  ],
+  "triggerSerially": false,
+  "triggerWhenAnyDestinationAvailable": false,
+  "triggerWhenEmpty": false,
+  "type": "org.apache.nifi.processors.standard.LogMessage",
+  "typeDescription": "Emits a log message at the specified log level",
+  "useCases": [],
+  "version": "2.12.0"
+}

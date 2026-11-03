@@ -1,0 +1,331 @@
+{
+  "additionalDetails": false,
+  "artifact": "nifi-standard-nar",
+  "buildInfo": {
+    "revision": "1"
+  },
+  "defaultBulletinLevel": "WARN",
+  "defaultConcurrentTasksBySchedulingStrategy": {
+    "CRON_DRIVEN": 1,
+    "TIMER_DRIVEN": 1
+  },
+  "defaultPenaltyDuration": "30 sec",
+  "defaultSchedulingPeriodBySchedulingStrategy": {
+    "CRON_DRIVEN": "* * * * * ?",
+    "TIMER_DRIVEN": "0 sec"
+  },
+  "defaultSchedulingStrategy": "TIMER_DRIVEN",
+  "defaultYieldDuration": "1 sec",
+  "group": "org.apache.nifi",
+  "inputRequirement": "INPUT_REQUIRED",
+  "multiProcessorUseCases": [],
+  "primaryNodeOnly": false,
+  "propertyDescriptors": {
+    "Character Set": {
+      "defaultValue": "UTF-8",
+      "description": "The Character Set in which the file is encoded",
+      "displayName": "Character Set",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Character Set",
+      "required": true,
+      "sensitive": false
+    },
+    "Evaluation Mode": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "Line-by-Line",
+          "value": "Line-by-Line"
+        },
+        {
+          "description": "",
+          "displayName": "Entire text",
+          "value": "Entire text"
+        }
+      ],
+      "defaultValue": "Line-by-Line",
+      "description": "Run the 'Replacement Strategy' against each line separately (Line-by-Line) or buffer the entire file into memory (Entire Text) and run against that.",
+      "displayName": "Evaluation Mode",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Evaluation Mode",
+      "required": true,
+      "sensitive": false
+    },
+    "Line-by-Line Evaluation Mode": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "All",
+          "value": "All"
+        },
+        {
+          "description": "",
+          "displayName": "First-Line",
+          "value": "First-Line"
+        },
+        {
+          "description": "",
+          "displayName": "Last-Line",
+          "value": "Last-Line"
+        },
+        {
+          "description": "",
+          "displayName": "Except-First-Line",
+          "value": "Except-First-Line"
+        },
+        {
+          "description": "",
+          "displayName": "Except-Last-Line",
+          "value": "Except-Last-Line"
+        }
+      ],
+      "defaultValue": "All",
+      "description": "Run the 'Replacement Strategy' against each line separately (Line-by-Line) for all lines in the FlowFile, First Line (Header) alone, Last Line (Footer) alone, Except the First Line (Header) or Except the Last Line (Footer).",
+      "displayName": "Line-by-Line Evaluation Mode",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Line-by-Line Evaluation Mode",
+      "required": false,
+      "sensitive": false
+    },
+    "Maximum Buffer Size": {
+      "defaultValue": "1 MB",
+      "description": "Specifies the maximum amount of data to buffer (per file or per line, depending on the Evaluation Mode) in order to apply the replacement. If 'Entire Text' (in Evaluation Mode) is selected and the FlowFile is larger than this value, the FlowFile will be routed to 'failure'. In 'Line-by-Line' Mode, if a single line is larger than this value, the FlowFile will be routed to 'failure'. A default value of 1 MB is provided, primarily for 'Entire Text' mode. In 'Line-by-Line' Mode, a value such as 8 KB or 16 KB is suggested. This value is ignored if the <Replacement Strategy> property is set to one of: Append, Prepend, Always Replace",
+      "displayName": "Maximum Buffer Size",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Maximum Buffer Size",
+      "required": true,
+      "sensitive": false
+    },
+    "Replacement Strategy": {
+      "allowableValues": [
+        {
+          "description": "Insert the Replacement Value at the beginning of the FlowFile or the beginning of each line (depending on the Evaluation Mode). For \"Line-by-Line\" Evaluation Mode, the value will be prepended to each line. Similarly, for \"First-Line\", \"Last-Line\", \"Except-Last-Line\" and \"Except-First-Line\" Evaluation Modes,the value will be prepended to header alone, footer alone, all lines except header and all lines except footer respectively. For \"Entire Text\" evaluation mode,the value will be prepended to the entire text.",
+          "displayName": "Prepend",
+          "value": "Prepend"
+        },
+        {
+          "description": "Insert the Replacement Value at the end of the FlowFile or the end of each line (depending on the Evaluation Mode). For \"Line-by-Line\" Evaluation Mode, the value will be appended to each line. Similarly, for \"First-Line\", \"Last-Line\", \"Except-Last-Line\" and \"Except-First-Line\" Evaluation Modes,the value will be appended to header alone, footer alone, all lines except header and all lines except footer respectively. For \"Entire Text\" evaluation mode,the value will be appended to the entire text.",
+          "displayName": "Append",
+          "value": "Append"
+        },
+        {
+          "description": "Prepends text before the start of the FlowFile (or the start of each line, depending on the configuration of the Evaluation Mode property) as well as appending text to the end of the FlowFile (or the end of each line, depending on the configuration of the Evaluation Mode property)",
+          "displayName": "Surround",
+          "value": "Surround"
+        },
+        {
+          "description": "Interpret the Search Value as a Regular Expression and replace all matches with the Replacement Value. The Replacement Value may reference Capturing Groups used in the Search Value by using a dollar-sign followed by the Capturing Group number, such as $1 or $2. If the Search Value is set to .* then everything is replaced without even evaluating the Regular Expression.",
+          "displayName": "Regex Replace",
+          "value": "Regex Replace"
+        },
+        {
+          "description": "Search for all instances of the Search Value and replace the matches with the Replacement Value.",
+          "displayName": "Literal Replace",
+          "value": "Literal Replace"
+        },
+        {
+          "description": "Always replaces the entire line or the entire contents of the FlowFile (depending on the value of the <Evaluation Mode> property) and does not bother searching for any value. When this strategy is chosen, the <Search Value> property is ignored.",
+          "displayName": "Always Replace",
+          "value": "Always Replace"
+        },
+        {
+          "description": "Substitute variable references (specified in ${var} form) using FlowFile attributes for looking up the replacement value by variable name. When this strategy is chosen, both the <Search Value> and <Replacement Value> properties are ignored.",
+          "displayName": "Substitute Variables",
+          "value": "Substitute Variables"
+        }
+      ],
+      "defaultValue": "Regex Replace",
+      "description": "The strategy for how and what to replace within the FlowFile's text content.",
+      "displayName": "Replacement Strategy",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Replacement Strategy",
+      "required": true,
+      "sensitive": false
+    },
+    "Replacement Value": {
+      "defaultValue": "$1",
+      "dependencies": [
+        {
+          "dependentValues": [
+            "Always Replace",
+            "Append",
+            "Literal Replace",
+            "Prepend",
+            "Regex Replace"
+          ],
+          "propertyDisplayName": "Replacement Strategy",
+          "propertyName": "Replacement Strategy"
+        }
+      ],
+      "description": "The value to insert using the 'Replacement Strategy'. Using \"Regex Replace\" back-references to Regular Expression capturing groups are supported, but back-references that reference capturing groups that do not exist in the regular expression will be treated as literal value. Back References may also be referenced using the Expression Language, as '$1', '$2', etc. The single-tick marks MUST be included, as these variables are not \"Standard\" attribute names (attribute names must be quoted unless they contain only numbers, letters, and _).",
+      "displayName": "Replacement Value",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Replacement Value",
+      "required": true,
+      "sensitive": false
+    },
+    "Search Value": {
+      "defaultValue": "(?s)(^.*$)",
+      "dependencies": [
+        {
+          "dependentValues": [
+            "Literal Replace",
+            "Regex Replace"
+          ],
+          "propertyDisplayName": "Replacement Strategy",
+          "propertyName": "Replacement Strategy"
+        }
+      ],
+      "description": "The Search Value to search for in the FlowFile content. Only used for 'Literal Replace' and 'Regex Replace' matching strategies",
+      "displayName": "Search Value",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Search Value",
+      "required": true,
+      "sensitive": false
+    },
+    "Text to Append": {
+      "dependencies": [
+        {
+          "dependentValues": [
+            "Surround"
+          ],
+          "propertyDisplayName": "Replacement Strategy",
+          "propertyName": "Replacement Strategy"
+        }
+      ],
+      "description": "The text to append to the end of the FlowFile, or each line, depending on the configured value of the Evaluation Mode property",
+      "displayName": "Text to Append",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Text to Append",
+      "required": true,
+      "sensitive": false
+    },
+    "Text to Prepend": {
+      "dependencies": [
+        {
+          "dependentValues": [
+            "Surround"
+          ],
+          "propertyDisplayName": "Replacement Strategy",
+          "propertyName": "Replacement Strategy"
+        }
+      ],
+      "description": "The text to prepend to the start of the FlowFile, or each line, depending on the configured value of the Evaluation Mode property",
+      "displayName": "Text to Prepend",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Text to Prepend",
+      "required": true,
+      "sensitive": false
+    }
+  },
+  "sideEffectFree": true,
+  "supportedRelationships": [
+    {
+      "description": "FlowFiles that could not be updated are routed to this relationship",
+      "name": "failure"
+    },
+    {
+      "description": "FlowFiles that have been successfully processed are routed to this relationship. This includes both FlowFiles that had text replaced and those that did not.",
+      "name": "success"
+    }
+  ],
+  "supportedSchedulingStrategies": [
+    "TIMER_DRIVEN",
+    "CRON_DRIVEN"
+  ],
+  "supportsBatching": true,
+  "supportsDynamicProperties": false,
+  "supportsDynamicRelationships": false,
+  "supportsSensitiveDynamicProperties": false,
+  "systemResourceConsiderations": [
+    {
+      "description": "An instance of this component can cause high usage of this system resource.  Multiple instances or high concurrency settings may result a degradation of performance.",
+      "resource": "MEMORY"
+    }
+  ],
+  "tags": [
+    "Change",
+    "Modify",
+    "Regex",
+    "Regular Expression",
+    "Replace",
+    "Text",
+    "Update"
+  ],
+  "triggerSerially": false,
+  "triggerWhenAnyDestinationAvailable": false,
+  "triggerWhenEmpty": false,
+  "type": "org.apache.nifi.processors.standard.ReplaceText",
+  "typeDescription": "Updates the content of a FlowFile by searching for some textual value in the FlowFile content (via Regular Expression/regex, or literal value) and replacing the section of the content that matches with some alternate value. It can also be used to append or prepend text to the contents of a FlowFile.",
+  "useCases": [
+    {
+      "configuration": "\"Evaluation Mode\" = \"Line-by-Line\"\n\"Replacement Strategy\" = \"Append\"\n\n\"Replacement Value\" is set to whatever text should be appended to the line.\nFor example, to insert the text `<fin>` at the end of every line, we would set \"Replacement Value\" to `<fin>`.\nWe can also use Expression Language. So to insert the filename at the end of every line, we set \"Replacement Value\" to `${filename}`\n",
+      "description": "Append text to the end of every line in a FlowFile",
+      "keywords": [
+        "raw text",
+        "append",
+        "line"
+      ],
+      "notes": ""
+    },
+    {
+      "configuration": "\"Evaluation Mode\" = \"Line-by-Line\"\n\"Replacement Strategy\" = \"Prepend\"\n\n\"Replacement Value\" is set to whatever text should be prepended to the line.\nFor example, to insert the text `<start>` at the beginning of every line, we would set \"Replacement Value\" to `<start>`.\nWe can also use Expression Language. So to insert the filename at the beginning of every line, we set \"Replacement Value\" to `${filename}`\n",
+      "description": "Prepend text to the beginning of every line in a FlowFile",
+      "keywords": [
+        "raw text",
+        "prepend",
+        "line"
+      ],
+      "notes": ""
+    },
+    {
+      "configuration": "\"Evaluation Mode\" = \"Line-by-Line\"\n\"Replacement Strategy\" = \"Literal Replace\"\n\"Search Value\" is set to whatever text is in the FlowFile that needs to be replaced.\n\"Replacement Value\" is set to the text that should replace the current text.\n\nFor example, to replace the word \"spider\" with \"arachnid\" we set \"Search Value\" to `spider` and set \"Replacement Value\" to `arachnid`.\n",
+      "description": "Replace every occurrence of a literal string in the FlowFile with a different value",
+      "keywords": [
+        "replace",
+        "string",
+        "text",
+        "literal"
+      ],
+      "notes": ""
+    },
+    {
+      "configuration": "\"Evaluation Mode\" = \"Line-by-Line\"\n\"Replacement Strategy\" = \"Regex Replace\"\n\"Search Value\" is set to a regular expression that matches the text that should be transformed in a capturing group.\n\"Replacement Value\" is set to a NiFi Expression Language expression that references `$1` (in quotes to escape the reference name).\n\nFor example, if we wanted to lowercase any occurrence of WOLF, TIGER, or LION, we would use a \"Search Value\" of `(WOLF|TIGER|LION)` and a \"Replacement Value\" of `${'$1':toLower()}`.\nIf we want to replace any identifier with a hash of that identifier, we might use a \"Search Value\" of `identifier: (.*)` and a \"Replacement Value\" of `identifier: ${'$1':hash('sha256')}`\n",
+      "description": "Transform every occurrence of a literal string in a FlowFile",
+      "keywords": [
+        "replace",
+        "transform",
+        "raw text"
+      ],
+      "notes": ""
+    },
+    {
+      "configuration": "\"Evaluation Mode\" = \"Entire text\"\n\"Replacement Strategy\" = \"Always Replace\"\n\n\"Replacement Value\" is set to the new text that should be written to the FlowFile. This text might include NiFi Expression Language to reference one or more attributes.\n",
+      "description": "Completely replace the contents of a FlowFile to a specific text",
+      "keywords": [
+        "replace",
+        "raw text"
+      ],
+      "notes": ""
+    }
+  ],
+  "version": "2.12.0"
+}

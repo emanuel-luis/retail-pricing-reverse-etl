@@ -134,9 +134,13 @@ BEGIN
 END $$;
 
 -- audit.end_run(p_run_id) -> (status, failed_steps, open_steps)
--- Closes a running run: failed when any step failed or is still open, else succeeded. Fills
--- rows_in = rows_out (sum of rows of succeeded steps) and bytes, and on failure stores the error
--- and raises an alert of kind stage_failed. Safe to call twice: an ended run is returned as is.
+-- Closes a running run: failed when any step failed or is still open, else succeeded. A planned
+-- item with no step at all counts as open, so an item NiFi dropped before its first event fails
+-- the run: for job extract every audit.extract_plan table of the cycle needs an 'extract.table'
+-- step (item = table), for job load every table of audit.load_plan(cycle, latest succeeded
+-- extract run) a 'load.table' step. Fills rows_in = rows_out (sum of rows of succeeded steps) and
+-- bytes, and on failure stores the error and raises an alert of kind stage_failed. Safe to call
+-- twice: an ended run is returned as is.
 CREATE OR REPLACE FUNCTION audit.end_run(p_run_id uuid)
 RETURNS TABLE(status text, failed_steps int, open_steps int)
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
@@ -150,6 +154,9 @@ DECLARE
     v_errors text;
     v_status text;
     v_error text;
+    v_planned text[] := '{}';
+    v_missing text[];
+    v_extract uuid;
 BEGIN
     SELECT * INTO v_run FROM audit.job_run r WHERE r.run_id = p_run_id FOR UPDATE;
     IF NOT FOUND THEN
@@ -161,6 +168,24 @@ BEGIN
            sum(s.bytes) FILTER (WHERE s.status = 'succeeded')
     INTO v_failed, v_open, v_rows, v_bytes
     FROM audit.step s WHERE s.run_id = p_run_id;
+    IF v_run.job_id = 'extract' THEN
+        SELECT coalesce(array_agg(p.table_name), '{}') INTO v_planned
+        FROM audit.extract_plan p WHERE p.cycle_id = v_run.cycle_id;
+    ELSIF v_run.job_id = 'load' THEN
+        SELECT r.run_id INTO v_extract FROM audit.job_run r
+        WHERE r.cycle_id = v_run.cycle_id AND r.job_id = 'extract' AND r.status = 'succeeded'
+        ORDER BY r.started_at DESC LIMIT 1;
+        IF FOUND THEN
+            SELECT coalesce(array_agg(lp.table_name), '{}') INTO v_planned
+            FROM audit.load_plan(v_run.cycle_id, v_extract) lp;
+        END IF;
+    END IF;
+    -- A failed or running step is already counted above; only items with no step are added.
+    SELECT array_agg(t ORDER BY t) INTO v_missing
+    FROM unnest(v_planned) t
+    WHERE NOT EXISTS (SELECT 1 FROM audit.step s WHERE s.run_id = p_run_id
+                      AND s.step_name = v_run.job_id || '.table' AND s.item = t);
+    v_open := v_open + coalesce(cardinality(v_missing), 0);
     IF v_run.status <> 'running' THEN
         RETURN QUERY SELECT v_run.status, v_failed, v_open;
         RETURN;
@@ -174,7 +199,9 @@ BEGIN
               ORDER BY s.started_at LIMIT 3) f;
         v_error := concat_ws('; ',
             CASE WHEN v_failed > 0 THEN v_failed || ' failed step(s): ' || v_errors END,
-            CASE WHEN v_open > 0 THEN v_open || ' step(s) still open' END);
+            CASE WHEN v_open > 0 THEN v_open || ' step(s) still open' END,
+            CASE WHEN v_missing IS NOT NULL THEN cardinality(v_missing)
+                || ' planned item(s) never started: ' || array_to_string(v_missing, ', ') END);
     END IF;
     UPDATE audit.job_run r
        SET status = v_status, ended_at = now(), rows_in = v_rows, rows_out = v_rows,
