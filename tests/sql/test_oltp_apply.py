@@ -3,6 +3,7 @@
 import random
 import threading
 import uuid
+from collections.abc import Iterator
 from decimal import Decimal
 from typing import Any
 
@@ -18,8 +19,14 @@ STORE = 1
 
 
 @pytest.fixture
-def cycle() -> int:
-    return uuid.uuid4().int % 10**12
+def cycle(oltp_owner: psycopg.Connection) -> Iterator[int]:
+    """A random cycle id; its pricing_apply rows (and those of the next 9 ids) are removed after
+    the test. The extract partitions batch and conflict on cycle_id by value, so 12-digit ids
+    left behind would plan billions of empty pages in the next cycle's extract."""
+    c = uuid.uuid4().int % 10**12
+    yield c
+    for t in APPLY_TABLES:
+        oltp_owner.execute(f"DELETE FROM {t} WHERE cycle_id BETWEEN %s AND %s".encode(), (c, c + 9))
 
 
 def _apply(conn: psycopg.Connection, cycle: int, target: str, batch: int = 1) -> tuple[Any, ...]:
