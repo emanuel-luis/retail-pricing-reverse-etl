@@ -4,7 +4,7 @@
 `_loaded_at`; ReplacingMergeTree(version) ordered by the primary key, no partitioning.
 """
 
-from retail_pricing.data.contract import TABLES, Column, primary_key
+from retail_pricing.data.contract import EXTRACT_TABLES, Column, primary_key
 
 # Text columns that hold a small set of codes, statuses or channels.
 LOW_CARDINALITY = frozenset(
@@ -52,7 +52,7 @@ def column_type(col: Column) -> str:
 
 
 def create_table(table: str) -> str:
-    cols = [f"{c.name} {column_type(c)}" for c in TABLES[table]]
+    cols = [f"{c.name} {column_type(c)}" for c in EXTRACT_TABLES[table]]
     cols += [f"{name} {type_}" for name, type_ in META_COLUMNS]
     body = ",\n".join(f"    {c}" for c in cols)
     order = ", ".join(primary_key(table))
@@ -63,4 +63,4 @@ def create_table(table: str) -> str:
 
 
 def tables() -> list[str]:
-    return [create_table(t) for t in TABLES]
+    return [create_table(t) for t in EXTRACT_TABLES]

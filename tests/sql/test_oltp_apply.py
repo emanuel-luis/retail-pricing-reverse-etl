@@ -9,6 +9,7 @@ from typing import Any
 import psycopg
 import pytest
 
+from retail_pricing.data.contract import APPLY_TABLES
 from retail_pricing.settings import OltpSettings
 
 pytestmark = pytest.mark.sql
@@ -286,3 +287,77 @@ def test_single_row_edits_during_apply_never_deadlock(
         for t in threads:
             t.join()
     assert errors == []
+
+
+@pytest.mark.parametrize("table", list(APPLY_TABLES))
+def test_apply_tables_match_the_extract_contract(
+    oltp_owner: psycopg.Connection, table: str
+) -> None:
+    """050_apply.sql and the extract-only contract agree: names, order and nullability."""
+    schema, name = table.split(".")
+    rows = oltp_owner.execute(
+        "SELECT column_name, is_nullable = 'YES' FROM information_schema.columns"
+        " WHERE table_schema = %s AND table_name = %s ORDER BY ordinal_position",
+        (schema, name),
+    ).fetchall()
+    assert rows == [(c.name, c.nullable) for c in APPLY_TABLES[table]]
+
+
+def test_apply_versions_the_outcome_rows(oltp_owner: psycopg.Connection, cycle: int) -> None:
+    """Stage rows and the batch row get version + 1 and a new updated_at, so they extract."""
+    conn, zone = oltp_owner, _store_zone(oltp_owner)
+    ((p, pr, v),) = _zone_rows(conn, 1, zone)
+    _stage_zone(conn, cycle, [(p, zone, pr + Decimal("0.20"), v)])
+    before = conn.execute(
+        "SELECT version, updated_at FROM pricing_apply.zone_price_stage WHERE cycle_id = %s",
+        (cycle,),
+    ).fetchone()
+    _apply(conn, cycle, "zone_price")
+    stage = conn.execute(
+        "SELECT version, updated_at FROM pricing_apply.zone_price_stage WHERE cycle_id = %s",
+        (cycle,),
+    ).fetchone()
+    batch = conn.execute(
+        "SELECT version FROM pricing_apply.batch WHERE cycle_id = %s", (cycle,)
+    ).fetchone()
+    assert before is not None and stage is not None
+    assert before[0] == 1 and stage[0] == 2 and stage[1] >= before[1]
+    assert batch == (2,)
+
+
+def _checks(conn: psycopg.Connection, fn: str, cycle: int) -> dict[tuple[Any, ...], Any]:
+    return {
+        (z, c, check): (n, s, w)
+        for _, z, c, check, n, s, w in conn.execute(
+            f"SELECT * FROM pricing_apply.{fn}(%s, 'zone_price')".encode(), (cycle,)
+        ).fetchall()
+    }
+
+
+def test_expected_applied_matches_actual_and_follows_later_edits(
+    oltp_owner: psycopg.Connection, cycle: int
+) -> None:
+    """The expected 'applied' check (proposed values) equals the actual one (current values),
+    with a row per staged group; a manual edit after the apply takes the row out of both."""
+    conn, zone = oltp_owner, _store_zone(oltp_owner)
+    rows = _zone_rows(conn, 4, zone)
+    _stage_zone(conn, cycle, [(p, zone, pr + Decimal("0.30"), v) for p, pr, v in rows[:3]])
+    _stage_zone(conn, cycle, [(p, zone, pr + Decimal("0.30"), v + 7) for p, pr, v in rows[3:]])
+    _apply(conn, cycle, "zone_price")
+
+    actual = _checks(conn, "reconcile_actual", cycle)
+    expected = _checks(conn, "reconcile_expected_applied", cycle)
+    assert {k[2] for k in expected} == {"applied"}
+    assert expected == {k: v for k, v in actual.items() if k[2] == "applied"}
+    assert sum(v[0] for v in expected.values()) == 3
+
+    p = rows[0][0]
+    conn.execute("SET app.actor = 'store-ops'")
+    conn.execute(
+        "UPDATE pricing.zone_price SET price = price + 1 WHERE product_id = %s AND zone_id = %s",
+        (p, zone),
+    )
+    actual = _checks(conn, "reconcile_actual", cycle)
+    expected = _checks(conn, "reconcile_expected_applied", cycle)
+    assert expected == {k: v for k, v in actual.items() if k[2] == "applied"}
+    assert sum(v[0] for v in expected.values()) == 2

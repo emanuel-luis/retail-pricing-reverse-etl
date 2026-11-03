@@ -283,4 +283,71 @@ TABLES: dict[str, tuple[Column, ...]] = {name: (*cols, *STANDARD) for name, cols
 
 
 def primary_key(table: str) -> tuple[str, ...]:
-    return tuple(c.name for c in TABLES[table] if c.pk)
+    return tuple(c.name for c in EXTRACT_TABLES[table] if c.pk)
+
+
+# Extract-only tables: the pricing_apply stage outcome and conflicts that NiFi extracts so dbt sees
+# the apply result (PLAN 4.1). They are never seeded; `sql/oltp/050_apply.sql` creates them
+# (defaults and triggers the contract cannot express) and the sql tests check that its columns
+# equal these, in order. The extract list and the ClickHouse raw tables use EXTRACT_TABLES.
+def _stage(keys: tuple[Column, ...], *cols: Column) -> tuple[Column, ...]:
+    return (
+        _pk("cycle_id", "bigint"),
+        *keys,
+        Column("batch_no", "int"),
+        *cols,
+        _null("row_hash", "text"),
+        Column("status", "text"),
+        _null("status_detail", "text"),
+        _null("processed_at", "timestamptz"),
+    )
+
+
+_PROPOSED = (
+    _null("new_price", "numeric(10,2)"),
+    _null("old_price", "numeric(10,2)"),
+    Column("expected_version", "bigint"),
+    _null("reason_code", "text"),
+)
+_APPLY_TABLES: dict[str, tuple[Column, ...]] = {
+    "pricing_apply.zone_price_stage": _stage(
+        (_pk("product_id", "bigint"), _pk("zone_id", "smallint")), *_PROPOSED
+    ),
+    "pricing_apply.store_override_stage": _stage(
+        (_pk("store_id", "int"), _pk("product_id", "bigint")), *_PROPOSED
+    ),
+    "pricing_apply.promo_price_stage": _stage(
+        (_pk("promo_id", "int"), _pk("product_id", "bigint"), _pk("zone_id", "smallint")),
+        *_PROPOSED,
+    ),
+    "pricing_apply.shelf_label_stage": _stage(
+        (_pk("store_id", "int"), _pk("product_id", "bigint")),
+        _null("price", "numeric(10,2)"),
+        _null("promo_price", "numeric(10,2)"),
+        Column("due_date", "date"),
+        Column("source_target", "text"),
+        Column("zone_id", "smallint"),
+    ),
+    "pricing_apply.batch": (
+        _pk("cycle_id", "bigint"),
+        _pk("target", "text"),
+        _pk("batch_no", "int"),
+        *(_null(c, "int") for c in ("received", "applied", "unchanged", "conflicts", "rejects")),
+        Column("processed_at", "timestamptz"),
+    ),
+    "pricing_apply.conflict": (
+        _pk("cycle_id", "bigint"),
+        _pk("target", "text"),
+        _pk("key_text", "text"),
+        _null("expected_version", "bigint"),
+        _null("actual_version", "bigint"),
+        _null("proposed_price", "numeric(10,2)"),
+        _null("actual_price", "numeric(10,2)"),
+        _null("actual_updated_by", "text"),
+        Column("detected_at", "timestamptz"),
+    ),
+}
+APPLY_TABLES: dict[str, tuple[Column, ...]] = {
+    name: (*cols, *STANDARD) for name, cols in _APPLY_TABLES.items()
+}
+EXTRACT_TABLES: dict[str, tuple[Column, ...]] = {**TABLES, **APPLY_TABLES}

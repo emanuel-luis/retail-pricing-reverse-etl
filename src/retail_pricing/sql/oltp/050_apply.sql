@@ -14,6 +14,8 @@ CREATE TABLE IF NOT EXISTS pricing_apply.zone_price_stage (
     status text NOT NULL DEFAULT 'staged',
     status_detail text,
     processed_at timestamptz,
+    version bigint NOT NULL DEFAULT 1,
+    updated_at timestamptz NOT NULL DEFAULT now(),
     PRIMARY KEY (cycle_id, product_id, zone_id)
 );
 
@@ -31,6 +33,8 @@ CREATE TABLE IF NOT EXISTS pricing_apply.store_override_stage (
     status text NOT NULL DEFAULT 'staged',
     status_detail text,
     processed_at timestamptz,
+    version bigint NOT NULL DEFAULT 1,
+    updated_at timestamptz NOT NULL DEFAULT now(),
     PRIMARY KEY (cycle_id, store_id, product_id)
 );
 
@@ -48,6 +52,8 @@ CREATE TABLE IF NOT EXISTS pricing_apply.promo_price_stage (
     status text NOT NULL DEFAULT 'staged',
     status_detail text,
     processed_at timestamptz,
+    version bigint NOT NULL DEFAULT 1,
+    updated_at timestamptz NOT NULL DEFAULT now(),
     PRIMARY KEY (cycle_id, promo_id, product_id, zone_id)
 );
 
@@ -66,6 +72,8 @@ CREATE TABLE IF NOT EXISTS pricing_apply.shelf_label_stage (
     status text NOT NULL DEFAULT 'staged',
     status_detail text,
     processed_at timestamptz,
+    version bigint NOT NULL DEFAULT 1,
+    updated_at timestamptz NOT NULL DEFAULT now(),
     PRIMARY KEY (cycle_id, store_id, product_id)
 );
 
@@ -79,6 +87,8 @@ CREATE TABLE IF NOT EXISTS pricing_apply.batch (
     conflicts int,
     rejects int,
     processed_at timestamptz NOT NULL DEFAULT now(),
+    version bigint NOT NULL DEFAULT 1,
+    updated_at timestamptz NOT NULL DEFAULT now(),
     PRIMARY KEY (cycle_id, target, batch_no)
 );
 
@@ -92,6 +102,8 @@ CREATE TABLE IF NOT EXISTS pricing_apply.conflict (
     actual_price numeric(10,2),
     actual_updated_by text,
     detected_at timestamptz NOT NULL DEFAULT now(),
+    version bigint NOT NULL DEFAULT 1,
+    updated_at timestamptz NOT NULL DEFAULT now(),
     PRIMARY KEY (cycle_id, target, key_text)
 );
 
@@ -99,6 +111,21 @@ CREATE INDEX IF NOT EXISTS zone_price_stage_batch_idx ON pricing_apply.zone_pric
 CREATE INDEX IF NOT EXISTS store_override_stage_batch_idx ON pricing_apply.store_override_stage (cycle_id, batch_no);
 CREATE INDEX IF NOT EXISTS promo_price_stage_batch_idx ON pricing_apply.promo_price_stage (cycle_id, batch_no);
 CREATE INDEX IF NOT EXISTS shelf_label_stage_batch_idx ON pricing_apply.shelf_label_stage (cycle_id, batch_no);
+
+-- The stage outcome and the conflicts are extracted like any OLTP table (PLAN 4.1): version and
+-- updated_at come from ops.touch_row(), and updated_at is indexed for the incremental window.
+DO $$
+DECLARE t text;
+BEGIN
+    FOREACH t IN ARRAY ARRAY['zone_price_stage', 'store_override_stage', 'promo_price_stage',
+                             'shelf_label_stage', 'batch', 'conflict']
+    LOOP
+        EXECUTE format('CREATE OR REPLACE TRIGGER touch_row BEFORE UPDATE ON pricing_apply.%I '
+                       'FOR EACH ROW EXECUTE FUNCTION ops.touch_row()', t);
+        EXECUTE format('CREATE INDEX IF NOT EXISTS %I ON pricing_apply.%I (updated_at)',
+                       t || '_updated_at_idx', t);
+    END LOOP;
+END $$;
 
 -- Each _apply_<target> runs inside apply_batch (one transaction, actor pricing-engine) and
 -- moves every stage row of the batch from 'staged' to rejected / unchanged / applied / conflict.
@@ -438,14 +465,18 @@ BEGIN
 END $$;
 
 -- Checksums per (zone, category), two checks: 'transit' = every staged row of the cycle with
--- its proposed price; 'applied' = target rows with last_cycle_id = cycle whose stage row was
--- applied, with their current price. wsum = sum(((key1 * 1000003 + key2) % 1000000007) * cents).
+-- its proposed price; 'applied' = the rows the cycle applied: stage status applied (or unchanged,
+-- an earlier attempt's apply) whose target row still has last_cycle_id = cycle (labels: the
+-- cycle's queue row). With p_proposed the applied rows carry the stage's proposed value,
+-- otherwise the target's current value. wsum = sum(((key1 * 1000003 + key2) % 1000000007) * cents).
 -- Keys: zone_price (product_id, zone_id); store_override (store_id, product_id);
 -- promo_price (promo_id, product_id * 100 + zone_id); shelf_label (store_id, product_id).
-CREATE OR REPLACE FUNCTION pricing_apply.reconcile_actual(p_cycle_id bigint, p_target text)
+-- Every (zone, category) group with a staged row gets both checks (zeros when nothing applied).
+CREATE OR REPLACE FUNCTION pricing_apply._reconcile(p_cycle_id bigint, p_target text,
+                                                    p_proposed boolean)
 RETURNS TABLE (target text, zone_id smallint, category_id int, check_name text, rows bigint,
                sum_cents numeric, wsum numeric)
-LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
+LANGUAGE sql STABLE SET search_path = pg_catalog, pg_temp AS $$
     WITH checks (check_name, zone_id, product_id, k1, k2, price) AS (
         SELECT 'transit', s.zone_id, s.product_id, s.product_id, s.zone_id::bigint, s.new_price
           FROM pricing_apply.zone_price_stage s
@@ -464,34 +495,37 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
           FROM pricing_apply.shelf_label_stage s
          WHERE p_target = 'shelf_label' AND s.cycle_id = p_cycle_id
         UNION ALL
-        SELECT 'applied', t.zone_id, t.product_id, t.product_id, t.zone_id::bigint, t.price
+        SELECT 'applied', t.zone_id, t.product_id, t.product_id, t.zone_id::bigint,
+               CASE WHEN p_proposed THEN s.new_price ELSE t.price END
           FROM pricing.zone_price t
           JOIN pricing_apply.zone_price_stage s
             ON s.cycle_id = p_cycle_id AND s.product_id = t.product_id AND s.zone_id = t.zone_id
-           AND s.status = 'applied'
+           AND s.status IN ('applied', 'unchanged')
          WHERE p_target = 'zone_price' AND t.last_cycle_id = p_cycle_id
         UNION ALL
-        SELECT 'applied', m.zone_id, t.product_id, t.store_id, t.product_id, t.price
+        SELECT 'applied', m.zone_id, t.product_id, t.store_id, t.product_id,
+               CASE WHEN p_proposed THEN s.new_price ELSE t.price END
           FROM pricing.store_price_override t
           JOIN master.store m USING (store_id)
           JOIN pricing_apply.store_override_stage s
             ON s.cycle_id = p_cycle_id AND s.store_id = t.store_id AND s.product_id = t.product_id
-           AND s.status = 'applied'
+           AND s.status IN ('applied', 'unchanged')
          WHERE p_target = 'store_override' AND t.last_cycle_id = p_cycle_id AND t.valid_to IS NULL
         UNION ALL
         SELECT 'applied', t.zone_id, t.product_id, t.promo_id, t.product_id * 100 + t.zone_id,
-               t.promo_price
+               CASE WHEN p_proposed THEN s.new_price ELSE t.promo_price END
           FROM pricing.promo_price t
           JOIN pricing_apply.promo_price_stage s
             ON s.cycle_id = p_cycle_id AND s.promo_id = t.promo_id
-           AND s.product_id = t.product_id AND s.zone_id = t.zone_id AND s.status = 'applied'
+           AND s.product_id = t.product_id AND s.zone_id = t.zone_id AND s.status IN ('applied', 'unchanged')
          WHERE p_target = 'promo_price' AND t.last_cycle_id = p_cycle_id
         UNION ALL
-        SELECT 'applied', s.zone_id, q.product_id, q.store_id, q.product_id, q.price
+        SELECT 'applied', s.zone_id, q.product_id, q.store_id, q.product_id,
+               CASE WHEN p_proposed THEN s.price ELSE q.price END
           FROM pricing.shelf_label_queue q
           JOIN pricing_apply.shelf_label_stage s
             ON s.cycle_id = q.cycle_id AND s.store_id = q.store_id AND s.product_id = q.product_id
-           AND s.status = 'applied'
+           AND s.status IN ('applied', 'unchanged')
          WHERE p_target = 'shelf_label' AND q.cycle_id = p_cycle_id
     ), agg AS (
         SELECT c.check_name, c.zone_id, pc.category_id, count(*) AS n,
@@ -508,4 +542,23 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
      CROSS JOIN (VALUES ('transit'), ('applied')) k (check_name)
       LEFT JOIN agg a USING (zone_id, category_id, check_name)
      ORDER BY 2, 3, 4 DESC;
+$$;
+
+-- The OLTP side of the reconciliation: both checks, current values.
+CREATE OR REPLACE FUNCTION pricing_apply.reconcile_actual(p_cycle_id bigint, p_target text)
+RETURNS TABLE (target text, zone_id smallint, category_id int, check_name text, rows bigint,
+               sum_cents numeric, wsum numeric)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
+    SELECT * FROM pricing_apply._reconcile(p_cycle_id, p_target, false);
+$$;
+
+-- The expected 'applied' check (DECISIONS 120): the same rows with the values the cycle
+-- proposed. NiFi writes it to audit.reconcile_expected next to ClickHouse's 'transit' check.
+CREATE OR REPLACE FUNCTION pricing_apply.reconcile_expected_applied(p_cycle_id bigint,
+                                                                    p_target text)
+RETURNS TABLE (target text, zone_id smallint, category_id int, check_name text, rows bigint,
+               sum_cents numeric, wsum numeric)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
+    SELECT * FROM pricing_apply._reconcile(p_cycle_id, p_target, true) r
+     WHERE r.check_name = 'applied';
 $$;

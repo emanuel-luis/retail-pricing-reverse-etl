@@ -1,20 +1,20 @@
 from retail_pricing.control.seed import JOBS, extract_tables, pk_column
-from retail_pricing.data.contract import TABLES
+from retail_pricing.data.contract import EXTRACT_TABLES
 
 
 def test_every_contract_table_is_seeded_in_contract_order() -> None:
     seeds = extract_tables()
-    assert [t.table_name for t in seeds] == list(TABLES)
-    assert [t.load_order for t in seeds] == list(range(1, len(TABLES) + 1))
+    assert [t.table_name for t in seeds] == list(EXTRACT_TABLES)
+    assert [t.load_order for t in seeds] == list(range(1, len(EXTRACT_TABLES) + 1))
 
 
 def test_select_list_is_the_contract_columns() -> None:
     for seed in extract_tables():
-        assert seed.select_list.split(", ") == [c.name for c in TABLES[seed.table_name]]
+        assert seed.select_list.split(", ") == [c.name for c in EXTRACT_TABLES[seed.table_name]]
 
 
 def test_pk_column_is_a_numeric_key_column() -> None:
-    for name, cols in TABLES.items():
+    for name, cols in EXTRACT_TABLES.items():
         column = next(c for c in cols if c.name == pk_column(name))
         assert column.pk and column.type in ("bigint", "int", "smallint")
     assert pk_column("sales.sale") == "sale_id"

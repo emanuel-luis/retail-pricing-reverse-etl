@@ -37,7 +37,7 @@ sources:
       - name: market__competitor
       - name: market__competitor_price
       - name: ops__business_clock
-      # pricing_apply extracts (stage status and conflicts); see macros/raw_or_empty.sql.
+      # pricing_apply extracts (stage status and conflicts), loaded from the next cycle on.
       - name: pricing_apply__zone_price_stage
       - name: pricing_apply__store_override_stage
       - name: pricing_apply__promo_price_stage

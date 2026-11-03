@@ -5,7 +5,7 @@ models:
     description: >
       Apply status of every pricing_apply stage row of the four targets, one row per
       (cycle_id, target, product_id, zone_id, store_id, promo_id); key parts that do not apply
-      to a target are 0. Empty when the stage extracts are not loaded.
+      to a target are 0. Cycle N appears once cycle N + 1 has extracted the stage tables.
     data_tests:
       - unique_combination: {arguments: {columns: [cycle_id, target, product_id, zone_id, store_id, promo_id]}}
     columns:

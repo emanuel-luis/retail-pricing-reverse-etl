@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from retail_pricing.data.contract import TABLES
+from retail_pricing.data.contract import EXTRACT_TABLES
 
 NUMERIC_TYPES = ("bigint", "int", "smallint")
 
@@ -104,15 +104,15 @@ def pk_column(table: str) -> str:
     The single-column primary key, or for a composite key product_id when it is part of the key
     (the widest range), else the first numeric key column.
     """
-    numeric = [c.name for c in TABLES[table] if c.pk and c.type in NUMERIC_TYPES]
+    numeric = [c.name for c in EXTRACT_TABLES[table] if c.pk and c.type in NUMERIC_TYPES]
     if not numeric:
         raise ValueError(f"{table} has no numeric primary key column")
     return "product_id" if "product_id" in numeric else numeric[0]
 
 
 def extract_tables() -> list[ExtractSeed]:
-    """Every contract table, in contract (foreign key) order."""
+    """Every contract table in contract (foreign key) order, then the extract-only tables."""
     return [
         ExtractSeed(name, pk_column(name), ", ".join(c.name for c in cols), order)
-        for order, (name, cols) in enumerate(TABLES.items(), start=1)
+        for order, (name, cols) in enumerate(EXTRACT_TABLES.items(), start=1)
     ]
