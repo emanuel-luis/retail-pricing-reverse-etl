@@ -30,10 +30,9 @@ unit_tests:
       - input: ref('int_price_grid')
         format: sql
         rows: >
-          select arraySort(arrayConcat(
-              arrayMap(n -> toInt64(n * 100 + 49), range(10)),
-              arrayMap(n -> toInt64(n * 100 + 99), range(50)),
-              arrayMap(n -> toInt64(n * 100 + 90), range(50, 300)))) as grid
+          select CAST([49, 99, 99, 90] AS Array(Int64)) as band_ending,
+                 CAST([49, 99, 1099, 5090] AS Array(Int64)) as band_first,
+                 CAST([949, 999, 4999, 1000000000000000] AS Array(Int64)) as band_top
     expect:
       rows:
         - {promo_id: 7, product_id: 1, new_price: 8.49, changed: true, expected_version: 3, primary_reason: PROMO_DEPTH_KEEP}

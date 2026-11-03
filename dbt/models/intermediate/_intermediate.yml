@@ -73,7 +73,7 @@ models:
       - {name: current_version, description: The snapshot version; becomes expected_version.}
 
   - name: int_price_grid
-    description: One row holding every price-ending grid price in cents (sorted Array(Int64)), built from rules.price_ending_band.
+    description: "One row: the price-ending grid in closed form, per band the ending and its first and last grid price in cents (band_ending, band_first, band_top), from rules.price_ending_band."
 
   - name: int_price_candidate
     description: Unbounded candidate price (Decimal) per product x zone, with its component reasons and weights and the largest component.

@@ -29,9 +29,8 @@
                 if(b.3 * x.5 >= np * b.4, b.4, x.5),
                 arrayPushBack(acc.6, np),
                 toUInt8(assumeNotNull(acc.7 or np = 0 or np > x.4))),
-            [toInt64(if(x.3 >= if(b.1 = 0, 0, intDiv(b.1 * x.5 + b.2 - 1, b.2)), x.3,
-                        arrayFirst(g -> g >= if(b.1 = 0, 0, intDiv(b.1 * x.5 + b.2 - 1, b.2)),
-                                   grid)))])[1],
+            [toInt64(assumeNotNull(if(x.3 >= if(b.1 = 0, 0, intDiv(b.1 * x.5 + b.2 - 1, b.2)), x.3,
+                        {{ grid_ceil('if(b.1 = 0, 0, intDiv(b.1 * x.5 + b.2 - 1, b.2))') }})))])[1],
         -- b = (best_n, best_d, rank_n, rank_d) after a possible rank change
         [if(x.1 != acc.3,
             tuple(if(acc.1 * acc.5 >= acc.4 * acc.2, acc.1, acc.4),
@@ -47,7 +46,7 @@
     arrayFold((acc, x) -> arrayMap(b -> arrayMap(np -> tuple(
                 b.1, x.1, greatest(b.2, np), arrayPushBack(acc.4, np),
                 toUInt8(assumeNotNull(acc.5 or np = 0 or np > x.4))),
-            [toInt64(if(b.1 = 0 or x.3 > b.1, x.3, arrayFirst(g -> g > b.1, grid)))])[1],
+            [toInt64(assumeNotNull(if(b.1 = 0 or x.3 > b.1, x.3, {{ grid_next_above('b.1') }})))])[1],
         -- b = (best, rank_max) after a possible rank change
         [if(x.1 != acc.2, tuple(greatest(acc.1, acc.3), toInt64(0)), tuple(acc.1, acc.3))])[1],
         members,
@@ -66,7 +65,7 @@ from (
         from (
             select coalesce(toInt64(m.ladder_group_id), -b.product_id) as group_key,
                    b.zone_id as zone_id,
-                   (select grid from {{ grid }}) as grid,
+                   (select (band_ending, band_first, band_top) from {{ grid }}) as grid,
                    {{ sort }}(x -> (x.1, x.2), groupArray(tuple(
                        toInt64(coalesce(m.rank, 0)), b.product_id, toInt64(b.p), toInt64(b.hi),
                        toInt64(coalesce(m.pack_h, 100)), toUInt8(b.bad)))) as members

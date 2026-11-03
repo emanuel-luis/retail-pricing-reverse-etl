@@ -3,7 +3,7 @@
 -- the cap (FLOOR_LIMITED_BY_CAP) and the price is the highest grid price <= hi.
 select product_id, zone_id, new_price, unit_cost, min_margin, primary_reason
 from (
-    select *, (select grid from {{ ref('int_price_grid') }}) as grid
+    select *, {{ grid_value() }} as grid
     from {{ ref('pricing_zone_price') }}
     where cycle_id = {{ cycle_id() }}
 )

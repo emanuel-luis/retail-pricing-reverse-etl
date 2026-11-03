@@ -1,14 +1,13 @@
 version: 2
 
-# The ending grid of the seed bands: [0,10) .49/.99, [10,50) .99, [50,300) .90, in cents.
+# The ending grid of the seed bands in closed form: [0,10) .49/.99, [10,50) .99, [50,inf) .90.
 x-grid: &grid
   input: ref('int_price_grid')
   format: sql
   rows: >
-    select arraySort(arrayConcat(
-        arrayMap(n -> toInt64(n * 100 + 49), range(10)),
-        arrayMap(n -> toInt64(n * 100 + 99), range(50)),
-        arrayMap(n -> toInt64(n * 100 + 90), range(50, 300)))) as grid
+    select CAST([49, 99, 99, 90] AS Array(Int64)) as band_ending,
+           CAST([49, 99, 1099, 5090] AS Array(Int64)) as band_first,
+           CAST([949, 999, 4999, 1000000000000000] AS Array(Int64)) as band_top
 
 unit_tests:
   - name: elasticity_clamp_and_fallback

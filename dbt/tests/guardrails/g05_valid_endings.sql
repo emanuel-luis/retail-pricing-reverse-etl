@@ -11,4 +11,4 @@ with changed as (
 )
 select target, product_id, new_price
 from changed
-where not has((select grid from {{ ref('int_price_grid') }}), toInt64(new_price * 100))
+where {{ grid_floor('toInt64(new_price * 100)', grid_value()) }} != toInt64(new_price * 100)

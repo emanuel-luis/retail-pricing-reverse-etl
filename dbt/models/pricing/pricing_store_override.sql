@@ -15,7 +15,7 @@ with o as (
            zp.primary_reason as zone_reason,
            zp.reasons as zone_reasons,
            {{ e4('zp.max_change_pct') }} as cap_e4,
-           (select grid from {{ ref('int_price_grid') }}) as grid
+           {{ grid_value() }} as grid
     from {{ ref('stg_store_price_override') }} o
     inner join {{ ref('stg_store') }} s on s.store_id = o.store_id
     inner join (

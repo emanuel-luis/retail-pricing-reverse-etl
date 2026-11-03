@@ -10,7 +10,7 @@ with p as (
            pp.promo_price as old_price,
            pp.version as expected_version,
            pr.discount_pct as discount_pct,
-           (select grid from {{ ref('int_price_grid') }}) as grid,
+           {{ grid_value() }} as grid,
            toInt64(zp.new_price * 100) as regular_new_c,
            {{ grid_floor('intDiv(toInt64(zp.new_price * 100) * (10000 - ' ~ e4('pr.discount_pct') ~ '), 10000)') }}
                as new_c

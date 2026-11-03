@@ -8,7 +8,7 @@
 with
 cents as (
     select c.*,
-           (select grid from {{ ref('int_price_grid') }}) as grid,
+           {{ grid_value() }} as grid,
            toInt64(c.current_price * 100) as cur_c,
            {{ e4('c.max_change_pct') }} as cap_e4,
            c.unit_cost is not null as has_cost,

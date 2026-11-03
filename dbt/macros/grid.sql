@@ -1,11 +1,33 @@
 {#
-  Price-ending grid helpers (DECISIONS 38). `g` is the sorted Array(Int64) of grid prices in
-  cents from int_price_grid; values are Int64 cents. A result of 0 means "no grid price".
-  Lambda variable names are unique so the helpers can nest inside other lambdas.
+  Price-ending grid helpers (DECISIONS 38), in closed form per band. `g` is the one-row tuple
+  (band_ending, band_first, band_top) of int_price_grid (grid_value()): per band the ending and
+  its first and last grid price, all Int64 cents. A band holds every n * 100 + ending between
+  first and top. Values are Int64 cents; a result of 0 means "no grid price". Only arithmetic over
+  the few bands runs per row (scanning a full grid array per row materializes it in every block).
+  `arrayMap(_v -> ..., [v])[1]` evaluates v once; lambda names are unique so the helpers nest.
 #}
-{% macro grid_floor(v, g='grid') -%}arrayLast(_gf -> _gf <= ({{ v }}), {{ g }}){%- endmacro %}
-{% macro grid_ceil(v, g='grid') -%}arrayFirst(_gc -> _gc >= ({{ v }}), {{ g }}){%- endmacro %}
-{% macro grid_next_above(v, g='grid') -%}arrayFirst(_ga -> _ga > ({{ v }}), {{ g }}){%- endmacro %}
+{% macro grid_value() -%}
+(select (band_ending, band_first, band_top) from {{ ref('int_price_grid') }})
+{%- endmacro %}
+
+{# Largest grid price <= v. #}
+{% macro grid_floor(v, g='grid') -%}
+arrayMap(_vf -> arrayMax(arrayMap((_e, _f, _t) ->
+        if(_vf >= _e and least(intDiv(_vf - _e, 100) * 100 + _e, _t) >= _f,
+           least(intDiv(_vf - _e, 100) * 100 + _e, _t), toInt64(0)),
+    {{ g }}.1, {{ g }}.2, {{ g }}.3)), [toInt64({{ v }})])[1]
+{%- endmacro %}
+
+{# Smallest grid price >= v (endings are below 1.00, so _vc - _e + 99 >= 0 for v >= 0). #}
+{% macro grid_ceil(v, g='grid') -%}
+arrayMap(_vc -> arrayMap(_m -> if(_m = 9223372036854775807, toInt64(0), _m), [arrayMin(arrayMap((_e, _f, _t) ->
+        if(greatest(_f, intDiv(_vc - _e + 99, 100) * 100 + _e) <= _t,
+           greatest(_f, intDiv(_vc - _e + 99, 100) * 100 + _e), toInt64(9223372036854775807)),
+    {{ g }}.1, {{ g }}.2, {{ g }}.3))])[1], [toInt64({{ v }})])[1]
+{%- endmacro %}
+
+{# Smallest grid price > v. #}
+{% macro grid_next_above(v, g='grid') -%}{{ grid_ceil('(' ~ v ~ ') + 1', g) }}{%- endmacro %}
 
 {# Nearest grid price, a tie goes up. #}
 {% macro grid_round(v, g='grid') -%}

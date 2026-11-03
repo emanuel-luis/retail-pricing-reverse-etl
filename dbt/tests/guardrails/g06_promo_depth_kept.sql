@@ -4,7 +4,7 @@ with p as (
     select promo_id, product_id, zone_id, toInt64(new_price * 100) as new_c,
            intDiv(toInt64(regular_new_price * 100) * (10000 - {{ e4('discount_pct') }}), 10000)
                as target_c,
-           (select grid from {{ ref('int_price_grid') }}) as grid
+           {{ grid_value() }} as grid
     from {{ ref('pricing_promo_price') }}
     where cycle_id = {{ cycle_id() }}
 )
