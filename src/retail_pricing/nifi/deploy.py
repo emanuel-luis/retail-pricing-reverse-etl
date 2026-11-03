@@ -261,26 +261,29 @@ def wait_tcp(host: str, port: int, timeout_s: float = 60.0) -> None:
 # -- registry ------------------------------------------------------------------------------------
 
 
-def record_group_ids(control: ControlSettings, groups: dict[str, str]) -> int | None:
+def record_group_ids(control: ControlSettings, groups: dict[str, str]) -> int:
     """UPDATE registry.job.nifi_process_group_id by group name as the control owner (step 8).
 
-    Returns the rows updated, or None (with a warning) when the control DB is not reachable or
-    `control init` has not run.
+    Returns the rows updated. Raises NifiError when the control DB is not reachable, `control
+    init` has not run, or fewer job rows changed than the flow has groups named after a seed job.
     """
     import psycopg
 
+    from retail_pricing.control.seed import JOBS
+
+    expected = sum(j.process_group_name in groups for j in JOBS)
     try:
         conn = psycopg.connect(
             control.conninfo(control.owner_user, control.owner_password), connect_timeout=5
         )
-    except psycopg.OperationalError:
-        log.warning("control DB not reachable; registry.job.nifi_process_group_id not written")
-        return None
+    except psycopg.OperationalError as e:
+        raise NifiError(f"step 8: control DB not reachable, group ids not written: {e}") from None
     with conn:
         row = conn.execute("SELECT to_regclass('registry.job')").fetchone()
         if row is None or row[0] is None:
-            log.warning("registry.job missing (run control init); group ids not written")
-            return None
+            raise NifiError(
+                "step 8: registry.job missing (run control init); group ids not written"
+            )
         n = 0
         for name, gid in sorted(groups.items()):
             cur = conn.execute(
@@ -288,7 +291,12 @@ def record_group_ids(control: ControlSettings, groups: dict[str, str]) -> int | 
                 (gid, name),
             )
             n += cur.rowcount
-        return n
+    if n < expected:
+        raise NifiError(
+            f"step 8: {n} registry.job row(s) updated, expected {expected} (run control init,"
+            " or deploy with --no-registry for a flow whose groups are not jobs)"
+        )
+    return n
 
 
 # -- the whole deploy ----------------------------------------------------------------------------
@@ -305,7 +313,10 @@ def deploy(
     control: ControlSettings | None = None,
     wait_s: float = 300.0,
 ) -> str:
-    """Replace the `retail-pricing` group with `flow_path`; returns the new group id."""
+    """Replace the `retail-pricing` group with `flow_path`; returns the new group id.
+
+    Step 8 runs only with `control`; None skips it (`nifi deploy --no-registry`).
+    """
     values, sensitive = load_params(params_path)  # fail on unset secrets before touching NiFi
     flow = retarget(flow_path.read_bytes(), f"retail-pricing-{env}")
     c.login(wait_s=wait_s)  # 1
@@ -333,6 +344,5 @@ def deploy(
     if control is not None:  # 8
         groups = {path.rsplit("/", 1)[1]: f["id"] for path, f in tree}
         n = record_group_ids(control, groups)
-        if n is not None:
-            log.info("registry updated", extra={"jobs": n})
+        log.info("registry updated", extra={"jobs": n})
     return gid

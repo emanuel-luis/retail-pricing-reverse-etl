@@ -31,8 +31,10 @@ def token_command(
         typer.echo(token)
         return
     # Write next to the target and rename, so a reader never sees a half-written token.
+    # A leftover temp file would keep its old mode, so it goes first and O_EXCL makes a new one.
     tmp = out.with_name(out.name + ".tmp")
-    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    tmp.unlink(missing_ok=True)
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     with os.fdopen(fd, "w", encoding="utf-8") as f:
         f.write(token)
     os.replace(tmp, out)
@@ -81,6 +83,13 @@ def deploy_command(
     ),
     start: Annotated[bool, typer.Option(help="Start the group after it validates.")] = True,
     wait: Annotated[float, typer.Option(help="Seconds to wait for NiFi to boot.")] = 300.0,
+    registry: Annotated[
+        bool,
+        typer.Option(
+            help="Write the group ids into registry.job (step 8); --no-registry skips it, for a"
+            " flow whose groups are not jobs."
+        ),
+    ] = True,
 ) -> None:
     """Replace the retail-pricing group: parameters, upload, services, validation, start."""
     from retail_pricing.nifi.client import connect
@@ -96,7 +105,7 @@ def deploy_command(
             Path(f"nifi/params/{env.value}.json"),
             start=start,
             trigger=(settings.host, settings.trigger_port),
-            control=ControlSettings(),
+            control=ControlSettings() if registry else None,
             wait_s=wait,
         )
     typer.echo(f"deployed group {gid}")

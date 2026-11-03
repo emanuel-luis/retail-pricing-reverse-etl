@@ -163,3 +163,11 @@ def test_retarget_points_every_group_at_the_env_context() -> None:
     assert out["parameterContexts"] == {"retail-pricing-ci": {"name": "retail-pricing-ci", "x": 1}}
     assert out["flowContents"]["parameterContextName"] == "retail-pricing-ci"
     assert out["flowContents"]["processGroups"][0]["parameterContextName"] == "retail-pricing-ci"
+
+
+def test_step_8_fails_when_the_control_db_is_unreachable() -> None:
+    from retail_pricing.settings import ControlSettings
+
+    control = ControlSettings().model_copy(update={"port": 1})
+    with pytest.raises(NifiError, match="step 8: control DB not reachable"):
+        d.record_group_ids(control, {"10 extract": "g1"})
