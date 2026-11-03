@@ -23,7 +23,11 @@ synthetic tables. `docs/PLAN.md` is the contract and lists what each pull reques
   (127.0.0.1:25433, db `control`), `clickhouse` (HTTP 127.0.0.1:28123; admin `ch_admin`,
   users `nifi`, `dbt`, `grafana`), `s3` (RustFS, 127.0.0.1:29000), `dbt-runner`
   (127.0.0.1:28580; builds the app image `retail-pricing-app:local`), `workload` (profile
-  `workload`, reuses the image). A stack run on the owner's machine takes the heavy lock. Bind
+  `workload`, reuses the image), and profile `monitoring` (`make monitoring`; `make demo` starts
+  it too): `prometheus` (127.0.0.1:29090), `grafana` (127.0.0.1:23000, anonymous Viewer, admin
+  from `.env`; provisioning in `config/grafana/`, three dashboards and nine alert rules),
+  `pg-exporter-oltp`, `pg-exporter-control` and `nifi-token` (the app image refreshing the NiFi
+  JWT Prometheus reads). A stack run on the owner's machine takes the heavy lock. Bind
   mounts point at the working copy that ran `up`: never remove a worktree whose stack runs.
 - `make load SF=<n>`: `retail-pricing oltp load --sf <n>` (`--replace` drops and reloads).
   `make control-init`: `retail-pricing control init` (idempotent; seed from the contract).
@@ -104,7 +108,7 @@ synthetic tables. `docs/PLAN.md` is the contract and lists what each pull reques
   JDBC driver, sha256-checked), `.env.example`.
 - `tests/unit/` (no data), `tests/slow/` (SF0.01 generation, marker `slow`), `tests/sql/`
   (marker `sql`, compose Postgres), `tests/clickhouse/` (marker `clickhouse`),
-  `tests/integration/` (marker `integration`, deployed NiFi flow).
+  `tests/integration/` (marker `integration`, deployed NiFi flow; `test_monitoring_stack.py` needs the monitoring profile).
 
 ## Invariants
 
