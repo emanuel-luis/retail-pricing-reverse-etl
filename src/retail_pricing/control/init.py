@@ -126,3 +126,17 @@ def status(settings: ControlSettings, limit: int = 5) -> list[str]:
                 for job, st2, rows in runs
             ]
     return lines or ["no cycles yet"]
+
+
+def set_cycle_schedule(settings: ControlSettings, every: str | None) -> str | None:
+    """Set job `cycle`'s schedule interval (None turns the schedule off); returns it as text."""
+    s = settings
+    with psycopg.connect(s.conninfo(s.owner_user, s.owner_password), autocommit=True) as conn:
+        row = conn.execute(
+            "UPDATE registry.job SET schedule_interval = %s::interval WHERE job_id = 'cycle'"
+            " RETURNING schedule_interval::text",
+            (every,),
+        ).fetchone()
+    if row is None:
+        raise RuntimeError("registry.job has no 'cycle' row: run `retail-pricing control init`")
+    return None if row[0] is None else str(row[0])

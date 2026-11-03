@@ -35,11 +35,28 @@ step() {
   [ "$rc" -eq 0 ] || { echo "step '$name' failed (exit $rc)" >&2; exit "$rc"; }
 }
 
-env_file() { [ -f .env ] || { cp .env.example .env; echo "created .env from .env.example (local-only values)"; }; }
+# The variable names an env file sets, sorted (comments and blank lines ignored).
+env_keys() { grep -E '^[A-Z_][A-Z0-9_]*=' "$1" | cut -d= -f1 | sort -u; }
+
+env_file() {
+  [ -f .env ] || { cp .env.example .env; echo "created .env from .env.example (local-only values)"; }
+  # An older .env lacks variables that later services need: name them instead of failing deep
+  # inside compose interpolation.
+  local missing
+  missing=$(comm -23 <(env_keys .env.example) <(env_keys .env))
+  if [ -n "$missing" ]; then
+    echo ".env lacks variables from .env.example (copy them over, or delete .env):" >&2
+    echo "$missing" | sed 's/^/  /' >&2
+    return 1
+  fi
+}
 data_all() { $RP data all --sf "$SF"; }
 stack_up() { docker compose up -d --build --wait; }
 oltp_load() { $RP oltp load --sf "$SF"; }
 control_init() { $RP control init; }
+# The demo triggers every cycle itself: a scheduled cycle started by the fresh deploy would make
+# the first trigger answer 409 busy.
+schedule_off() { $RP control schedule --off; }
 ch_init() { $RP ch init; }
 s3_init() { $RP s3 init; }
 nifi_deploy() { $RP nifi deploy --env "${DEPLOY_ENV:-local}"; }
@@ -59,6 +76,7 @@ prepare() {
   step "stack up" stack_up
   step "oltp load" oltp_load
   step "control init" control_init
+  step "schedule off" schedule_off
   step "ch init" ch_init
   step "s3 init" s3_init
   step "nifi deploy" nifi_deploy

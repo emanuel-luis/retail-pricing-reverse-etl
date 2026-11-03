@@ -7,6 +7,7 @@ database, and stats.jsonl (scripts/sample-stats.sh) when it exists.
 
 import json
 import re
+from decimal import Decimal
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -214,6 +215,13 @@ def render_md(rep: dict[str, Any], grafana: str | None = None) -> str:
     return "\n".join(L)
 
 
+def _plain(v: object) -> object:
+    """Decimal from numeric columns to int (whole values, e.g. row sums) or float."""
+    if isinstance(v, Decimal):
+        return int(v) if v == v.to_integral_value() else float(v)
+    return v
+
+
 def load() -> tuple[Rows, Rows, Rows, Rows, Rows]:
     """stages, extract/load steps, dbt nodes, reverse totals and reconcile from the control DB."""
     import psycopg
@@ -225,18 +233,24 @@ def load() -> tuple[Rows, Rows, Rows, Rows, Rows]:
     with psycopg.connect(s.conninfo(s.owner_user, s.owner_password), row_factory=dict_row) as c:
 
         def q(sql: str) -> Rows:
-            return c.execute(sql).fetchall()
+            # numeric columns arrive as Decimal; the report only does float arithmetic on them
+            return [{k: _plain(v) for k, v in row.items()} for row in c.execute(sql).fetchall()]
 
         stages = q(
             "SELECT cycle_id, job_id, status, duration_s FROM audit.v_cycle_stage_duration"
             " ORDER BY cycle_id, stage_order"
         )
+        # Extract records rows and bytes on its per-file steps (item '<table>#<page>-<n>') and
+        # load on its per-table step, so both are summed per table; the time spans the table's
+        # first start to its last end.
         tables = q(
-            "SELECT r.cycle_id, r.job_id, s.item, s.rows, s.bytes,"
-            " extract(epoch FROM s.ended_at - s.started_at)::float AS seconds"
+            "SELECT r.cycle_id, r.job_id, split_part(s.item, '#', 1) AS item,"
+            " sum(s.rows) FILTER (WHERE s.step_name IN ('extract.file', 'load.table')) AS rows,"
+            " sum(s.bytes) FILTER (WHERE s.step_name = 'extract.file') AS bytes,"
+            " extract(epoch FROM max(s.ended_at) - min(s.started_at))::float AS seconds"
             " FROM audit.step s JOIN audit.v_latest_run r USING (run_id)"
             " WHERE r.job_id IN ('extract', 'load') AND s.status = 'succeeded'"
-            " AND s.item IS NOT NULL ORDER BY r.cycle_id, r.job_id, s.item"
+            " AND s.item IS NOT NULL GROUP BY 1, 2, 3 ORDER BY 1, 2, 3"
         )
         nodes = q(
             "SELECT cycle_id, unique_id, status, execution_time_s, rows_affected"

@@ -99,15 +99,15 @@ def test_applied_match_audit() -> None:
 def test_applied_hold_proposed() -> None:
     mart = [{"cycle_id": 1, "product_id": 7, "zone_id": 2, "proposed_price": "9.99"}]
     held = {"last_cycle_id": 1, "product_id": 7, "zone_id": 2, "price": "9.99"}
-    assert applied_hold_proposed(mart, [held]) == []
-    assert applied_hold_proposed(mart, [{**held, "price": "10.49"}]) == [
+    assert applied_hold_proposed(mart, [held], [1, 2]) == []
+    assert applied_hold_proposed(mart, [{**held, "price": "10.49"}], [1, 2]) == [
         "cycle 1 zone_price 7:2: OLTP price 10.49 but proposed 9.99"
     ]
-    assert applied_hold_proposed([], [held]) == [
+    assert applied_hold_proposed([], [held], [1, 2]) == [
         "cycle 1 zone_price 7:2: held in the OLTP but not applied in the mart"
     ]
     # Overwritten later: not held by the cycle any more, so nothing to compare.
-    assert applied_hold_proposed(mart, []) == []
+    assert applied_hold_proposed(mart, [], [1, 2]) == []
 
 
 def test_has_conflicts() -> None:
@@ -151,3 +151,10 @@ def test_run_checks_reports_failures() -> None:
 def test_render_caps_the_list() -> None:
     out = render({"x": [f"f{i}" for i in range(25)]})
     assert "and 15 more" in out
+
+
+def test_applied_hold_proposed_skips_the_last_cycle() -> None:
+    # The last cycle's outcome is not in the mart yet (it arrives with the next extract).
+    held = {"last_cycle_id": 3, "product_id": 5, "zone_id": 1, "price": "9.99"}
+    assert applied_hold_proposed([], [held], [1, 2]) == []
+    assert applied_hold_proposed([], [held], [1, 2, 3]) != []

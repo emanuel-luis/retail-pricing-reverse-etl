@@ -117,12 +117,14 @@ def applied_match_audit(mart: Counts, audit: Counts, cycles: list[int]) -> list[
     return fails
 
 
-def applied_hold_proposed(mart_applied: Rows, oltp_held: Rows) -> list[str]:
+def applied_hold_proposed(mart_applied: Rows, oltp_held: Rows, cycles: list[int]) -> list[str]:
     """Zone prices the engine applied and nobody changed since hold the proposed price.
 
     oltp_held: pricing.zone_price rows whose last_cycle_id is one of the cycles; the engine is
     the only writer of last_cycle_id, and any later write moves or clears it. Such a row must
-    have an applied mart row of the same cycle with the same proposed price.
+    have an applied mart row of the same cycle with the same proposed price. Only `cycles`
+    (those whose marts are complete, see mart_cycles) are checked: the last cycle's apply
+    outcome reaches ClickHouse with the next cycle's extract.
     """
     proposed = {
         (m["cycle_id"], m["product_id"], m["zone_id"]): Decimal(str(m["proposed_price"]))
@@ -130,6 +132,8 @@ def applied_hold_proposed(mart_applied: Rows, oltp_held: Rows) -> list[str]:
     }
     fails = []
     for h in oltp_held:
+        if h["last_cycle_id"] not in cycles:
+            continue
         key = (h["last_cycle_id"], h["product_id"], h["zone_id"])
         label = f"cycle {key[0]} zone_price {key[1]}:{key[2]}"
         if key not in proposed:
@@ -166,7 +170,7 @@ def run_checks(
             data["mart_applied"], data["audit_applied"], mart_cycles(wanted)
         ),
         "applied zone prices hold the proposed price": applied_hold_proposed(
-            data["mart_zone_applied"], data["oltp_held"]
+            data["mart_zone_applied"], data["oltp_held"], mart_cycles(wanted)
         ),
     }
     if expect_conflicts_in is not None:

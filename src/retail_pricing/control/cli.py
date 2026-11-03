@@ -23,3 +23,23 @@ def status_command(
     from retail_pricing.settings import ControlSettings
 
     typer.echo("\n".join(status(ControlSettings(), limit)))
+
+
+@app.command("schedule")
+def schedule_command(
+    every: str | None = typer.Option(
+        None,
+        help="Start a cycle when the last one started longer ago than this, e.g. '10 minutes'.",
+    ),
+    off: bool = typer.Option(
+        False, "--off", help="Stop the scheduled cycles (HTTP triggers only)."
+    ),
+) -> None:
+    """Set or clear the cycle schedule in the job registry (NiFi polls it every minute)."""
+    from retail_pricing.control.init import set_cycle_schedule
+    from retail_pricing.settings import ControlSettings
+
+    if off == (every is not None):
+        raise typer.BadParameter("give exactly one of --every or --off")
+    shown = set_cycle_schedule(ControlSettings(), None if off else every)
+    typer.echo(f"cycle schedule: {shown or 'off'}")

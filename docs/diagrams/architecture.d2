@@ -1,0 +1,45 @@
+# The system in context: the compose services, who drives them and how one pricing cycle moves
+# data between them. Grounded in compose.yaml, src/retail_pricing/nifi/builder/ (the ten process
+# groups), src/retail_pricing/dbt_runner/, src/retail_pricing/sql/oltp/050_apply.sql and
+# src/retail_pricing/sql/control/. Monitoring (Prometheus, Grafana) is added in PR 6.
+...@_style
+
+title: "Architecture: one pricing cycle across the stack" {
+  shape: text
+  near: top-center
+  style: {font-size: 24; bold: true}
+}
+
+direction: down
+
+operator: "operator or CI\nmake demo · cycle trigger" {class: actor}
+workload: "workload generator\nsales, returns, receipts,\nmanual price edits" {class: actor}
+
+oltp: "oltp · Postgres 18\nretail store operations;\nversion + updated_at per row;\npricing_apply.apply_batch" {class: store}
+
+nifi: "NiFi 2.12 · flows as code\n00 trigger, 10 extract, 20 load,\n30 transform, 40-43 reverse,\n50 reconcile, 90 finalize\n(each stage a barrier + gate)" {class: process}
+
+s3: "s3 · RustFS\nretail-raw: Parquet per\ntable, cycle and run" {class: store}
+clickhouse: "ClickHouse 26.3\nraw.* ReplacingMergeTree;\nstg, int, pricing, reverse, marts" {class: store}
+runner: "dbt runner\nHTTP API, runs dbt build\nfor one cycle (dbt-core 1.12)" {class: process}
+control: "control-db · Postgres 18\njob registry, watermarks,\naudit of cycles, runs, steps,\nbatches, reconciliation" {class: store}
+
+operator -> nifi
+workload -> oltp
+oltp -> nifi: "1 extract by watermark"
+nifi -> s3: "Parquet"
+s3 -> clickhouse: "2 load: s3() pull"
+nifi -> runner: "3 transform"
+runner -> clickhouse: "dbt build"
+clickhouse -> nifi: "4 changed rows"
+nifi -> oltp: "apply_batch"
+nifi -> control {class: meta}
+
+legend: Legend {
+  class: legend
+  grid-columns: 3
+  actor: "caller" {class: [actor; legend-actor]}
+  process: "service that runs work" {class: [process; legend-item]}
+  store: "database or bucket" {class: [store; legend-store]}
+  edges: "solid: data, numbered\nin cycle order\ndashed: audit and control" {shape: text; style.font-size: 13}
+}
