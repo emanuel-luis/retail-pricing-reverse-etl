@@ -168,7 +168,8 @@ Grafana over the SF10 cycles (21:20 to 23:05 UTC), provisioned from `config/graf
 ![Platform: scrape targets, NiFi queues, threads and heap, ClickHouse queries, memory, parts and S3 reads, and Postgres transactions, connections, locks, tuples and cache hit ratio.](images/platform.png)
 
 Cycle 3 shows as pending in "Proposed vs applied": a cycle's marts are complete only after the
-next cycle's extract.
+next cycle's extract. The pricing outcomes screenshot predates a label fix in the same pull request: its
+"Average change by category" axis shows category ids 1 to 99 as 100% to 9900%.
 
 ## SF100 (estimate, not run)
 

@@ -294,7 +294,8 @@ outcomes = dashboard(
             "barchart",
             CH,
             ch(
-                "SELECT toString(category_id) AS category,\n"
+                # A label Grafana cannot parse as a number, or percentunit formats the ids too.
+                "SELECT concat('category ', toString(category_id)) AS category,\n"
                 "       round(sum(avg_change_pct * n_changed) / sum(n_changed), 4) AS avg_change\n"
                 f"FROM marts.mart_price_change_impact\nWHERE cycle_id = {LATEST_IMPACT}\n"
                 "GROUP BY category_id\nORDER BY category_id"

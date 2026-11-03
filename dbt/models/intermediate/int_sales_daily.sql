@@ -9,17 +9,19 @@ with
 -- dbt-clickhouse sets join_use_nulls=1, so the left join makes zone_id Nullable; sales without a
 -- zone are dropped here, so the group key is not Nullable.
 sale as (
-    select sale_id, business_date, assumeNotNull(zone_id) as zone_id
+    select sale_id, business_date, assumeNotNull(sale_zone_id) as zone_id
     from (
         select h.sale_id as sale_id,
                h.business_date as business_date,
                if(h.channel = 'WEB',
                   (select min(zone_id) from {{ ref('stg_price_zone') }} where channel = 'WEB'),
-                  st.zone_id) as zone_id
+                  st.zone_id) as sale_zone_id
         from {{ ref('stg_sale') }} h
         left join {{ ref('stg_store') }} st on st.store_id = h.store_id
     )
-    where zone_id is not null
+    -- Another name than zone_id: ClickHouse resolves a SELECT alias before a column, so
+    -- `zone_id is not null` would test assumeNotNull(zone_id) and never drop a row.
+    where sale_zone_id is not null
 ),
 lines as (
     select l.product_id as product_id, s.zone_id as zone_id, s.business_date as business_date,

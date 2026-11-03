@@ -82,7 +82,7 @@
             "uid": "clickhouse"
           },
           "editorType": "sql",
-          "rawSql": "SELECT toString(category_id) AS category,\n       round(sum(avg_change_pct * n_changed) / sum(n_changed), 4) AS avg_change\nFROM marts.mart_price_change_impact\nWHERE cycle_id = (SELECT max(cycle_id) FROM marts.mart_price_change_impact)\nGROUP BY category_id\nORDER BY category_id",
+          "rawSql": "SELECT concat('category ', toString(category_id)) AS category,\n       round(sum(avg_change_pct * n_changed) / sum(n_changed), 4) AS avg_change\nFROM marts.mart_price_change_impact\nWHERE cycle_id = (SELECT max(cycle_id) FROM marts.mart_price_change_impact)\nGROUP BY category_id\nORDER BY category_id",
           "format": 1,
           "queryType": "table"
         }
