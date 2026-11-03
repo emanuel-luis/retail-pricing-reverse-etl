@@ -3024,6 +3024,98 @@
             "componentType": "CONNECTION",
             "destination": {
               "groupId": "4fea7dca-9e15-58c4-8ebd-e1b6a7b44ca7",
+              "id": "a12ed52f-01f3-5ac7-b4bc-6488e70ff103",
+              "name": "step failed retry",
+              "type": "PROCESSOR"
+            },
+            "flowFileExpiration": "0 sec",
+            "groupIdentifier": "4fea7dca-9e15-58c4-8ebd-e1b6a7b44ca7",
+            "identifier": "29279bc3-c984-529a-8778-f7144c3314e4",
+            "labelIndex": 1,
+            "loadBalanceCompression": "DO_NOT_COMPRESS",
+            "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
+            "prioritizers": [],
+            "selectedRelationships": [
+              "failure",
+              "retry"
+            ],
+            "source": {
+              "comments": "",
+              "groupId": "4fea7dca-9e15-58c4-8ebd-e1b6a7b44ca7",
+              "id": "8d52a97b-cfed-54f9-bdcf-9bc7ff245835",
+              "name": "step failed",
+              "type": "PROCESSOR"
+            },
+            "zIndex": 0
+          },
+          {
+            "backPressureDataSizeThreshold": "1 GB",
+            "backPressureObjectThreshold": 10000,
+            "bends": [],
+            "componentType": "CONNECTION",
+            "destination": {
+              "groupId": "4fea7dca-9e15-58c4-8ebd-e1b6a7b44ca7",
+              "id": "8d52a97b-cfed-54f9-bdcf-9bc7ff245835",
+              "name": "step failed",
+              "type": "PROCESSOR"
+            },
+            "flowFileExpiration": "0 sec",
+            "groupIdentifier": "4fea7dca-9e15-58c4-8ebd-e1b6a7b44ca7",
+            "identifier": "d50d511c-a879-50d1-ac8f-be0c812a6e78",
+            "labelIndex": 1,
+            "loadBalanceCompression": "DO_NOT_COMPRESS",
+            "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
+            "prioritizers": [],
+            "selectedRelationships": [
+              "retry"
+            ],
+            "source": {
+              "comments": "",
+              "groupId": "4fea7dca-9e15-58c4-8ebd-e1b6a7b44ca7",
+              "id": "a12ed52f-01f3-5ac7-b4bc-6488e70ff103",
+              "name": "step failed retry",
+              "type": "PROCESSOR"
+            },
+            "zIndex": 0
+          },
+          {
+            "backPressureDataSizeThreshold": "1 GB",
+            "backPressureObjectThreshold": 10000,
+            "bends": [],
+            "componentType": "CONNECTION",
+            "destination": {
+              "groupId": "4fea7dca-9e15-58c4-8ebd-e1b6a7b44ca7",
+              "id": "2a7c3568-249f-5f92-909d-a9a5b21d3c4f",
+              "name": "step failed not recorded",
+              "type": "PROCESSOR"
+            },
+            "flowFileExpiration": "0 sec",
+            "groupIdentifier": "4fea7dca-9e15-58c4-8ebd-e1b6a7b44ca7",
+            "identifier": "37e069ee-9740-56e8-b57f-06c089c3ad5f",
+            "labelIndex": 1,
+            "loadBalanceCompression": "DO_NOT_COMPRESS",
+            "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
+            "prioritizers": [],
+            "selectedRelationships": [
+              "failure",
+              "retries_exceeded"
+            ],
+            "source": {
+              "comments": "",
+              "groupId": "4fea7dca-9e15-58c4-8ebd-e1b6a7b44ca7",
+              "id": "a12ed52f-01f3-5ac7-b4bc-6488e70ff103",
+              "name": "step failed retry",
+              "type": "PROCESSOR"
+            },
+            "zIndex": 0
+          },
+          {
+            "backPressureDataSizeThreshold": "1 GB",
+            "backPressureObjectThreshold": 10000,
+            "bends": [],
+            "componentType": "CONNECTION",
+            "destination": {
+              "groupId": "4fea7dca-9e15-58c4-8ebd-e1b6a7b44ca7",
               "id": "ff398328-94a9-527e-a134-e516804c8f87",
               "name": "start_run",
               "type": "PROCESSOR"
@@ -3627,6 +3719,36 @@
             "componentType": "CONNECTION",
             "destination": {
               "groupId": "4fea7dca-9e15-58c4-8ebd-e1b6a7b44ca7",
+              "id": "9f4c2406-59fe-5ae6-b092-94b5c9132447",
+              "name": "item step",
+              "type": "PROCESSOR"
+            },
+            "flowFileExpiration": "0 sec",
+            "groupIdentifier": "4fea7dca-9e15-58c4-8ebd-e1b6a7b44ca7",
+            "identifier": "42dddaf2-6c0c-5f9a-9215-00fd7ff785bf",
+            "labelIndex": 1,
+            "loadBalanceCompression": "DO_NOT_COMPRESS",
+            "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
+            "prioritizers": [],
+            "selectedRelationships": [
+              "split"
+            ],
+            "source": {
+              "comments": "",
+              "groupId": "4fea7dca-9e15-58c4-8ebd-e1b6a7b44ca7",
+              "id": "c29cdf02-a906-55cb-b9b5-b649639c9446",
+              "name": "split plan",
+              "type": "PROCESSOR"
+            },
+            "zIndex": 0
+          },
+          {
+            "backPressureDataSizeThreshold": "1 GB",
+            "backPressureObjectThreshold": 10000,
+            "bends": [],
+            "componentType": "CONNECTION",
+            "destination": {
+              "groupId": "4fea7dca-9e15-58c4-8ebd-e1b6a7b44ca7",
               "id": "0c2aebac-1978-5798-889d-f80d1e4caf56",
               "name": "out",
               "type": "OUTPUT_PORT"
@@ -3693,19 +3815,19 @@
             },
             "flowFileExpiration": "0 sec",
             "groupIdentifier": "4fea7dca-9e15-58c4-8ebd-e1b6a7b44ca7",
-            "identifier": "97bd3494-eb2a-5809-897d-d7d868b401a7",
+            "identifier": "7cd193d2-b08a-5adf-bb02-b3c53d3480ef",
             "labelIndex": 1,
             "loadBalanceCompression": "DO_NOT_COMPRESS",
             "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
             "prioritizers": [],
             "selectedRelationships": [
-              "split"
+              "success"
             ],
             "source": {
               "comments": "",
               "groupId": "4fea7dca-9e15-58c4-8ebd-e1b6a7b44ca7",
-              "id": "c29cdf02-a906-55cb-b9b5-b649639c9446",
-              "name": "split plan",
+              "id": "9f4c2406-59fe-5ae6-b092-94b5c9132447",
+              "name": "item step",
               "type": "PROCESSOR"
             },
             "zIndex": 0
@@ -5265,8 +5387,6 @@
           },
           {
             "autoTerminatedRelationships": [
-              "failure",
-              "retry",
               "success"
             ],
             "backoffMechanism": "PENALIZE_FLOWFILE",
@@ -5328,6 +5448,112 @@
             "yieldDuration": "1 sec"
           },
           {
+            "autoTerminatedRelationships": [
+              "success"
+            ],
+            "backoffMechanism": "PENALIZE_FLOWFILE",
+            "bulletinLevel": "WARN",
+            "bundle": {
+              "artifact": "nifi-standard-nar",
+              "group": "org.apache.nifi",
+              "version": "2.12.0"
+            },
+            "comments": "",
+            "componentType": "PROCESSOR",
+            "concurrentlySchedulableTaskCount": 1,
+            "executionNode": "ALL",
+            "groupIdentifier": "4fea7dca-9e15-58c4-8ebd-e1b6a7b44ca7",
+            "identifier": "2a7c3568-249f-5f92-909d-a9a5b21d3c4f",
+            "maxBackoffPeriod": "10 mins",
+            "name": "step failed not recorded",
+            "penaltyDuration": "30 sec",
+            "position": {
+              "x": 420.0,
+              "y": 220.0
+            },
+            "properties": {
+              "Log Level": "error",
+              "Log Message": "failed step event not recorded: run ${run_id} step ${step_id} item ${item}: ${step.error:replaceNull(${executesql.error.message:replaceNull(${s3.errorMessage:replaceNull(${s3.exception:replaceNull(${invokehttp.response.body:replaceNull(${invokehttp.status.message:replaceNull('see the NiFi bulletins')})})})})})}"
+            },
+            "propertyDescriptors": {
+              "Log Level": {
+                "displayName": "Log Level",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Log Level",
+                "sensitive": false
+              },
+              "Log Message": {
+                "displayName": "Log Message",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Log Message",
+                "sensitive": false
+              }
+            },
+            "retriedRelationships": [],
+            "retryCount": 10,
+            "runDurationMillis": 0,
+            "scheduledState": "ENABLED",
+            "schedulingPeriod": "0 sec",
+            "schedulingStrategy": "TIMER_DRIVEN",
+            "style": {},
+            "type": "org.apache.nifi.processors.standard.LogMessage",
+            "yieldDuration": "1 sec"
+          },
+          {
+            "autoTerminatedRelationships": [],
+            "backoffMechanism": "PENALIZE_FLOWFILE",
+            "bulletinLevel": "WARN",
+            "bundle": {
+              "artifact": "nifi-standard-nar",
+              "group": "org.apache.nifi",
+              "version": "2.12.0"
+            },
+            "comments": "",
+            "componentType": "PROCESSOR",
+            "concurrentlySchedulableTaskCount": 1,
+            "executionNode": "ALL",
+            "groupIdentifier": "4fea7dca-9e15-58c4-8ebd-e1b6a7b44ca7",
+            "identifier": "a12ed52f-01f3-5ac7-b4bc-6488e70ff103",
+            "maxBackoffPeriod": "10 mins",
+            "name": "step failed retry",
+            "penaltyDuration": "30 sec",
+            "position": {
+              "x": 840.0,
+              "y": 220.0
+            },
+            "properties": {
+              "Maximum Retries": "#{retry_max}",
+              "Retry Attribute": "retry.10_extract.step_failed"
+            },
+            "propertyDescriptors": {
+              "Maximum Retries": {
+                "displayName": "Maximum Retries",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Maximum Retries",
+                "sensitive": false
+              },
+              "Retry Attribute": {
+                "displayName": "Retry Attribute",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Retry Attribute",
+                "sensitive": false
+              }
+            },
+            "retriedRelationships": [],
+            "retryCount": 10,
+            "runDurationMillis": 0,
+            "scheduledState": "ENABLED",
+            "schedulingPeriod": "0 sec",
+            "schedulingStrategy": "TIMER_DRIVEN",
+            "style": {},
+            "type": "org.apache.nifi.processors.standard.RetryFlowFile",
+            "yieldDuration": "1 sec"
+          },
+          {
             "autoTerminatedRelationships": [],
             "backoffMechanism": "PENALIZE_FLOWFILE",
             "bulletinLevel": "WARN",
@@ -5346,12 +5572,12 @@
             "name": "start_run retry",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 420.0,
+              "x": 1260.0,
               "y": 220.0
             },
             "properties": {
               "Maximum Retries": "#{retry_max}",
-              "Retry Attribute": "retry.start_run"
+              "Retry Attribute": "retry.10_extract.start_run"
             },
             "propertyDescriptors": {
               "Maximum Retries": {
@@ -5398,7 +5624,7 @@
             "name": "business clock",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 840.0,
+              "x": 1680.0,
               "y": 220.0
             },
             "properties": {
@@ -5458,7 +5684,7 @@
             "name": "window",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 1260.0,
+              "x": 2100.0,
               "y": 220.0
             },
             "properties": {
@@ -5518,8 +5744,8 @@
             "name": "extract_plan",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 1680.0,
-              "y": 220.0
+              "x": 0.0,
+              "y": 440.0
             },
             "properties": {
               "Database Connection Pooling Service": "cbf9569a-b4c8-55f8-813e-147b1f5ba802",
@@ -5578,12 +5804,12 @@
             "name": "business clock retry",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 2100.0,
-              "y": 220.0
+              "x": 420.0,
+              "y": 440.0
             },
             "properties": {
               "Maximum Retries": "#{retry_max}",
-              "Retry Attribute": "retry.business_clock"
+              "Retry Attribute": "retry.10_extract.business_clock"
             },
             "propertyDescriptors": {
               "Maximum Retries": {
@@ -5630,12 +5856,12 @@
             "name": "extract_plan retry",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 0.0,
+              "x": 840.0,
               "y": 440.0
             },
             "properties": {
               "Maximum Retries": "#{retry_max}",
-              "Retry Attribute": "retry.extract_plan"
+              "Retry Attribute": "retry.10_extract.extract_plan"
             },
             "propertyDescriptors": {
               "Maximum Retries": {
@@ -5682,7 +5908,7 @@
             "name": "split plan",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 420.0,
+              "x": 1260.0,
               "y": 440.0
             },
             "properties": {
@@ -5712,6 +5938,66 @@
             "backoffMechanism": "PENALIZE_FLOWFILE",
             "bulletinLevel": "WARN",
             "bundle": {
+              "artifact": "nifi-update-attribute-nar",
+              "group": "org.apache.nifi",
+              "version": "2.12.0"
+            },
+            "comments": "",
+            "componentType": "PROCESSOR",
+            "concurrentlySchedulableTaskCount": 1,
+            "executionNode": "ALL",
+            "groupIdentifier": "4fea7dca-9e15-58c4-8ebd-e1b6a7b44ca7",
+            "identifier": "9f4c2406-59fe-5ae6-b092-94b5c9132447",
+            "maxBackoffPeriod": "10 mins",
+            "name": "item step",
+            "penaltyDuration": "30 sec",
+            "position": {
+              "x": 1680.0,
+              "y": 440.0
+            },
+            "properties": {
+              "Delete Attributes Expression": "executesql\\.error\\.message",
+              "item": "plan item ${fragment.index}",
+              "step_id": "${UUID()}"
+            },
+            "propertyDescriptors": {
+              "Delete Attributes Expression": {
+                "displayName": "Delete Attributes Expression",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Delete Attributes Expression",
+                "sensitive": false
+              },
+              "item": {
+                "displayName": "item",
+                "dynamic": true,
+                "identifiesControllerService": false,
+                "name": "item",
+                "sensitive": false
+              },
+              "step_id": {
+                "displayName": "step_id",
+                "dynamic": true,
+                "identifiesControllerService": false,
+                "name": "step_id",
+                "sensitive": false
+              }
+            },
+            "retriedRelationships": [],
+            "retryCount": 10,
+            "runDurationMillis": 0,
+            "scheduledState": "ENABLED",
+            "schedulingPeriod": "0 sec",
+            "schedulingStrategy": "TIMER_DRIVEN",
+            "style": {},
+            "type": "org.apache.nifi.processors.attributes.UpdateAttribute",
+            "yieldDuration": "1 sec"
+          },
+          {
+            "autoTerminatedRelationships": [],
+            "backoffMechanism": "PENALIZE_FLOWFILE",
+            "bulletinLevel": "WARN",
+            "bundle": {
               "artifact": "nifi-standard-nar",
               "group": "org.apache.nifi",
               "version": "2.12.0"
@@ -5726,7 +6012,7 @@
             "name": "table",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 840.0,
+              "x": 2100.0,
               "y": 440.0
             },
             "properties": {
@@ -5826,13 +6112,12 @@
             "name": "table step",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 1260.0,
-              "y": 440.0
+              "x": 0.0,
+              "y": 660.0
             },
             "properties": {
               "item": "${table_name}",
-              "page": "0",
-              "step_id": "${UUID()}"
+              "page": "0"
             },
             "propertyDescriptors": {
               "item": {
@@ -5847,13 +6132,6 @@
                 "dynamic": true,
                 "identifiesControllerService": false,
                 "name": "page",
-                "sensitive": false
-              },
-              "step_id": {
-                "displayName": "step_id",
-                "dynamic": true,
-                "identifiesControllerService": false,
-                "name": "step_id",
                 "sensitive": false
               }
             },
@@ -5886,8 +6164,8 @@
             "name": "table started",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 1680.0,
-              "y": 440.0
+              "x": 420.0,
+              "y": 660.0
             },
             "properties": {
               "JDBC Connection Pool": "cbf9569a-b4c8-55f8-813e-147b1f5ba802",
@@ -5946,8 +6224,8 @@
             "name": "mode",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 2100.0,
-              "y": 440.0
+              "x": 840.0,
+              "y": 660.0
             },
             "properties": {
               "full": "${mode:equals('full')}"
@@ -5990,7 +6268,7 @@
             "name": "full pages",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 0.0,
+              "x": 1260.0,
               "y": 660.0
             },
             "properties": {
@@ -6090,7 +6368,7 @@
             "name": "page",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 420.0,
+              "x": 1680.0,
               "y": 660.0
             },
             "properties": {
@@ -6142,7 +6420,7 @@
             "name": "incremental query",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 840.0,
+              "x": 2100.0,
               "y": 660.0
             },
             "properties": {
@@ -6202,8 +6480,8 @@
             "name": "table succeeded",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 1260.0,
-              "y": 660.0
+              "x": 0.0,
+              "y": 880.0
             },
             "properties": {
               "JDBC Connection Pool": "cbf9569a-b4c8-55f8-813e-147b1f5ba802",
@@ -6264,8 +6542,8 @@
             "name": "has query",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 1680.0,
-              "y": 660.0
+              "x": 420.0,
+              "y": 880.0
             },
             "properties": {
               "query": "${fileSize:gt(0)}"
@@ -6308,8 +6586,8 @@
             "name": "query pages",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 2100.0,
-              "y": 660.0
+              "x": 840.0,
+              "y": 880.0
             },
             "properties": {
               "Database Connection Pooling Service": "7ff80f41-fbb9-55fd-a314-f2a494a5f1d8",
@@ -6392,7 +6670,7 @@
             "name": "file step",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 0.0,
+              "x": 1260.0,
               "y": 880.0
             },
             "properties": {
@@ -6444,7 +6722,7 @@
             "name": "rows",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 420.0,
+              "x": 1680.0,
               "y": 880.0
             },
             "properties": {
@@ -6488,7 +6766,7 @@
             "name": "s3 key",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 840.0,
+              "x": 2100.0,
               "y": 880.0
             },
             "properties": {
@@ -6532,8 +6810,8 @@
             "name": "put parquet",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 1260.0,
-              "y": 880.0
+              "x": 0.0,
+              "y": 1100.0
             },
             "properties": {
               "AWS Credentials Provider Service": "4a376ac6-521c-5554-992e-bcce1fd0df34",
@@ -6618,8 +6896,8 @@
             "name": "file succeeded",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 1680.0,
-              "y": 880.0
+              "x": 420.0,
+              "y": 1100.0
             },
             "properties": {
               "JDBC Connection Pool": "cbf9569a-b4c8-55f8-813e-147b1f5ba802",
@@ -6678,12 +6956,12 @@
             "name": "table started retry",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 2100.0,
-              "y": 880.0
+              "x": 840.0,
+              "y": 1100.0
             },
             "properties": {
               "Maximum Retries": "#{retry_max}",
-              "Retry Attribute": "retry.table_started"
+              "Retry Attribute": "retry.10_extract.table_started"
             },
             "propertyDescriptors": {
               "Maximum Retries": {
@@ -6730,7 +7008,7 @@
             "name": "table started retried",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 0.0,
+              "x": 1260.0,
               "y": 1100.0
             },
             "properties": {
@@ -6790,12 +7068,12 @@
             "name": "full pages retry",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 420.0,
+              "x": 1680.0,
               "y": 1100.0
             },
             "properties": {
               "Maximum Retries": "#{retry_max}",
-              "Retry Attribute": "retry.full_pages"
+              "Retry Attribute": "retry.10_extract.full_pages"
             },
             "propertyDescriptors": {
               "Maximum Retries": {
@@ -6842,7 +7120,7 @@
             "name": "full pages retried",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 840.0,
+              "x": 2100.0,
               "y": 1100.0
             },
             "properties": {
@@ -6902,12 +7180,12 @@
             "name": "table succeeded retry",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 1260.0,
-              "y": 1100.0
+              "x": 0.0,
+              "y": 1320.0
             },
             "properties": {
               "Maximum Retries": "#{retry_max}",
-              "Retry Attribute": "retry.table_succeeded"
+              "Retry Attribute": "retry.10_extract.table_succeeded"
             },
             "propertyDescriptors": {
               "Maximum Retries": {
@@ -6954,8 +7232,8 @@
             "name": "table succeeded retried",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 1680.0,
-              "y": 1100.0
+              "x": 420.0,
+              "y": 1320.0
             },
             "properties": {
               "JDBC Connection Pool": "cbf9569a-b4c8-55f8-813e-147b1f5ba802",
@@ -7014,12 +7292,12 @@
             "name": "query pages retry",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 2100.0,
-              "y": 1100.0
+              "x": 840.0,
+              "y": 1320.0
             },
             "properties": {
               "Maximum Retries": "#{retry_max}",
-              "Retry Attribute": "retry.query_pages"
+              "Retry Attribute": "retry.10_extract.query_pages"
             },
             "propertyDescriptors": {
               "Maximum Retries": {
@@ -7066,7 +7344,7 @@
             "name": "query pages retried",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 0.0,
+              "x": 1260.0,
               "y": 1320.0
             },
             "properties": {
@@ -7126,12 +7404,12 @@
             "name": "put parquet retry",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 420.0,
+              "x": 1680.0,
               "y": 1320.0
             },
             "properties": {
               "Maximum Retries": "#{retry_max}",
-              "Retry Attribute": "retry.put_parquet"
+              "Retry Attribute": "retry.10_extract.put_parquet"
             },
             "propertyDescriptors": {
               "Maximum Retries": {
@@ -7178,7 +7456,7 @@
             "name": "put parquet retried",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 840.0,
+              "x": 2100.0,
               "y": 1320.0
             },
             "properties": {
@@ -7238,12 +7516,12 @@
             "name": "file succeeded retry",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 1260.0,
-              "y": 1320.0
+              "x": 0.0,
+              "y": 1540.0
             },
             "properties": {
               "Maximum Retries": "#{retry_max}",
-              "Retry Attribute": "retry.file_succeeded"
+              "Retry Attribute": "retry.10_extract.file_succeeded"
             },
             "propertyDescriptors": {
               "Maximum Retries": {
@@ -7290,8 +7568,8 @@
             "name": "file succeeded retried",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 1680.0,
-              "y": 1320.0
+              "x": 420.0,
+              "y": 1540.0
             },
             "properties": {
               "JDBC Connection Pool": "cbf9569a-b4c8-55f8-813e-147b1f5ba802",
@@ -7340,6 +7618,98 @@
         "comments": "",
         "componentType": "PROCESS_GROUP",
         "connections": [
+          {
+            "backPressureDataSizeThreshold": "1 GB",
+            "backPressureObjectThreshold": 10000,
+            "bends": [],
+            "componentType": "CONNECTION",
+            "destination": {
+              "groupId": "7d8af771-9652-5aa0-9ab4-3c0881276aa0",
+              "id": "6ea34de2-767d-5e33-b2f8-896ba24a3e8b",
+              "name": "step failed retry",
+              "type": "PROCESSOR"
+            },
+            "flowFileExpiration": "0 sec",
+            "groupIdentifier": "7d8af771-9652-5aa0-9ab4-3c0881276aa0",
+            "identifier": "669b4c84-236f-5d2c-b386-5a7ac29a02a3",
+            "labelIndex": 1,
+            "loadBalanceCompression": "DO_NOT_COMPRESS",
+            "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
+            "prioritizers": [],
+            "selectedRelationships": [
+              "failure",
+              "retry"
+            ],
+            "source": {
+              "comments": "",
+              "groupId": "7d8af771-9652-5aa0-9ab4-3c0881276aa0",
+              "id": "78610a4f-6916-5449-861f-e861ea337f41",
+              "name": "step failed",
+              "type": "PROCESSOR"
+            },
+            "zIndex": 0
+          },
+          {
+            "backPressureDataSizeThreshold": "1 GB",
+            "backPressureObjectThreshold": 10000,
+            "bends": [],
+            "componentType": "CONNECTION",
+            "destination": {
+              "groupId": "7d8af771-9652-5aa0-9ab4-3c0881276aa0",
+              "id": "78610a4f-6916-5449-861f-e861ea337f41",
+              "name": "step failed",
+              "type": "PROCESSOR"
+            },
+            "flowFileExpiration": "0 sec",
+            "groupIdentifier": "7d8af771-9652-5aa0-9ab4-3c0881276aa0",
+            "identifier": "619ac57a-dc2c-53f0-bf35-44000e2be3c5",
+            "labelIndex": 1,
+            "loadBalanceCompression": "DO_NOT_COMPRESS",
+            "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
+            "prioritizers": [],
+            "selectedRelationships": [
+              "retry"
+            ],
+            "source": {
+              "comments": "",
+              "groupId": "7d8af771-9652-5aa0-9ab4-3c0881276aa0",
+              "id": "6ea34de2-767d-5e33-b2f8-896ba24a3e8b",
+              "name": "step failed retry",
+              "type": "PROCESSOR"
+            },
+            "zIndex": 0
+          },
+          {
+            "backPressureDataSizeThreshold": "1 GB",
+            "backPressureObjectThreshold": 10000,
+            "bends": [],
+            "componentType": "CONNECTION",
+            "destination": {
+              "groupId": "7d8af771-9652-5aa0-9ab4-3c0881276aa0",
+              "id": "f236653a-9005-5500-8f94-96f8ed73ac80",
+              "name": "step failed not recorded",
+              "type": "PROCESSOR"
+            },
+            "flowFileExpiration": "0 sec",
+            "groupIdentifier": "7d8af771-9652-5aa0-9ab4-3c0881276aa0",
+            "identifier": "44ed3fbf-72f4-5aef-9928-3f2e80736ccb",
+            "labelIndex": 1,
+            "loadBalanceCompression": "DO_NOT_COMPRESS",
+            "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
+            "prioritizers": [],
+            "selectedRelationships": [
+              "failure",
+              "retries_exceeded"
+            ],
+            "source": {
+              "comments": "",
+              "groupId": "7d8af771-9652-5aa0-9ab4-3c0881276aa0",
+              "id": "6ea34de2-767d-5e33-b2f8-896ba24a3e8b",
+              "name": "step failed retry",
+              "type": "PROCESSOR"
+            },
+            "zIndex": 0
+          },
           {
             "backPressureDataSizeThreshold": "1 GB",
             "backPressureObjectThreshold": 10000,
@@ -7768,6 +8138,36 @@
             "componentType": "CONNECTION",
             "destination": {
               "groupId": "7d8af771-9652-5aa0-9ab4-3c0881276aa0",
+              "id": "759cda5f-fcfb-596c-8f9e-238df352d0b0",
+              "name": "item step",
+              "type": "PROCESSOR"
+            },
+            "flowFileExpiration": "0 sec",
+            "groupIdentifier": "7d8af771-9652-5aa0-9ab4-3c0881276aa0",
+            "identifier": "0841711c-263c-59f1-9adb-d688496eea80",
+            "labelIndex": 1,
+            "loadBalanceCompression": "DO_NOT_COMPRESS",
+            "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
+            "prioritizers": [],
+            "selectedRelationships": [
+              "split"
+            ],
+            "source": {
+              "comments": "",
+              "groupId": "7d8af771-9652-5aa0-9ab4-3c0881276aa0",
+              "id": "f4741a98-7694-5ea0-98e2-891dafd6ceda",
+              "name": "split plan",
+              "type": "PROCESSOR"
+            },
+            "zIndex": 0
+          },
+          {
+            "backPressureDataSizeThreshold": "1 GB",
+            "backPressureObjectThreshold": 10000,
+            "bends": [],
+            "componentType": "CONNECTION",
+            "destination": {
+              "groupId": "7d8af771-9652-5aa0-9ab4-3c0881276aa0",
               "id": "a2a24ce3-6c8d-5888-8f6b-49dd1b337ba7",
               "name": "out",
               "type": "OUTPUT_PORT"
@@ -7834,19 +8234,19 @@
             },
             "flowFileExpiration": "0 sec",
             "groupIdentifier": "7d8af771-9652-5aa0-9ab4-3c0881276aa0",
-            "identifier": "a9794a56-2bdd-5ae6-814a-3548effef7bd",
+            "identifier": "74be8325-4851-52f3-85a2-431044879b57",
             "labelIndex": 1,
             "loadBalanceCompression": "DO_NOT_COMPRESS",
             "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
             "prioritizers": [],
             "selectedRelationships": [
-              "split"
+              "success"
             ],
             "source": {
               "comments": "",
               "groupId": "7d8af771-9652-5aa0-9ab4-3c0881276aa0",
-              "id": "f4741a98-7694-5ea0-98e2-891dafd6ceda",
-              "name": "split plan",
+              "id": "759cda5f-fcfb-596c-8f9e-238df352d0b0",
+              "name": "item step",
               "type": "PROCESSOR"
             },
             "zIndex": 0
@@ -8857,8 +9257,6 @@
           },
           {
             "autoTerminatedRelationships": [
-              "failure",
-              "retry",
               "success"
             ],
             "backoffMechanism": "PENALIZE_FLOWFILE",
@@ -8920,6 +9318,112 @@
             "yieldDuration": "1 sec"
           },
           {
+            "autoTerminatedRelationships": [
+              "success"
+            ],
+            "backoffMechanism": "PENALIZE_FLOWFILE",
+            "bulletinLevel": "WARN",
+            "bundle": {
+              "artifact": "nifi-standard-nar",
+              "group": "org.apache.nifi",
+              "version": "2.12.0"
+            },
+            "comments": "",
+            "componentType": "PROCESSOR",
+            "concurrentlySchedulableTaskCount": 1,
+            "executionNode": "ALL",
+            "groupIdentifier": "7d8af771-9652-5aa0-9ab4-3c0881276aa0",
+            "identifier": "f236653a-9005-5500-8f94-96f8ed73ac80",
+            "maxBackoffPeriod": "10 mins",
+            "name": "step failed not recorded",
+            "penaltyDuration": "30 sec",
+            "position": {
+              "x": 420.0,
+              "y": 220.0
+            },
+            "properties": {
+              "Log Level": "error",
+              "Log Message": "failed step event not recorded: run ${run_id} step ${step_id} item ${item}: ${step.error:replaceNull(${executesql.error.message:replaceNull(${s3.errorMessage:replaceNull(${s3.exception:replaceNull(${invokehttp.response.body:replaceNull(${invokehttp.status.message:replaceNull('see the NiFi bulletins')})})})})})}"
+            },
+            "propertyDescriptors": {
+              "Log Level": {
+                "displayName": "Log Level",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Log Level",
+                "sensitive": false
+              },
+              "Log Message": {
+                "displayName": "Log Message",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Log Message",
+                "sensitive": false
+              }
+            },
+            "retriedRelationships": [],
+            "retryCount": 10,
+            "runDurationMillis": 0,
+            "scheduledState": "ENABLED",
+            "schedulingPeriod": "0 sec",
+            "schedulingStrategy": "TIMER_DRIVEN",
+            "style": {},
+            "type": "org.apache.nifi.processors.standard.LogMessage",
+            "yieldDuration": "1 sec"
+          },
+          {
+            "autoTerminatedRelationships": [],
+            "backoffMechanism": "PENALIZE_FLOWFILE",
+            "bulletinLevel": "WARN",
+            "bundle": {
+              "artifact": "nifi-standard-nar",
+              "group": "org.apache.nifi",
+              "version": "2.12.0"
+            },
+            "comments": "",
+            "componentType": "PROCESSOR",
+            "concurrentlySchedulableTaskCount": 1,
+            "executionNode": "ALL",
+            "groupIdentifier": "7d8af771-9652-5aa0-9ab4-3c0881276aa0",
+            "identifier": "6ea34de2-767d-5e33-b2f8-896ba24a3e8b",
+            "maxBackoffPeriod": "10 mins",
+            "name": "step failed retry",
+            "penaltyDuration": "30 sec",
+            "position": {
+              "x": 840.0,
+              "y": 220.0
+            },
+            "properties": {
+              "Maximum Retries": "#{retry_max}",
+              "Retry Attribute": "retry.20_load.step_failed"
+            },
+            "propertyDescriptors": {
+              "Maximum Retries": {
+                "displayName": "Maximum Retries",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Maximum Retries",
+                "sensitive": false
+              },
+              "Retry Attribute": {
+                "displayName": "Retry Attribute",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Retry Attribute",
+                "sensitive": false
+              }
+            },
+            "retriedRelationships": [],
+            "retryCount": 10,
+            "runDurationMillis": 0,
+            "scheduledState": "ENABLED",
+            "schedulingPeriod": "0 sec",
+            "schedulingStrategy": "TIMER_DRIVEN",
+            "style": {},
+            "type": "org.apache.nifi.processors.standard.RetryFlowFile",
+            "yieldDuration": "1 sec"
+          },
+          {
             "autoTerminatedRelationships": [],
             "backoffMechanism": "PENALIZE_FLOWFILE",
             "bulletinLevel": "WARN",
@@ -8938,12 +9442,12 @@
             "name": "start_run retry",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 420.0,
+              "x": 1260.0,
               "y": 220.0
             },
             "properties": {
               "Maximum Retries": "#{retry_max}",
-              "Retry Attribute": "retry.start_run"
+              "Retry Attribute": "retry.20_load.start_run"
             },
             "propertyDescriptors": {
               "Maximum Retries": {
@@ -8990,7 +9494,7 @@
             "name": "load_plan",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 840.0,
+              "x": 1680.0,
               "y": 220.0
             },
             "properties": {
@@ -9050,12 +9554,12 @@
             "name": "load_plan retry",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 1260.0,
+              "x": 2100.0,
               "y": 220.0
             },
             "properties": {
               "Maximum Retries": "#{retry_max}",
-              "Retry Attribute": "retry.load_plan"
+              "Retry Attribute": "retry.20_load.load_plan"
             },
             "propertyDescriptors": {
               "Maximum Retries": {
@@ -9102,8 +9606,8 @@
             "name": "split plan",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 1680.0,
-              "y": 220.0
+              "x": 0.0,
+              "y": 440.0
             },
             "properties": {
               "JsonPath Expression": "$.*"
@@ -9132,6 +9636,66 @@
             "backoffMechanism": "PENALIZE_FLOWFILE",
             "bulletinLevel": "WARN",
             "bundle": {
+              "artifact": "nifi-update-attribute-nar",
+              "group": "org.apache.nifi",
+              "version": "2.12.0"
+            },
+            "comments": "",
+            "componentType": "PROCESSOR",
+            "concurrentlySchedulableTaskCount": 1,
+            "executionNode": "ALL",
+            "groupIdentifier": "7d8af771-9652-5aa0-9ab4-3c0881276aa0",
+            "identifier": "759cda5f-fcfb-596c-8f9e-238df352d0b0",
+            "maxBackoffPeriod": "10 mins",
+            "name": "item step",
+            "penaltyDuration": "30 sec",
+            "position": {
+              "x": 420.0,
+              "y": 440.0
+            },
+            "properties": {
+              "Delete Attributes Expression": "executesql\\.error\\.message",
+              "item": "plan item ${fragment.index}",
+              "step_id": "${UUID()}"
+            },
+            "propertyDescriptors": {
+              "Delete Attributes Expression": {
+                "displayName": "Delete Attributes Expression",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Delete Attributes Expression",
+                "sensitive": false
+              },
+              "item": {
+                "displayName": "item",
+                "dynamic": true,
+                "identifiesControllerService": false,
+                "name": "item",
+                "sensitive": false
+              },
+              "step_id": {
+                "displayName": "step_id",
+                "dynamic": true,
+                "identifiesControllerService": false,
+                "name": "step_id",
+                "sensitive": false
+              }
+            },
+            "retriedRelationships": [],
+            "retryCount": 10,
+            "runDurationMillis": 0,
+            "scheduledState": "ENABLED",
+            "schedulingPeriod": "0 sec",
+            "schedulingStrategy": "TIMER_DRIVEN",
+            "style": {},
+            "type": "org.apache.nifi.processors.attributes.UpdateAttribute",
+            "yieldDuration": "1 sec"
+          },
+          {
+            "autoTerminatedRelationships": [],
+            "backoffMechanism": "PENALIZE_FLOWFILE",
+            "bulletinLevel": "WARN",
+            "bundle": {
               "artifact": "nifi-standard-nar",
               "group": "org.apache.nifi",
               "version": "2.12.0"
@@ -9146,8 +9710,8 @@
             "name": "table",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 2100.0,
-              "y": 220.0
+              "x": 840.0,
+              "y": 440.0
             },
             "properties": {
               "Destination": "flowfile-attribute",
@@ -9222,12 +9786,11 @@
             "name": "table step",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 0.0,
+              "x": 1260.0,
               "y": 440.0
             },
             "properties": {
-              "item": "${table_name}",
-              "step_id": "${UUID()}"
+              "item": "${table_name}"
             },
             "propertyDescriptors": {
               "item": {
@@ -9235,13 +9798,6 @@
                 "dynamic": true,
                 "identifiesControllerService": false,
                 "name": "item",
-                "sensitive": false
-              },
-              "step_id": {
-                "displayName": "step_id",
-                "dynamic": true,
-                "identifiesControllerService": false,
-                "name": "step_id",
                 "sensitive": false
               }
             },
@@ -9274,7 +9830,7 @@
             "name": "table started",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 420.0,
+              "x": 1680.0,
               "y": 440.0
             },
             "properties": {
@@ -9334,7 +9890,7 @@
             "name": "insert select",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 840.0,
+              "x": 2100.0,
               "y": 440.0
             },
             "properties": {
@@ -9396,8 +9952,8 @@
             "name": "clickhouse insert",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 1260.0,
-              "y": 440.0
+              "x": 0.0,
+              "y": 660.0
             },
             "properties": {
               "HTTP Method": "POST",
@@ -9480,8 +10036,8 @@
             "name": "written rows",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 1680.0,
-              "y": 440.0
+              "x": 420.0,
+              "y": 660.0
             },
             "properties": {
               "written_rows": "${X-ClickHouse-Summary:jsonPath('$.written_rows')}"
@@ -9524,8 +10080,8 @@
             "name": "rows match",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 2100.0,
-              "y": 440.0
+              "x": 840.0,
+              "y": 660.0
             },
             "properties": {
               "match": "${written_rows:equals(${expected_rows})}"
@@ -9568,7 +10124,7 @@
             "name": "rows differ",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 0.0,
+              "x": 1260.0,
               "y": 660.0
             },
             "properties": {
@@ -9614,7 +10170,7 @@
             "name": "table succeeded",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 420.0,
+              "x": 1680.0,
               "y": 660.0
             },
             "properties": {
@@ -9674,12 +10230,12 @@
             "name": "table started retry",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 840.0,
+              "x": 2100.0,
               "y": 660.0
             },
             "properties": {
               "Maximum Retries": "#{retry_max}",
-              "Retry Attribute": "retry.table_started"
+              "Retry Attribute": "retry.20_load.table_started"
             },
             "propertyDescriptors": {
               "Maximum Retries": {
@@ -9726,8 +10282,8 @@
             "name": "table started retried",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 1260.0,
-              "y": 660.0
+              "x": 0.0,
+              "y": 880.0
             },
             "properties": {
               "JDBC Connection Pool": "cbf9569a-b4c8-55f8-813e-147b1f5ba802",
@@ -9786,12 +10342,12 @@
             "name": "clickhouse insert retry",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 1680.0,
-              "y": 660.0
+              "x": 420.0,
+              "y": 880.0
             },
             "properties": {
               "Maximum Retries": "#{retry_max}",
-              "Retry Attribute": "retry.clickhouse_insert"
+              "Retry Attribute": "retry.20_load.clickhouse_insert"
             },
             "propertyDescriptors": {
               "Maximum Retries": {
@@ -9838,8 +10394,8 @@
             "name": "clickhouse insert retried",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 2100.0,
-              "y": 660.0
+              "x": 840.0,
+              "y": 880.0
             },
             "properties": {
               "JDBC Connection Pool": "cbf9569a-b4c8-55f8-813e-147b1f5ba802",
@@ -9898,12 +10454,12 @@
             "name": "table succeeded retry",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 0.0,
+              "x": 1260.0,
               "y": 880.0
             },
             "properties": {
               "Maximum Retries": "#{retry_max}",
-              "Retry Attribute": "retry.table_succeeded"
+              "Retry Attribute": "retry.20_load.table_succeeded"
             },
             "propertyDescriptors": {
               "Maximum Retries": {
@@ -9950,7 +10506,7 @@
             "name": "table succeeded retried",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 420.0,
+              "x": 1680.0,
               "y": 880.0
             },
             "properties": {
@@ -10298,7 +10854,7 @@
         },
         "properties": {
           "Maximum Retries": "#{retry_max}",
-          "Retry Attribute": "retry.gate_extract:_end_run"
+          "Retry Attribute": "retry.retail_pricing.gate_extract__end_run"
         },
         "propertyDescriptors": {
           "Maximum Retries": {
@@ -10626,7 +11182,7 @@
         },
         "properties": {
           "Maximum Retries": "#{retry_max}",
-          "Retry Attribute": "retry.gate_load:_end_run"
+          "Retry Attribute": "retry.retail_pricing.gate_load__end_run"
         },
         "propertyDescriptors": {
           "Maximum Retries": {
@@ -10738,7 +11294,7 @@
         },
         "properties": {
           "Maximum Retries": "#{retry_max}",
-          "Retry Attribute": "retry.gate_load:_commit_watermarks"
+          "Retry Attribute": "retry.retail_pricing.gate_load__commit_watermarks"
         },
         "propertyDescriptors": {
           "Maximum Retries": {

@@ -15,6 +15,7 @@ PROCESSORS = (
     "HandleHttpRequest",
     "HandleHttpResponse",
     "InvokeHTTP",
+    "LogMessage",
     "PutDatabaseRecord",
     "PutS3Object",
     "PutSQL",
@@ -61,6 +62,8 @@ def pull(client: Client, out_dir: Path) -> list[Path]:
                 f"/flow/{kind}-definition/{b['group']}/{b['artifact']}/{b['version']}/{t['type']}"
             )
             path = out_dir / f"{name}.json"
-            path.write_text(json.dumps(body, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+            path.write_text(
+                json.dumps(body, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n"
+            )
             written.append(path)
     return written

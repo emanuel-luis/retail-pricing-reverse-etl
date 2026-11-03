@@ -34,9 +34,7 @@ def build(parent: Group) -> Group:
         "table",
         {k: f"$.{k}" for k in ("table_name", "prefix", "expected_rows", "file_count")},
     )
-    step = g.proc(
-        "UpdateAttribute", "table step", {"step_id": "${UUID()}", "item": "${table_name}"}
-    )
+    step = g.proc("UpdateAttribute", "table step", {"item": "${table_name}"})
     started = put_sql(g, "table started", event_sql("load.table", "started"))
     sql = g.proc(
         "ReplaceText",
@@ -85,7 +83,7 @@ def build(parent: Group) -> Group:
         auto=("success",),
     )
 
-    g.connect(split, item, "split")
+    g.connect(split, item, "success")
     g.connect(item, step, "matched")
     g.connect(item, s.step_failed, "unmatched", "failure")
     g.connect(step, started, "success")

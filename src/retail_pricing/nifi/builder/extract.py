@@ -59,7 +59,7 @@ def build(parent: Group) -> Group:
     step = g.proc(
         "UpdateAttribute",
         "table step",
-        {"step_id": "${UUID()}", "item": "${table_name}", "page": "0"},
+        {"item": "${table_name}", "page": "0"},
     )
     started = put_sql(g, "table started", event_sql("extract.table", "started"))
     mode = g.proc("RouteOnAttribute", "mode", {"full": "${mode:equals('full')}"})
@@ -157,7 +157,7 @@ def build(parent: Group) -> Group:
         auto=("success",),
     )
 
-    g.connect(split, item, "split")
+    g.connect(split, item, "success")
     g.connect(item, step, "matched")
     g.connect(item, s.step_failed, "unmatched", "failure")
     g.connect(step, started, "success")

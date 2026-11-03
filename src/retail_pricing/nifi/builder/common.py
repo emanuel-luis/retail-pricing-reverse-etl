@@ -119,18 +119,18 @@ class Stage:
     run: Ref  # RouteOnAttribute: `unmatched` carries run_id on to the plan
     out: Ref
     token_failed: Ref  # UpdateAttribute: stage.error, then the out port
-    step_failed: Ref  # PutSQL step_event failed for the item FlowFile
+    step_failed: Ref  # PutSQL step_event failed for the item FlowFile (retried, then logged)
 
     def guard_token(self, proc: Ref, *rels: str) -> None:
         """Retry a token-level processor; when retries run out the token leaves with an error."""
-        retry = self._retry(proc)
+        retry = retry_of(self.g, proc)
         self.g.connect(proc, retry, *rels)
         self.g.connect(retry, proc, "retry")
         self.g.connect(retry, self.token_failed, "retries_exceeded", "failure")
 
     def guard(self, proc: Ref, *rels: str, step: str) -> None:
         """Retry an item processor: each retry is a `retried` event, then `failed` at the end."""
-        retry = self._retry(proc)
+        retry = retry_of(self.g, proc)
         retried = put_sql(
             self.g,
             f"{proc.name} retried",
@@ -142,22 +142,45 @@ class Stage:
         self.g.connect(retried, proc, "success", "failure", "retry")
         self.g.connect(retry, self.step_failed, "retries_exceeded", "failure")
 
-    def _retry(self, proc: Ref) -> Ref:
-        # One retry attribute per processor: RetryFlowFile refuses a counter another one set.
-        attr = "retry." + "".join(ch if ch.isalnum() else "_" for ch in proc.name)
-        return self.g.proc(
-            "RetryFlowFile",
-            f"{proc.name} retry",
-            {"Maximum Retries": "#{retry_max}", "Retry Attribute": attr},
-        )
-
     def split(self, plan: Ref) -> Ref:
-        """SplitJson the plan: the original leaves when the group is empty (Batch Output)."""
+        """SplitJson the plan: the original leaves when the group is empty (Batch Output).
+
+        Returns an UpdateAttribute whose `success` is each item, with its step_id and a stand-in
+        item name already set, so every failure path can write a valid step event. The token's
+        last SQL error is dropped so items never report it as theirs.
+        """
         split = self.g.proc("SplitJson", "split plan", {"JsonPath Expression": "$.*"})
+        item = self.g.proc(
+            "UpdateAttribute",
+            "item step",
+            {
+                "step_id": "${UUID()}",
+                "item": "plan item ${fragment.index}",
+                "Delete Attributes Expression": "executesql\\.error\\.message",
+            },
+        )
         self.g.connect(plan, split, "success")
+        self.g.connect(split, item, "split")
         self.g.connect(split, self.out, "original")
         self.g.connect(split, self.token_failed, "failure")
-        return split
+        return item
+
+
+def retry_of(g: Group, proc: Ref) -> Ref:
+    """A RetryFlowFile for `proc`. Its counter is `retry.<group>.<processor>`: RetryFlowFile
+    refuses a counter another one set, and tokens carry attributes from group to group."""
+
+    def safe(name: str) -> str:
+        return "".join(ch if ch.isalnum() else "_" for ch in name)
+
+    return g.proc(
+        "RetryFlowFile",
+        f"{proc.name} retry",
+        {
+            "Maximum Retries": "#{retry_max}",
+            "Retry Attribute": f"retry.{safe(g.name)}.{safe(proc.name)}",
+        },
+    )
 
 
 def stage(parent: Group, name: str, job: str) -> Stage:
@@ -182,8 +205,24 @@ def stage(parent: Group, name: str, job: str) -> Stage:
         g,
         "step failed",
         event_sql(job, "failed", detail=f"jsonb_build_object('error', '{ERROR_SQL}')"),
-        auto=("success", "failure", "retry"),
+        auto=("success",),
     )
+    # When even the failed event cannot be written, say so in the NiFi log; end_run still fails
+    # the run, because the item's planned step is missing or open.
+    lost = g.proc(
+        "LogMessage",
+        "step failed not recorded",
+        {
+            "Log Level": "error",
+            "Log Message": "failed step event not recorded: run ${run_id} step ${step_id}"
+            f" item ${{item}}: {ERROR_TEXT}",
+        },
+        auto=("success",),
+    )
+    step_failed_retry = retry_of(g, step_failed)
+    g.connect(step_failed, step_failed_retry, "failure", "retry")
+    g.connect(step_failed_retry, step_failed, "retry")
+    g.connect(step_failed_retry, lost, "retries_exceeded", "failure")
     s = Stage(g, job, enabled, out, token_failed, step_failed)
     g.connect(pin, start)
     g.connect(start, run, "success")

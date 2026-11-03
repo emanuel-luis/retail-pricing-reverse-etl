@@ -1,18 +1,11 @@
 """Parent-level gates between stage groups (PLAN 6.5): end_run, then route on its status."""
 
-from retail_pricing.nifi.builder.common import attrs, query
+from retail_pricing.nifi.builder.common import attrs, query, retry_of
 from retail_pricing.nifi.builder.dsl import Group, Ref
 
 
 def _retry(g: Group, proc: Ref, failed: Ref) -> None:
-    retry = g.proc(
-        "RetryFlowFile",
-        f"{proc.name} retry",
-        {
-            "Maximum Retries": "#{retry_max}",
-            "Retry Attribute": f"retry.{proc.name.replace(' ', '_')}",
-        },
-    )
+    retry = retry_of(g, proc)
     g.connect(proc, retry, "failure")
     g.connect(retry, proc, "retry")
     g.connect(retry, failed, "retries_exceeded", "failure")
