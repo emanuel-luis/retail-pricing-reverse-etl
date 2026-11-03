@@ -6,8 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-03
+
 ### Added
 
+- `docs/RESULTS.md`: the SF10 heavy run (three cycles with the workload on: stage timings, rows
+  written back, conflicts, reconciliation, peak memory per container, the shelf label bottleneck
+  in `pg_stat_statements`), the SF0.01 and SF1 numbers, an SF100 estimate, and screenshots of the
+  three dashboards; the README results table.
 - Monitoring (compose profile `monitoring`, `make monitoring`, started by `make demo`):
   Prometheus with seven scrape jobs, a `nifi-token` sidecar refreshing the NiFi JWT, two
   postgres-exporters on `pg_monitor` roles, and Grafana 13 provisioned as code with three
@@ -61,3 +67,9 @@ All notable changes to this project are documented here. The format follows
 - `docs/PLAN.md` (the contract), `docs/DECISIONS.md`, the `data-prep` D2 diagram, CLAUDE.md.
 - CI: `lint`, `test-fast` (unit plus SF0.01 data checks) and `diagrams`; `security.yml` with
   pip-audit and zizmor; Dependabot (monthly, minor and patch) with an auto-merge workflow.
+
+### Fixed
+
+- SF10 runs: the raw load inserts with one pipeline (DECISIONS 143); `int_sales_daily` aggregates
+  once over lines and returns with two threads (144); RustFS gets 1 GiB and restarts on failure
+  (145); the `etl` ClickHouse profile keeps the written join order (146).
