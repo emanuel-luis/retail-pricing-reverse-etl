@@ -1,0 +1,47 @@
+# Monitoring: what Prometheus scrapes, how it authenticates to NiFi, and what Grafana reads for
+# its dashboards and alert rules. Grounded in compose.yaml (profile monitoring),
+# config/prometheus/prometheus.yml, config/grafana/provisioning/{datasources,dashboards,alerting}/
+# and config/grafana/dashboards/*.json.
+...@_style
+
+title: "Monitoring: metrics, the audit trail and the marts in Grafana" {
+  shape: text
+  near: top-center
+  style: {font-size: 24; bold: true}
+}
+
+direction: down
+
+nifi: "NiFi\n/nifi-api/flow/metrics/\nprometheus (bearer)" {class: process}
+token: "nifi-token sidecar\nnifi token --interval 6h\nwrites the JWT file" {class: process}
+clickhouse_m: "ClickHouse :9363\nmetrics, events,\nasync metrics" {class: process}
+exporters: "postgres-exporter x2\noltp and control-db\n(pg_monitor roles)" {class: process}
+apps: "dbt runner /metrics\nworkload :9108" {class: process}
+
+prometheus: "Prometheus v3.15\n7 scrape jobs every 15 s\n(NiFi 30 s), kept 7 d / 1 GB" {class: store}
+
+control: "control-db\naudit views: stage\ndurations, rows, reverse\ntotals, SLA, alerts" {class: store}
+marts: "ClickHouse marts\nprice change impact,\nproposed vs applied,\nconflicts" {class: store}
+
+grafana: "Grafana 13 (anonymous Viewer)\ndashboards: pipeline overview,\npricing outcomes, platform" {class: serving}
+alerts: "9 alert rules\ncycle failed, SLA, reconcile,\nDQ, conflict rate, watermark lag,\ntarget down, backpressure, memory" {class: check}
+
+token -> nifi {class: meta}
+nifi -> prometheus
+clickhouse_m -> prometheus
+exporters -> prometheus
+apps -> prometheus
+prometheus -> grafana
+control -> grafana
+marts -> grafana
+grafana -> alerts
+
+legend: Legend {
+  class: legend
+  grid-columns: 3
+  process: "metrics endpoint" {class: [process; legend-item]}
+  store: "time series or table" {class: [store; legend-store]}
+  serving: "dashboards" {class: [serving; legend-item]}
+  check: "alert rules" {class: [check; legend-item]}
+  edges: "solid: scraped or queried\ndashed: token" {shape: text; style.font-size: 13}
+}
