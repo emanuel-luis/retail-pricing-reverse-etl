@@ -65,7 +65,8 @@ failed or missing step:
 while cycle 2 is in transform, then `retail-pricing check` (every cycle succeeded, every
 reconcile passed, sent = applied + unchanged + conflicts + rejects, no guardrail error, conflicts
 equal in the OLTP, the audit and the mart, applied prices equal the proposals) and
-`retail-pricing report`. At SF0.01 the whole demo takes about five minutes on a laptop; a cycle
+`retail-pricing report`. At SF0.01 the whole demo takes about five minutes on a laptop once the
+images are built; a cycle
 spends about 40 s in dbt and under a second in each reverse stage, and cycle 2 records the
 injected conflicts (not TPC-DS benchmark results).
 
@@ -143,7 +144,7 @@ Grafana · Docker Compose · GitHub Actions · uv · ruff · mypy · pytest · H
 ```bash
 git clone https://github.com/emanuel-luis/retail-pricing-reverse-etl && cd retail-pricing-reverse-etl
 make install
-make demo SF=0.01   # the whole loop from scratch in about five minutes (Docker, ~8 GB)
+make demo SF=0.01   # the whole loop from scratch: about five minutes once the images are built
 make data SF=0.01   # TPC-DS SF0.01 plus the OLTP seed under data/ (seconds)
 make test           # unit tests plus the SF0.01 generation checks
 make up             # OLTP and control Postgres, ClickHouse, RustFS, the dbt runner (builds the

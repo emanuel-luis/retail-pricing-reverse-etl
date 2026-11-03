@@ -108,8 +108,15 @@ def conflicts_agree(oltp: Counts, audit: Counts, mart: Counts, mart_cycles: list
 
 
 def applied_match_audit(mart: Counts, audit: Counts, cycles: list[int]) -> list[str]:
-    """Applied rows per cycle and target in mart_proposed_vs_applied = audit.reverse_batch."""
+    """Applied rows per cycle and target in mart_proposed_vs_applied = audit.reverse_batch.
+
+    Never vacuous: a cycle with nothing applied at all fails, so a loop that applied nothing
+    cannot pass by comparing zeros.
+    """
     fails = []
+    for c in cycles:
+        if not any(n for k, n in audit.items() if k[0] == c):
+            fails.append(f"cycle {c}: the audit records no applied row (nothing to compare)")
     for key in sorted(k for k in set(mart) | set(audit) if k[0] in cycles):
         m, a = mart.get(key, 0), audit.get(key, 0)
         if m != a:
@@ -131,9 +138,12 @@ def applied_hold_proposed(mart_applied: Rows, oltp_held: Rows, cycles: list[int]
         for m in mart_applied
     }
     fails = []
-    for h in oltp_held:
-        if h["last_cycle_id"] not in cycles:
-            continue
+    held = [h for h in oltp_held if h["last_cycle_id"] in cycles]
+    if cycles and not held:
+        # Never vacuous: some applied zone price must still be held by a checked cycle (the
+        # last cycle's applies overwrite few of them; none at all means nothing was applied).
+        fails.append(f"no zone price is held by cycles {cycles}: nothing to compare")
+    for h in held:
         key = (h["last_cycle_id"], h["product_id"], h["zone_id"])
         label = f"cycle {key[0]} zone_price {key[1]}:{key[2]}"
         if key not in proposed:

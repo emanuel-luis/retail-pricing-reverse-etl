@@ -93,7 +93,8 @@ def test_applied_match_audit() -> None:
     assert applied_match_audit({k: 4}, {k: 5}, [1]) == [
         "cycle 1 zone_price: mart applied 4 but audit 5"
     ]
-    assert applied_match_audit({k: 4}, {k: 5}, [2]) == []
+    other = (2, "zone_price")
+    assert applied_match_audit({k: 4, other: 3}, {k: 5, other: 3}, [2]) == []
 
 
 def test_applied_hold_proposed() -> None:
@@ -106,8 +107,10 @@ def test_applied_hold_proposed() -> None:
     assert applied_hold_proposed([], [held], [1, 2]) == [
         "cycle 1 zone_price 7:2: held in the OLTP but not applied in the mart"
     ]
-    # Overwritten later: not held by the cycle any more, so nothing to compare.
-    assert applied_hold_proposed(mart, [], [1, 2]) == []
+    # Overwritten later: that key is no longer held; the cycle's other applied keys still are.
+    still = {"last_cycle_id": 1, "product_id": 8, "zone_id": 2, "price": "4.99"}
+    both = [*mart, {"cycle_id": 1, "product_id": 8, "zone_id": 2, "proposed_price": "4.99"}]
+    assert applied_hold_proposed(both, [still], [1, 2]) == []
 
 
 def test_has_conflicts() -> None:
@@ -156,5 +159,16 @@ def test_render_caps_the_list() -> None:
 def test_applied_hold_proposed_skips_the_last_cycle() -> None:
     # The last cycle's outcome is not in the mart yet (it arrives with the next extract).
     held = {"last_cycle_id": 3, "product_id": 5, "zone_id": 1, "price": "9.99"}
-    assert applied_hold_proposed([], [held], [1, 2]) == []
+    one = {"last_cycle_id": 1, "product_id": 6, "zone_id": 1, "price": "2.99"}
+    mart = [{"cycle_id": 1, "product_id": 6, "zone_id": 1, "proposed_price": "2.99"}]
+    assert applied_hold_proposed(mart, [held, one], [1, 2]) == []
     assert applied_hold_proposed([], [held], [1, 2, 3]) != []
+
+
+def test_mart_checks_are_never_vacuous() -> None:
+    assert applied_hold_proposed([], [], [1, 2]) == [
+        "no zone price is held by cycles [1, 2]: nothing to compare"
+    ]
+    assert applied_match_audit({}, {}, [1]) == [
+        "cycle 1: the audit records no applied row (nothing to compare)"
+    ]

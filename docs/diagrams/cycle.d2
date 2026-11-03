@@ -50,8 +50,9 @@ cycle: "One cycle: extract, load, transform, reverse, reconcile" {
   }
 
   reconcile: "50 reconcile" {
-    nifi -> ch: "expected checksums"
-    nifi -> oltp: "actual checksums"
+    nifi -> ch: "expected transit\nchecksums"
+    nifi -> oltp: "expected applied\n+ actual, one read"
+    nifi -> ctl: "reconcile_expected,\nreconcile_actual"
     nifi -> ctl: "reconcile: passed"
   }
 

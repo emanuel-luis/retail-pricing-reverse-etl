@@ -750,7 +750,7 @@ event and ref.
 | `diagrams (D2 render check)` | `make d2-install diagrams-check` | 1 min | 1 |
 | `sql (Postgres functions)` | `docker compose up -d --wait oltp control-db`, `data` SF0.01, `oltp load`, `control init`, `pytest -m sql` | 4 min | 2 |
 | `dbt (ClickHouse, SF0.01)` | section 8.4, artifacts run_results.json on failure | 6 min | 3 |
-| `e2e (compose loop, SF0.01)` | `make demo SF=0.01` with the `ci` params, then `pytest -m integration`; logs on failure; `make down` always | 15-25 min, timeout 40 | 4 (extract and load), 5 (full loop), 6 (monitoring) |
+| `e2e (compose loop, SF0.01)` | `make demo SF=0.01` with the `ci` params, then `pytest -m integration` on the same stack; the run directory always, logs and the NiFi log on failure; `make down` always | 20-35 min, timeout 55 | 4 (extract and load), 5 (full loop), 6 (monitoring) |
 
 Until `make demo` exists (PR 5), e2e runs the steps itself: `make data SF=0.01`, compose up of
 oltp, control-db, s3, clickhouse and nifi, `make load control-init ch-init s3-init`, `nifi deploy
@@ -830,7 +830,7 @@ marts exist. Neither is committed outside its PR.
 | ClickHouse OOM at SF10 | max_threads 2, lower external thresholds, grace_hash joins, narrow `history_days`, split int_sales_daily by month (incremental). Report the remaining peak |
 | NiFi heap at SF10 | Lower `page_rows` to 100k, concurrency to 2, row group to 16 MB |
 | OLTP load time at SF10 | Indexes after COPY, `synchronous_commit=off` only during load, measured and reported |
-| CI e2e time (NiFi image ~1.1 GB, startup) | SF0.01 with ci params, timeout 40. If it is over 30 min regularly, run e2e on main, schedule and a `run-e2e` label, and the owner updates the required checks |
+| CI e2e time (NiFi image ~1.1 GB, startup) | SF0.01 with ci params, timeout 55 (DECISIONS 128). If it is over 30 min regularly, run e2e on main, schedule and a `run-e2e` label, and the owner updates the required checks |
 | GenerateTableFetch EL limits | ReplaceText-built paged SQL from an OLTP `ops.page_ranges(table, page_rows)` function |
 | ClickHouse named-collection override or XML from_env grants | Full url in the collection per prefix, or SQL users by `ch init` |
 | dbt-core / adapter drift | Pin dbt-core 1.10.x; Dependabot PRs for dbt need the dbt job green |
