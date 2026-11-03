@@ -24,6 +24,7 @@ def _register_subcommands() -> None:
     from retail_pricing.clickhouse.cli import app as ch_app
     from retail_pricing.control.cli import app as control_app
     from retail_pricing.dbt_runner.cli import app as dbt_runner_app
+    from retail_pricing.nifi.cli import app as nifi_app
     from retail_pricing.oltp.cli import app as oltp_app
     from retail_pricing.s3.cli import app as s3_app
     from retail_pricing.workload.cli import app as workload_app
@@ -34,6 +35,7 @@ def _register_subcommands() -> None:
     app.add_typer(control_app, name="control")
     app.add_typer(workload_app, name="workload")
     app.add_typer(dbt_runner_app, name="dbt-runner")
+    app.add_typer(nifi_app, name="nifi")
 
 
 _register_subcommands()

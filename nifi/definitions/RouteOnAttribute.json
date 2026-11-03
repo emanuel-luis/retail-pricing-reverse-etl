@@ -1,0 +1,165 @@
+{
+  "additionalDetails": true,
+  "artifact": "nifi-standard-nar",
+  "buildInfo": {
+    "revision": "1"
+  },
+  "defaultBulletinLevel": "WARN",
+  "defaultConcurrentTasksBySchedulingStrategy": {
+    "CRON_DRIVEN": 1,
+    "TIMER_DRIVEN": 1
+  },
+  "defaultPenaltyDuration": "30 sec",
+  "defaultSchedulingPeriodBySchedulingStrategy": {
+    "CRON_DRIVEN": "* * * * * ?",
+    "TIMER_DRIVEN": "0 sec"
+  },
+  "defaultSchedulingStrategy": "TIMER_DRIVEN",
+  "defaultYieldDuration": "1 sec",
+  "dynamicProperties": [
+    {
+      "description": "Routes FlowFiles whose attributes match the Expression Language specified in the Dynamic Property Value to the Relationship specified in the Dynamic Property Key",
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "name": "Relationship Name",
+      "value": "Expression Language expression that returns a boolean value indicating whether or not the FlowFile should be routed to this Relationship"
+    }
+  ],
+  "dynamicRelationship": {
+    "description": "FlowFiles that match the Dynamic Property's Attribute Expression Language",
+    "name": "Name from Dynamic Property"
+  },
+  "group": "org.apache.nifi",
+  "inputRequirement": "INPUT_REQUIRED",
+  "multiProcessorUseCases": [
+    {
+      "configurations": [
+        {
+          "configuration": "Choose a RecordReader that is appropriate based on the format of the incoming data.\nChoose a RecordWriter that writes the data in the desired output format.\n\nAdd a single additional property. The name of the property should describe the criteria to route on. The property's value should be a RecordPath that returns `true` if the Record meets the criteria or `false` otherwise. This adds a new attribute to the FlowFile whose name is equal to the property name.\n\nConnect the 'success' Relationship to RouteOnAttribute.\n",
+          "processorClassName": "org.apache.nifi.processors.standard.PartitionRecord"
+        },
+        {
+          "configuration": "Set \"Routing Strategy\" to \"Route to Property name\"\n\nAdd two additional properties. For the first one, the name of the property should describe data that matches the criteria. The value is an Expression Language expression that checks if the attribute added by the PartitionRecord processor has a value of `true`. For example, `${criteria:equals('true')}`.\nThe second property should have a name that describes data that does not match the criteria. The value is an Expression Language that evaluates to the opposite of the first property value. For example, `${criteria:equals('true'):not()}`.\n\nConnect each of the newly created Relationships to the appropriate downstream processors.\n",
+          "processorClassName": "org.apache.nifi.processors.standard.RouteOnAttribute"
+        }
+      ],
+      "description": "Route record-oriented data based on whether or not the record's values meet some criteria",
+      "keywords": [
+        "record",
+        "route",
+        "content",
+        "data"
+      ],
+      "notes": ""
+    }
+  ],
+  "primaryNodeOnly": false,
+  "propertyDescriptors": {
+    "Routing Strategy": {
+      "allowableValues": [
+        {
+          "description": "A copy of the FlowFile will be routed to each relationship whose corresponding expression evaluates to 'true'",
+          "displayName": "Route to Property name",
+          "value": "Route to Property name"
+        },
+        {
+          "description": "Requires that all user-defined expressions evaluate to 'true' for the FlowFile to be considered a match",
+          "displayName": "Route to 'matched' if all match",
+          "value": "Route to 'match' if all match"
+        },
+        {
+          "description": "Requires that at least one user-defined expression evaluate to 'true' for the FlowFile to be considered a match",
+          "displayName": "Route to 'matched' if any matches",
+          "value": "Route to 'match' if any matches"
+        }
+      ],
+      "defaultValue": "Route to Property name",
+      "description": "Specifies how to determine which relationship to use when evaluating the Expression Language",
+      "displayName": "Routing Strategy",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Routing Strategy",
+      "required": true,
+      "sensitive": false
+    }
+  },
+  "sideEffectFree": true,
+  "supportedRelationships": [
+    {
+      "description": "FlowFiles that do not match any user-define expression will be routed here",
+      "name": "unmatched"
+    }
+  ],
+  "supportedSchedulingStrategies": [
+    "TIMER_DRIVEN",
+    "CRON_DRIVEN"
+  ],
+  "supportsBatching": true,
+  "supportsDynamicProperties": true,
+  "supportsDynamicRelationships": true,
+  "supportsSensitiveDynamicProperties": false,
+  "tags": [
+    "Attribute Expression Language",
+    "Expression Language",
+    "Regular Expression",
+    "attributes",
+    "detect",
+    "filter",
+    "find",
+    "regex",
+    "regexp",
+    "routing",
+    "search",
+    "string",
+    "text"
+  ],
+  "triggerSerially": false,
+  "triggerWhenAnyDestinationAvailable": false,
+  "triggerWhenEmpty": false,
+  "type": "org.apache.nifi.processors.standard.RouteOnAttribute",
+  "typeDescription": "Routes FlowFiles based on their Attributes using the Attribute Expression Language",
+  "useCases": [
+    {
+      "configuration": "Set the \"Routing Strategy\" property to \"Route to Property name\".\nFor each route that a FlowFile might be routed to, add a new property. The name of the property should describe the route.\nThe value of the property is an Attribute Expression Language expression that returns a boolean value indicating whether or not a given FlowFile will be routed to the associated relationship.\n\nFor example, we might route data based on its file extension using the following properties:\n    - \"Routing Strategy\" = \"Route to Property Name\"\n    - \"jpg\" = \"${filename:endsWith('.jpg')}\"\n    - \"png\" = \"${filename:endsWith('.png')}\"\n    - \"pdf\" = \"${filename:endsWith('.pdf')}\"\n\nThe Processor will now have 3 relationships: `jpg`, `png`, and `pdf`. Each of these should be connected to the appropriate downstream processor.\n",
+      "description": "Route data to one or more relationships based on its attributes using the NiFi Expression Language.",
+      "keywords": [
+        "attributes",
+        "routing",
+        "expression language"
+      ],
+      "notes": ""
+    },
+    {
+      "configuration": "Add a new property for each condition that must be satisfied in order to keep the data.\nIf the data should be kept in the case that any of the provided conditions is met, set the \"Routing Strategy\" property to \"Route to 'matched' if any matches\".\nIf all conditions must be met in order to keep the data, set the \"Routing Strategy\" property  to \"Route to 'matched' if all match\".\n\nFor example, to keep files whose filename ends with .txt and have a file size of at least 1000 bytes, we will use the following properties:\n    - \"ends_with_txt\" = \"${filename:endsWith('.txt')}\"\n    - \"large_enough\" = \"${fileSize:ge(1000)}\n    - \"Routing Strategy\" = \"Route to 'matched' if all match\"\n\nAuto-terminate the 'unmatched' relationship.\nConnect the 'matched' relationship to the next processor in the flow.\n",
+      "description": "Keep data only if its attributes meet some criteria, such as its filename ends with .txt.",
+      "keywords": [
+        "keep",
+        "filter",
+        "remove",
+        "delete",
+        "expression language"
+      ],
+      "notes": ""
+    },
+    {
+      "configuration": "Add a new property for each condition that must be satisfied in order to drop the data.\nIf the data should be dropped in the case that any of the provided conditions is met, set the \"Routing Strategy\" property to \"Route to 'matched' if any matches\".\nIf all conditions must be met in order to drop the data, set the \"Routing Strategy\" property  to \"Route to 'matched' if all match\".\n\nHere are a couple of examples for configuring the properties:\n    Example 1 Use Case: Data should be dropped if its \"uuid\" attribute has an 'a' in it or ends with '0'.\n      Here, we will use the following properties:\n        - \"has_a\" = \"${uuid:contains('a')}\"\n        - \"ends_with_0\" = \"${uuid:endsWith('0')}\n        - \"Routing Strategy\" = \"Route to 'matched' if any matches\"\n    Example 2 Use Case: Data should be dropped if its 'uuid' attribute has an 'a' AND it ends with a '1'.\n      Here, we will use the following properties:\n        - \"has_a\" = \"${uuid:contains('a')}\"\n        - \"ends_with_1\" = \"${uuid:endsWith('1')}\n        - \"Routing Strategy\" = \"Route to 'matched' if all match\"\n\nAuto-terminate the 'matched' relationship.\nConnect the 'unmatched' relationship to the next processor in the flow.\n",
+      "description": "Discard or drop a file based on attributes, such as filename.",
+      "keywords": [
+        "discard",
+        "drop",
+        "filter",
+        "remove",
+        "delete",
+        "expression language"
+      ],
+      "notes": ""
+    }
+  ],
+  "version": "2.12.0",
+  "writesAttributes": [
+    {
+      "description": "The relation to which the FlowFile was routed",
+      "name": "RouteOnAttribute.Route"
+    }
+  ]
+}

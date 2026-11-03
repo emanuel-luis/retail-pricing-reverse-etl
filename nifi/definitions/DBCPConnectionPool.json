@@ -1,0 +1,274 @@
+{
+  "additionalDetails": false,
+  "artifact": "nifi-dbcp-service-nar",
+  "buildInfo": {
+    "revision": "1"
+  },
+  "dynamicProperties": [
+    {
+      "description": "JDBC driver property name and value applied to JDBC connections.",
+      "expressionLanguageScope": "ENVIRONMENT",
+      "name": "JDBC property name",
+      "value": "JDBC property value"
+    },
+    {
+      "description": "JDBC driver property name prefixed with 'SENSITIVE.' handled as a sensitive property.",
+      "expressionLanguageScope": "NONE",
+      "name": "SENSITIVE.JDBC property name",
+      "value": "JDBC property value"
+    }
+  ],
+  "group": "org.apache.nifi",
+  "propertyDescriptors": {
+    "Database Connection URL": {
+      "description": "A database connection URL used to connect to a database. May contain database system name, host, port, database name and some parameters. The exact syntax of a database connection URL is specified by your DBMS.",
+      "displayName": "Database Connection URL",
+      "dynamic": false,
+      "expressionLanguageScope": "ENVIRONMENT",
+      "expressionLanguageScopeDescription": "Environment variables defined at JVM level and system properties",
+      "name": "Database Connection URL",
+      "required": true,
+      "sensitive": false
+    },
+    "Database Driver Class Name": {
+      "description": "Database driver class name",
+      "displayName": "Database Driver Class Name",
+      "dynamic": false,
+      "expressionLanguageScope": "ENVIRONMENT",
+      "expressionLanguageScopeDescription": "Environment variables defined at JVM level and system properties",
+      "name": "Database Driver Class Name",
+      "required": true,
+      "sensitive": false
+    },
+    "Database Driver Locations": {
+      "description": "Comma-separated list of files/folders and/or URLs containing the driver JAR and its dependencies (if any). For example '/var/tmp/mariadb-java-client-1.1.7.jar'",
+      "displayName": "Database Driver Locations",
+      "dynamic": false,
+      "expressionLanguageScope": "ENVIRONMENT",
+      "expressionLanguageScopeDescription": "Environment variables defined at JVM level and system properties",
+      "name": "Database Driver Locations",
+      "required": false,
+      "resourceDefinition": {
+        "cardinality": "MULTIPLE",
+        "resourceTypes": [
+          "DIRECTORY",
+          "FILE",
+          "URL"
+        ]
+      },
+      "sensitive": false
+    },
+    "Database Password Provider": {
+      "dependencies": [
+        {
+          "dependentValues": [
+            "PASSWORD_PROVIDER"
+          ],
+          "propertyDisplayName": "Password Source",
+          "propertyName": "Password Source"
+        }
+      ],
+      "description": "Controller Service that supplies database passwords on demand. When configured, the Password property is ignored.",
+      "displayName": "Database Password Provider",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Database Password Provider",
+      "required": true,
+      "sensitive": false,
+      "typeProvidedByValue": {
+        "artifact": "nifi-standard-services-api-nar",
+        "group": "org.apache.nifi",
+        "type": "org.apache.nifi.dbcp.api.DatabasePasswordProvider",
+        "version": "2.12.0"
+      }
+    },
+    "Database User": {
+      "description": "Database user name",
+      "displayName": "Database User",
+      "dynamic": false,
+      "expressionLanguageScope": "ENVIRONMENT",
+      "expressionLanguageScopeDescription": "Environment variables defined at JVM level and system properties",
+      "name": "Database User",
+      "required": false,
+      "sensitive": false
+    },
+    "Kerberos User Service": {
+      "description": "Specifies the Kerberos User Controller Service that should be used for authenticating with Kerberos",
+      "displayName": "Kerberos User Service",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Kerberos User Service",
+      "required": false,
+      "sensitive": false,
+      "typeProvidedByValue": {
+        "artifact": "nifi-standard-services-api-nar",
+        "group": "org.apache.nifi",
+        "type": "org.apache.nifi.kerberos.KerberosUserService",
+        "version": "2.12.0"
+      }
+    },
+    "Max Total Connections": {
+      "defaultValue": "8",
+      "description": "The maximum number of active connections that can be allocated from this pool at the same time,  or negative for no limit.",
+      "displayName": "Max Total Connections",
+      "dynamic": false,
+      "expressionLanguageScope": "ENVIRONMENT",
+      "expressionLanguageScopeDescription": "Environment variables defined at JVM level and system properties",
+      "name": "Max Total Connections",
+      "required": true,
+      "sensitive": false
+    },
+    "Max Wait Time": {
+      "defaultValue": "500 millis",
+      "description": "The maximum amount of time that the pool will wait (when there are no available connections)  for a connection to be returned before failing, or -1 to wait indefinitely. ",
+      "displayName": "Max Wait Time",
+      "dynamic": false,
+      "expressionLanguageScope": "ENVIRONMENT",
+      "expressionLanguageScopeDescription": "Environment variables defined at JVM level and system properties",
+      "name": "Max Wait Time",
+      "required": true,
+      "sensitive": false
+    },
+    "Maximum Connection Lifetime": {
+      "defaultValue": "-1",
+      "description": "The maximum lifetime of a connection. After this time is exceeded the connection will fail the next activation, passivation or validation test. A value of zero or less means the connection has an infinite lifetime.",
+      "displayName": "Maximum Connection Lifetime",
+      "dynamic": false,
+      "expressionLanguageScope": "ENVIRONMENT",
+      "expressionLanguageScopeDescription": "Environment variables defined at JVM level and system properties",
+      "name": "Maximum Connection Lifetime",
+      "required": false,
+      "sensitive": false
+    },
+    "Maximum Idle Connections": {
+      "defaultValue": "8",
+      "description": "The maximum number of connections that can remain idle in the pool without extra ones being released. Set to any negative value to allow unlimited idle connections.",
+      "displayName": "Maximum Idle Connections",
+      "dynamic": false,
+      "expressionLanguageScope": "ENVIRONMENT",
+      "expressionLanguageScopeDescription": "Environment variables defined at JVM level and system properties",
+      "name": "Maximum Idle Connections",
+      "required": false,
+      "sensitive": false
+    },
+    "Minimum Evictable Idle Time": {
+      "defaultValue": "30 mins",
+      "description": "The minimum amount of time a connection may sit idle in the pool before it is eligible for eviction.",
+      "displayName": "Minimum Evictable Idle Time",
+      "dynamic": false,
+      "expressionLanguageScope": "ENVIRONMENT",
+      "expressionLanguageScopeDescription": "Environment variables defined at JVM level and system properties",
+      "name": "Minimum Evictable Idle Time",
+      "required": false,
+      "sensitive": false
+    },
+    "Minimum Idle Connections": {
+      "defaultValue": "0",
+      "description": "The minimum number of connections that can remain idle in the pool without extra ones being created. Set to or zero to allow no idle connections.",
+      "displayName": "Minimum Idle Connections",
+      "dynamic": false,
+      "expressionLanguageScope": "ENVIRONMENT",
+      "expressionLanguageScopeDescription": "Environment variables defined at JVM level and system properties",
+      "name": "Minimum Idle Connections",
+      "required": false,
+      "sensitive": false
+    },
+    "Password": {
+      "dependencies": [
+        {
+          "dependentValues": [
+            "PASSWORD"
+          ],
+          "propertyDisplayName": "Password Source",
+          "propertyName": "Password Source"
+        }
+      ],
+      "description": "The password for the database user",
+      "displayName": "Password",
+      "dynamic": false,
+      "expressionLanguageScope": "ENVIRONMENT",
+      "expressionLanguageScopeDescription": "Environment variables defined at JVM level and system properties",
+      "name": "Password",
+      "required": false,
+      "sensitive": true
+    },
+    "Password Source": {
+      "allowableValues": [
+        {
+          "description": "Use the configured Password property for database authentication.",
+          "displayName": "Password",
+          "value": "PASSWORD"
+        },
+        {
+          "description": "Obtain database passwords from a configured Database Password Provider.",
+          "displayName": "Password Provider",
+          "value": "PASSWORD_PROVIDER"
+        }
+      ],
+      "defaultValue": "PASSWORD",
+      "description": "Specifies whether to supply the database password directly or obtain it from a Database Password Provider.",
+      "displayName": "Password Source",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Password Source",
+      "required": true,
+      "sensitive": false
+    },
+    "Soft Minimum Evictable Idle Time": {
+      "defaultValue": "-1",
+      "description": "The minimum amount of time a connection may sit idle in the pool before it is eligible for eviction by the idle connection evictor, with the extra condition that at least a minimum number of idle connections remain in the pool. When the not-soft version of this option is set to a positive value, it is examined first by the idle connection evictor: when idle connections are visited by the evictor, idle time is first compared against it (without considering the number of idle connections in the pool) and then against this soft option, including the minimum idle connections constraint.",
+      "displayName": "Soft Minimum Evictable Idle Time",
+      "dynamic": false,
+      "expressionLanguageScope": "ENVIRONMENT",
+      "expressionLanguageScopeDescription": "Environment variables defined at JVM level and system properties",
+      "name": "Soft Minimum Evictable Idle Time",
+      "required": false,
+      "sensitive": false
+    },
+    "Time Between Eviction Runs": {
+      "defaultValue": "-1",
+      "description": "The time period to sleep between runs of the idle connection evictor thread. When non-positive, no idle connection evictor thread will be run.",
+      "displayName": "Time Between Eviction Runs",
+      "dynamic": false,
+      "expressionLanguageScope": "ENVIRONMENT",
+      "expressionLanguageScopeDescription": "Environment variables defined at JVM level and system properties",
+      "name": "Time Between Eviction Runs",
+      "required": false,
+      "sensitive": false
+    },
+    "Validation Query": {
+      "description": "Validation query used to validate connections before returning them. When connection is invalid, it gets dropped and new valid connection will be returned. Note!! Using validation might have some performance penalty.",
+      "displayName": "Validation Query",
+      "dynamic": false,
+      "expressionLanguageScope": "ENVIRONMENT",
+      "expressionLanguageScopeDescription": "Environment variables defined at JVM level and system properties",
+      "name": "Validation Query",
+      "required": false,
+      "sensitive": false
+    }
+  },
+  "providedApiImplementations": [
+    {
+      "artifact": "nifi-standard-services-api-nar",
+      "group": "org.apache.nifi",
+      "type": "org.apache.nifi.dbcp.DBCPService",
+      "version": "2.12.0"
+    }
+  ],
+  "supportsDynamicProperties": true,
+  "supportsSensitiveDynamicProperties": true,
+  "tags": [
+    "connection",
+    "database",
+    "dbcp",
+    "jdbc",
+    "pooling",
+    "store"
+  ],
+  "type": "org.apache.nifi.dbcp.DBCPConnectionPool",
+  "typeDescription": "Provides Database Connection Pooling Service. Connections can be asked from pool and returned after usage.",
+  "version": "2.12.0"
+}

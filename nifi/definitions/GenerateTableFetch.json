@@ -1,0 +1,325 @@
+{
+  "additionalDetails": true,
+  "artifact": "nifi-standard-nar",
+  "buildInfo": {
+    "revision": "1"
+  },
+  "defaultBulletinLevel": "WARN",
+  "defaultConcurrentTasksBySchedulingStrategy": {
+    "CRON_DRIVEN": 1,
+    "TIMER_DRIVEN": 1
+  },
+  "defaultPenaltyDuration": "30 sec",
+  "defaultSchedulingPeriodBySchedulingStrategy": {
+    "CRON_DRIVEN": "* * * * * ?",
+    "TIMER_DRIVEN": "0 sec"
+  },
+  "defaultSchedulingStrategy": "TIMER_DRIVEN",
+  "defaultYieldDuration": "1 sec",
+  "dynamicProperties": [
+    {
+      "description": "Specifies an initial max value for max value columns. Properties should be added in the format `initial.maxvalue.<max_value_column>`. This value is only used the first time the table is accessed (when a Maximum Value Column is specified). In the case of incoming connections, the value is only used the first time for each table specified in the FlowFiles.",
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "name": "initial.maxvalue.<max_value_column>",
+      "value": "Initial maximum value for the specified column"
+    }
+  ],
+  "group": "org.apache.nifi",
+  "inputRequirement": "INPUT_ALLOWED",
+  "multiProcessorUseCases": [],
+  "primaryNodeOnly": false,
+  "propertyDescriptors": {
+    "Additional WHERE Clause": {
+      "description": "A custom clause to be added in the WHERE condition when building SQL queries.",
+      "displayName": "Additional WHERE Clause",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Additional WHERE Clause",
+      "required": false,
+      "sensitive": false
+    },
+    "Column for Value Partitioning": {
+      "description": "The name of a column whose values will be used for partitioning. The default behavior is to use row numbers on the result set for partitioning into 'pages' to be fetched from the database, using an offset/limit strategy. However for certain databases, it can be more efficient under the right circumstances to use the column values themselves to define the 'pages'. This property should only be used when the default queries are not performing well, when there is no maximum-value column or a single maximum-value column whose type can be coerced to a long integer (i.e. not date or timestamp), and the column values are evenly distributed and not sparse, for best performance.",
+      "displayName": "Column for Value Partitioning",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Column for Value Partitioning",
+      "required": false,
+      "sensitive": false
+    },
+    "Columns to Return": {
+      "description": "A comma-separated list of column names to be used in the query. If your database requires special treatment of the names (quoting, e.g.), each name should include such treatment. If no column names are supplied, all columns in the specified table will be returned. NOTE: It is important to use consistent column names for a given table for incremental fetch to work properly.",
+      "displayName": "Columns to Return",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Columns to Return",
+      "required": false,
+      "sensitive": false
+    },
+    "Custom ORDER BY Column": {
+      "description": "The name of a column to be used for ordering the results if Max-Value Columns are not provided and partitioning is enabled. This property is ignored if either Max-Value Columns is set or Partition Size = 0. NOTE: If neither Max-Value Columns nor Custom ORDER BY Column is set, then depending on the the database/driver, the processor may report an error and/or the generated SQL may result in missing and/or duplicate rows. This is because without an explicit ordering, fetching each partition is done using an arbitrary ordering.",
+      "displayName": "Custom ORDER BY Column",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Custom ORDER BY Column",
+      "required": false,
+      "sensitive": false
+    },
+    "Database Connection Pooling Service": {
+      "description": "The Controller Service that is used to obtain a connection to the database.",
+      "displayName": "Database Connection Pooling Service",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Database Connection Pooling Service",
+      "required": true,
+      "sensitive": false,
+      "typeProvidedByValue": {
+        "artifact": "nifi-standard-services-api-nar",
+        "group": "org.apache.nifi",
+        "type": "org.apache.nifi.dbcp.DBCPService",
+        "version": "2.12.0"
+      }
+    },
+    "Database Dialect Service": {
+      "dependencies": [
+        {
+          "dependentValues": [
+            "Database Dialect Service"
+          ],
+          "propertyDisplayName": "Database Type",
+          "propertyName": "Database Type"
+        }
+      ],
+      "description": "Database Dialect Service for generating statements specific to a particular service or vendor.",
+      "displayName": "Database Dialect Service",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Database Dialect Service",
+      "required": true,
+      "sensitive": false,
+      "typeProvidedByValue": {
+        "artifact": "nifi-standard-services-api-nar",
+        "group": "org.apache.nifi",
+        "type": "org.apache.nifi.database.dialect.service.api.DatabaseDialectService",
+        "version": "2.12.0"
+      }
+    },
+    "Database Type": {
+      "allowableValues": [
+        {
+          "description": "Requires configuring a Database Dialect Service for SQL statements",
+          "displayName": "Database Dialect Service",
+          "value": "Database Dialect Service"
+        },
+        {
+          "description": "Generates ANSI SQL",
+          "displayName": "Generic",
+          "value": "Generic"
+        },
+        {
+          "description": "Generates Oracle compliant SQL",
+          "displayName": "Oracle",
+          "value": "Oracle"
+        },
+        {
+          "description": "Generates Oracle compliant SQL for version 12 or greater",
+          "displayName": "Oracle 12+",
+          "value": "Oracle 12+"
+        },
+        {
+          "description": "Generates MS SQL Compatible SQL, for version 2012 or greater",
+          "displayName": "MS SQL 2012+",
+          "value": "MS SQL 2012+"
+        },
+        {
+          "description": "Generates MS SQL Compatible SQL for version 2008",
+          "displayName": "MS SQL 2008",
+          "value": "MS SQL 2008"
+        },
+        {
+          "description": "Generates MySQL compatible SQL",
+          "displayName": "MySQL",
+          "value": "MySQL"
+        },
+        {
+          "description": "Generates PostgreSQL compatible SQL",
+          "displayName": "PostgreSQL",
+          "value": "PostgreSQL"
+        },
+        {
+          "description": "Generates Phoenix compliant SQL",
+          "displayName": "Phoenix",
+          "value": "Phoenix"
+        }
+      ],
+      "defaultValue": "Generic",
+      "description": "Database Type for generating statements specific to a particular service or vendor.\nThe Generic Type supports most cases but selecting a specific type enables optimal processing\nor additional features.\n",
+      "displayName": "Database Type",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Database Type",
+      "required": true,
+      "sensitive": false
+    },
+    "Max Wait Time": {
+      "defaultValue": "0 seconds",
+      "description": "The maximum amount of time allowed for a running SQL select query , zero means there is no limit. Max time less than 1 second will be equal to zero.",
+      "displayName": "Max Wait Time",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Max Wait Time",
+      "required": true,
+      "sensitive": false
+    },
+    "Maximum-value Columns": {
+      "description": "A comma-separated list of column names. The processor will keep track of the maximum value for each column that has been returned since the processor started running. Using multiple columns implies an order to the column list, and each column's values are expected to increase more slowly than the previous columns' values. Thus, using multiple columns implies a hierarchical structure of columns, which is usually used for partitioning tables. This processor can be used to retrieve only those rows that have been added/updated since the last retrieval. Note that some JDBC types such as bit/boolean are not conducive to maintaining maximum value, so columns of these types should not be listed in this property, and will result in error(s) during processing. If no columns are provided, all rows from the table will be considered, which could have a performance impact. NOTE: It is important to use consistent max-value column names for a given table for incremental fetch to work properly.",
+      "displayName": "Maximum-value Columns",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Maximum-value Columns",
+      "required": false,
+      "sensitive": false
+    },
+    "Output Empty FlowFile on Zero Results": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "true",
+          "value": "true"
+        },
+        {
+          "description": "",
+          "displayName": "false",
+          "value": "false"
+        }
+      ],
+      "defaultValue": "false",
+      "description": "Depending on the specified properties, an execution of this processor may not result in any SQL statements generated. When this property is true, an empty FlowFile will be generated (having the parent of the incoming FlowFile if present) and transferred to the 'success' relationship. When this property is false, no output FlowFiles will be generated.",
+      "displayName": "Output Empty FlowFile on Zero Results",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Output Empty FlowFile on Zero Results",
+      "required": true,
+      "sensitive": false
+    },
+    "Partition Size": {
+      "defaultValue": "10000",
+      "description": "The number of result rows to be fetched by each generated SQL statement. The total number of rows in the table divided by the partition size gives the number of SQL statements (i.e. FlowFiles) generated. A value of zero indicates that a single FlowFile is to be generated whose SQL statement will fetch all rows in the table.",
+      "displayName": "Partition Size",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Partition Size",
+      "required": true,
+      "sensitive": false
+    },
+    "Table Name": {
+      "description": "The name of the database table to be queried.",
+      "displayName": "Table Name",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Table Name",
+      "required": true,
+      "sensitive": false
+    }
+  },
+  "seeAlso": [
+    "org.apache.nifi.processors.standard.ExecuteSQL",
+    "org.apache.nifi.processors.standard.ListDatabaseTables",
+    "org.apache.nifi.processors.standard.QueryDatabaseTable"
+  ],
+  "sideEffectFree": false,
+  "stateful": {
+    "description": "After performing a query on the specified table, the maximum values for the specified column(s) will be retained for use in future executions of the query. This allows the Processor to fetch only those records that have max values greater than the retained values. This can be used for incremental fetching, fetching of newly added rows, etc. To clear the maximum values, clear the state of the processor per the State Management documentation",
+    "scopes": [
+      "CLUSTER"
+    ]
+  },
+  "supportedRelationships": [
+    {
+      "description": "This relationship is only used when SQL query execution (using an incoming FlowFile) failed. The incoming FlowFile will be penalized and routed to this relationship. If no incoming connection(s) are specified, this relationship is unused.",
+      "name": "failure"
+    },
+    {
+      "description": "Successfully created FlowFile from SQL query result set.",
+      "name": "success"
+    }
+  ],
+  "supportedSchedulingStrategies": [
+    "TIMER_DRIVEN",
+    "CRON_DRIVEN"
+  ],
+  "supportsBatching": false,
+  "supportsDynamicProperties": true,
+  "supportsDynamicRelationships": false,
+  "supportsSensitiveDynamicProperties": false,
+  "tags": [
+    "database",
+    "fetch",
+    "generate",
+    "jdbc",
+    "query",
+    "select",
+    "sql"
+  ],
+  "triggerSerially": true,
+  "triggerWhenAnyDestinationAvailable": false,
+  "triggerWhenEmpty": false,
+  "type": "org.apache.nifi.processors.standard.GenerateTableFetch",
+  "typeDescription": "Generates SQL select queries that fetch \"pages\" of rows from a table. The partition size property, along with the table's row count, determine the size and number of pages and generated FlowFiles. In addition, incremental fetching can be achieved by setting Maximum-Value Columns, which causes the processor to track the columns' maximum values, thus only fetching rows whose columns' values exceed the observed maximums. This processor is intended to be run on the Primary Node only.\n\nThis processor can accept incoming connections; the behavior of the processor is different whether incoming connections are provided:\n  - If no incoming connection(s) are specified, the processor will generate SQL queries on the specified processor schedule. Expression Language is supported for many fields, but no FlowFile attributes are available. However the properties will be evaluated using the Environment/System properties.\n  - If incoming connection(s) are specified and no FlowFile is available to a processor task, no work will be performed.\n  - If incoming connection(s) are specified and a FlowFile is available to a processor task, the FlowFile's attributes may be used in Expression Language for such fields as Table Name and others. However, the Max-Value Columns and Columns to Return fields must be empty or refer to columns that are available in each specified table.",
+  "useCases": [],
+  "version": "2.12.0",
+  "writesAttributes": [
+    {
+      "description": "If the processor has incoming connections, and processing an incoming FlowFile causes a SQL Exception, the FlowFile is routed to failure and this attribute is set to the exception message.",
+      "name": "generatetablefetch.sql.error"
+    },
+    {
+      "description": "The name of the database table to be queried.",
+      "name": "generatetablefetch.tableName"
+    },
+    {
+      "description": "The comma-separated list of column names used in the query.",
+      "name": "generatetablefetch.columnNames"
+    },
+    {
+      "description": "Where clause used in the query to get the expected rows.",
+      "name": "generatetablefetch.whereClause"
+    },
+    {
+      "description": "The comma-separated list of column names used to keep track of data that has been returned since the processor started running.",
+      "name": "generatetablefetch.maxColumnNames"
+    },
+    {
+      "description": "The number of result rows to be fetched by the SQL statement.",
+      "name": "generatetablefetch.limit"
+    },
+    {
+      "description": "Offset to be used to retrieve the corresponding partition.",
+      "name": "generatetablefetch.offset"
+    },
+    {
+      "description": "All FlowFiles generated from the same query result set will have the same value for the fragment.identifier attribute. This can then be used to correlate the results.",
+      "name": "fragment.identifier"
+    },
+    {
+      "description": "This is the total number of  FlowFiles produced by a single ResultSet. This can be used in conjunction with the fragment.identifier attribute in order to know how many FlowFiles belonged to the same incoming ResultSet.",
+      "name": "fragment.count"
+    },
+    {
+      "description": "This is the position of this FlowFile in the list of outgoing FlowFiles that were all generated from the same execution. This can be used in conjunction with the fragment.identifier attribute to know which FlowFiles originated from the same execution and in what order  FlowFiles were produced",
+      "name": "fragment.index"
+    }
+  ]
+}

@@ -1,0 +1,148 @@
+{
+  "additionalDetails": true,
+  "artifact": "nifi-update-attribute-nar",
+  "buildInfo": {
+    "revision": "1"
+  },
+  "defaultBulletinLevel": "WARN",
+  "defaultConcurrentTasksBySchedulingStrategy": {
+    "CRON_DRIVEN": 1,
+    "TIMER_DRIVEN": 1
+  },
+  "defaultPenaltyDuration": "30 sec",
+  "defaultSchedulingPeriodBySchedulingStrategy": {
+    "CRON_DRIVEN": "* * * * * ?",
+    "TIMER_DRIVEN": "0 sec"
+  },
+  "defaultSchedulingStrategy": "TIMER_DRIVEN",
+  "defaultYieldDuration": "1 sec",
+  "dynamicProperties": [
+    {
+      "description": "Updates a FlowFile attribute specified by the Dynamic Property's key with the value specified by the Dynamic Property's value",
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "name": "A FlowFile attribute to update",
+      "value": "The value to set it to"
+    }
+  ],
+  "group": "org.apache.nifi",
+  "inputRequirement": "INPUT_REQUIRED",
+  "multiProcessorUseCases": [],
+  "primaryNodeOnly": false,
+  "propertyDescriptors": {
+    "Cache Value Lookup Cache Size": {
+      "defaultValue": "100",
+      "description": "Specifies how many canonical lookup values should be stored in the cache",
+      "displayName": "Cache Value Lookup Cache Size",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Cache Value Lookup Cache Size",
+      "required": true,
+      "sensitive": false
+    },
+    "Delete Attributes Expression": {
+      "description": "Regular expression for attributes to be deleted from FlowFiles.  Existing attributes that match will be deleted regardless of whether they are updated by this processor.",
+      "displayName": "Delete Attributes Expression",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Delete Attributes Expression",
+      "required": false,
+      "sensitive": false
+    },
+    "Stateful Variables Initial Value": {
+      "description": "If using state to set/reference variables then this value is used to set the initial value of the stateful variable. This will only be used in the @OnScheduled method when state does not contain a value for the variable. This is required if running statefully but can be empty if needed.",
+      "displayName": "Stateful Variables Initial Value",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Stateful Variables Initial Value",
+      "required": false,
+      "sensitive": false
+    },
+    "Store State": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "Do not store state",
+          "value": "Do not store state"
+        },
+        {
+          "description": "",
+          "displayName": "Store state locally",
+          "value": "Store state locally"
+        }
+      ],
+      "defaultValue": "Do not store state",
+      "description": "Select whether or not state will be stored. Selecting 'Stateless' will offer the default functionality of purely updating the attributes on a FlowFile in a stateless manner. Selecting a stateful option will not only store the attributes on the FlowFile but also in the Processors state. See the 'Stateful Usage' topic of the 'Additional Details' section of this processor's documentation for more information",
+      "displayName": "Store State",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Store State",
+      "required": true,
+      "sensitive": false
+    }
+  },
+  "sideEffectFree": true,
+  "stateful": {
+    "description": "Gives the option to store values not only on the FlowFile but as stateful variables to be referenced in a recursive manner.",
+    "scopes": [
+      "LOCAL"
+    ]
+  },
+  "supportedRelationships": [
+    {
+      "description": "All successful FlowFiles are routed to this relationship",
+      "name": "success"
+    }
+  ],
+  "supportedSchedulingStrategies": [
+    "TIMER_DRIVEN",
+    "CRON_DRIVEN"
+  ],
+  "supportsBatching": true,
+  "supportsDynamicProperties": true,
+  "supportsDynamicRelationships": false,
+  "supportsSensitiveDynamicProperties": false,
+  "tags": [
+    "Attribute Expression Language",
+    "attributes",
+    "delete",
+    "modification",
+    "state",
+    "update"
+  ],
+  "triggerSerially": false,
+  "triggerWhenAnyDestinationAvailable": false,
+  "triggerWhenEmpty": false,
+  "type": "org.apache.nifi.processors.attributes.UpdateAttribute",
+  "typeDescription": "Updates the Attributes for a FlowFile by using the Attribute Expression Language and/or deletes the attributes based on a regular expression",
+  "useCases": [
+    {
+      "configuration": "Leave \"Delete Attributes Expression\" and \"Stateful Variables Initial Value\" unset.\nSet \"Store State\" to \"Do not store state\".\n\nAdd a new property. The name of the property will become the name of the newly added attribute.\nThe value of the property will become the value of the newly added attribute. The value may use the NiFi Expression Language in order to reference other\nattributes or call Expression Language functions.\n",
+      "description": "Add a new FlowFile attribute",
+      "keywords": [],
+      "notes": ""
+    },
+    {
+      "configuration": "Leave \"Delete Attributes Expression\" and \"Stateful Variables Initial Value\" unset.\nSet \"Store State\" to \"Do not store state\".\n\nAdd a new property. The name of the property will become the name of the attribute whose value will be overwritten.\nThe value of the property will become the new value of the attribute. The value may use the NiFi Expression Language in order to reference other\nattributes or call Expression Language functions.\n\nFor example, to change the `txId` attribute to the uppercase version of its current value, add a property named `txId` with a value of `${txId:toUpper()}`\n",
+      "description": "Overwrite a FlowFile attribute with a new value",
+      "keywords": [],
+      "notes": ""
+    },
+    {
+      "configuration": "Leave \"Delete Attributes Expression\" and \"Stateful Variables Initial Value\" unset.\nSet \"Store State\" to \"Do not store state\".\n\nAdd a new property whose name is `filename` and whose value is the desired filename.\n\nFor example, to set the filename to `abc.txt`, add a property named `filename` with a value of `abc.txt`.\nTo add the `txId` attribute as a prefix to the filename, add a property named `filename` with a value of `${txId}${filename}`.\nOr, to make the filename more readable, separate the txId from the rest of the filename with a hyphen by using a value of `${txId}-${filename}`.\n",
+      "description": "Rename a file",
+      "keywords": [],
+      "notes": ""
+    }
+  ],
+  "version": "2.12.0",
+  "writesAttributes": [
+    {
+      "description": "This processor may write or remove zero or more attributes as described in additional details",
+      "name": "See additional details"
+    }
+  ]
+}

@@ -1,0 +1,940 @@
+{
+  "additionalDetails": true,
+  "artifact": "nifi-aws-nar",
+  "buildInfo": {
+    "revision": "1"
+  },
+  "defaultBulletinLevel": "WARN",
+  "defaultConcurrentTasksBySchedulingStrategy": {
+    "CRON_DRIVEN": 1,
+    "TIMER_DRIVEN": 1
+  },
+  "defaultPenaltyDuration": "30 sec",
+  "defaultSchedulingPeriodBySchedulingStrategy": {
+    "CRON_DRIVEN": "* * * * * ?",
+    "TIMER_DRIVEN": "0 sec"
+  },
+  "defaultSchedulingStrategy": "TIMER_DRIVEN",
+  "defaultYieldDuration": "1 sec",
+  "dynamicProperties": [
+    {
+      "description": "Allows user-defined metadata to be added to the S3 object as key/value pairs",
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "name": "The name of a User-Defined Metadata field to add to the S3 Object",
+      "value": "The value of a User-Defined Metadata field to add to the S3 Object"
+    }
+  ],
+  "group": "org.apache.nifi",
+  "inputRequirement": "INPUT_REQUIRED",
+  "multiProcessorUseCases": [],
+  "primaryNodeOnly": false,
+  "propertyDescriptors": {
+    "AWS Credentials Provider Service": {
+      "description": "The Controller Service that is used to obtain AWS credentials provider",
+      "displayName": "AWS Credentials Provider Service",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "AWS Credentials Provider Service",
+      "required": true,
+      "sensitive": false,
+      "typeProvidedByValue": {
+        "artifact": "nifi-aws-service-api-nar",
+        "group": "org.apache.nifi",
+        "type": "org.apache.nifi.processors.aws.credentials.provider.AwsCredentialsProviderService",
+        "version": "2.12.0"
+      }
+    },
+    "Bucket": {
+      "defaultValue": "${s3.bucket}",
+      "description": "The S3 Bucket to interact with",
+      "displayName": "Bucket",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Bucket",
+      "required": true,
+      "sensitive": false
+    },
+    "Cache Control": {
+      "description": "Sets the Cache-Control HTTP header indicating the caching directives of the associated object. Multiple directives are comma-separated.",
+      "displayName": "Cache Control",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Cache Control",
+      "required": false,
+      "sensitive": false
+    },
+    "Canned ACL": {
+      "defaultValue": "${s3.permissions.cannedacl}",
+      "description": "Amazon Canned ACL for an object, one of: BucketOwnerFullControl, BucketOwnerRead, AuthenticatedRead, PublicReadWrite, PublicRead, Private; will be ignored if any other ACL/permission/owner property is specified",
+      "displayName": "Canned ACL",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Canned ACL",
+      "required": false,
+      "sensitive": false
+    },
+    "Communications Timeout": {
+      "defaultValue": "30 secs",
+      "description": "",
+      "displayName": "Communications Timeout",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Communications Timeout",
+      "required": true,
+      "sensitive": false
+    },
+    "Content Disposition": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "inline",
+          "value": "inline"
+        },
+        {
+          "description": "",
+          "displayName": "attachment",
+          "value": "attachment"
+        }
+      ],
+      "description": "Sets the Content-Disposition HTTP header indicating if the content is intended to be displayed inline or should be downloaded.\n Possible values are 'inline' or 'attachment'. If this property is not specified, object's content-disposition will be set to filename. When 'attachment' is selected, '; filename=' plus object key are automatically appended to form final value 'attachment; filename=\"filename.jpg\"'.",
+      "displayName": "Content Disposition",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Content Disposition",
+      "required": false,
+      "sensitive": false
+    },
+    "Content Type": {
+      "description": "Sets the Content-Type HTTP header indicating the type of content stored in the associated object. The value of this header is a standard MIME type.\nAWS S3 Java client will attempt to determine the correct content type if one hasn't been set yet. Users are responsible for ensuring a suitable content type is set when uploading streams. If no content type is provided and cannot be determined by the filename, the default content type \"application/octet-stream\" will be used.",
+      "displayName": "Content Type",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Content Type",
+      "required": false,
+      "sensitive": false
+    },
+    "Custom Region": {
+      "dependencies": [
+        {
+          "dependentValues": [
+            "use-custom-region"
+          ],
+          "propertyDisplayName": "Region",
+          "propertyName": "Region"
+        }
+      ],
+      "description": "Custom region, e.g. a region of an AWS compatible service provider",
+      "displayName": "Custom Region",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Custom Region",
+      "required": true,
+      "sensitive": false
+    },
+    "Encryption Service": {
+      "description": "Specifies the Encryption Service Controller used to configure requests. FetchS3Object: Only needs to be configured in case of Server-side Customer Key encryption.",
+      "displayName": "Encryption Service",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Encryption Service",
+      "required": false,
+      "sensitive": false,
+      "typeProvidedByValue": {
+        "artifact": "nifi-aws-service-api-nar",
+        "group": "org.apache.nifi",
+        "type": "org.apache.nifi.processors.aws.s3.AmazonS3EncryptionService",
+        "version": "2.12.0"
+      }
+    },
+    "Endpoint Override URL": {
+      "description": "Endpoint URL to use instead of the AWS default including scheme, host, port, and path. The AWS libraries select an endpoint URL based on the AWS region, but this property overrides the selected endpoint URL, allowing use with other S3-compatible endpoints.",
+      "displayName": "Endpoint Override URL",
+      "dynamic": false,
+      "expressionLanguageScope": "ENVIRONMENT",
+      "expressionLanguageScopeDescription": "Environment variables defined at JVM level and system properties",
+      "name": "Endpoint Override URL",
+      "required": false,
+      "sensitive": false
+    },
+    "File Resource Service": {
+      "dependencies": [
+        {
+          "dependentValues": [
+            "FILE_RESOURCE_SERVICE"
+          ],
+          "propertyDisplayName": "Resource Transfer Source",
+          "propertyName": "Resource Transfer Source"
+        }
+      ],
+      "description": "File Resource Service providing access to the local resource to be transferred",
+      "displayName": "File Resource Service",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "File Resource Service",
+      "required": true,
+      "sensitive": false,
+      "typeProvidedByValue": {
+        "artifact": "nifi-standard-services-api-nar",
+        "group": "org.apache.nifi",
+        "type": "org.apache.nifi.fileresource.service.api.FileResourceService",
+        "version": "2.12.0"
+      }
+    },
+    "FullControl User List": {
+      "defaultValue": "${s3.permissions.full.users}",
+      "description": "A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have Full Control for an object",
+      "displayName": "FullControl User List",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "FullControl User List",
+      "required": false,
+      "sensitive": false
+    },
+    "Multipart Part Size": {
+      "defaultValue": "5 GB",
+      "description": "Specifies the part size for use when the PutS3Multipart Upload API is used. FlowFiles will be broken into chunks of this size for the upload process, but the last part sent can be smaller since it is not padded. The valid range is 50MB to 5GB.",
+      "displayName": "Multipart Part Size",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Multipart Part Size",
+      "required": true,
+      "sensitive": false
+    },
+    "Multipart Threshold": {
+      "defaultValue": "5 GB",
+      "description": "Specifies the file size threshold for switch from the PutS3Object API to the PutS3MultipartUpload API.  FlowFiles bigger than this limit will be sent using the stateful multipart process. The valid range is 50MB to 5GB.",
+      "displayName": "Multipart Threshold",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Multipart Threshold",
+      "required": true,
+      "sensitive": false
+    },
+    "Multipart Upload AgeOff Interval": {
+      "defaultValue": "60 min",
+      "description": "Specifies the interval at which existing multipart uploads in AWS S3 will be evaluated for ageoff.  When processor is triggered it will initiate the ageoff evaluation if this interval has been exceeded.",
+      "displayName": "Multipart Upload AgeOff Interval",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Multipart Upload AgeOff Interval",
+      "required": true,
+      "sensitive": false
+    },
+    "Multipart Upload Max Age Threshold": {
+      "defaultValue": "7 days",
+      "description": "Specifies the maximum age for existing multipart uploads in AWS S3.  When the ageoff process occurs, any upload older than this threshold will be aborted.",
+      "displayName": "Multipart Upload Max Age Threshold",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Multipart Upload Max Age Threshold",
+      "required": true,
+      "sensitive": false
+    },
+    "Object Key": {
+      "defaultValue": "${filename}",
+      "description": "The S3 Object Key to use. This is analogous to a filename for traditional file systems.",
+      "displayName": "Object Key",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Object Key",
+      "required": true,
+      "sensitive": false
+    },
+    "Object Tags Prefix": {
+      "description": "Specifies the prefix which would be scanned against the incoming FlowFile's attributes and the matching attribute's name and value would be considered as the outgoing S3 object's Tag name and Tag value respectively. For Ex: If the incoming FlowFile carries the attributes tagS3country, tagS3PII, the tag prefix to be specified would be 'tagS3'",
+      "displayName": "Object Tags Prefix",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Object Tags Prefix",
+      "required": false,
+      "sensitive": false
+    },
+    "Proxy Configuration Service": {
+      "description": "Specifies the Proxy Configuration Controller Service to proxy network requests.",
+      "displayName": "Proxy Configuration Service",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Proxy Configuration Service",
+      "required": false,
+      "sensitive": false,
+      "typeProvidedByValue": {
+        "artifact": "nifi-standard-services-api-nar",
+        "group": "org.apache.nifi",
+        "type": "org.apache.nifi.proxy.ProxyConfigurationService",
+        "version": "2.12.0"
+      }
+    },
+    "Read ACL User List": {
+      "defaultValue": "${s3.permissions.readacl.users}",
+      "description": "A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have permissions to read the Access Control List for an object",
+      "displayName": "Read ACL User List",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Read ACL User List",
+      "required": false,
+      "sensitive": false
+    },
+    "Read Permission User List": {
+      "defaultValue": "${s3.permissions.read.users}",
+      "description": "A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have Read Access for an object",
+      "displayName": "Read Permission User List",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Read Permission User List",
+      "required": false,
+      "sensitive": false
+    },
+    "Region": {
+      "allowableValues": [
+        {
+          "description": "AWS Region Code : af-south-1",
+          "displayName": "Africa (Cape Town)",
+          "value": "af-south-1"
+        },
+        {
+          "description": "AWS Region Code : ap-east-1",
+          "displayName": "Asia Pacific (Hong Kong)",
+          "value": "ap-east-1"
+        },
+        {
+          "description": "AWS Region Code : ap-south-2",
+          "displayName": "Asia Pacific (Hyderabad)",
+          "value": "ap-south-2"
+        },
+        {
+          "description": "AWS Region Code : ap-southeast-3",
+          "displayName": "Asia Pacific (Jakarta)",
+          "value": "ap-southeast-3"
+        },
+        {
+          "description": "AWS Region Code : ap-southeast-5",
+          "displayName": "Asia Pacific (Malaysia)",
+          "value": "ap-southeast-5"
+        },
+        {
+          "description": "AWS Region Code : ap-southeast-4",
+          "displayName": "Asia Pacific (Melbourne)",
+          "value": "ap-southeast-4"
+        },
+        {
+          "description": "AWS Region Code : ap-south-1",
+          "displayName": "Asia Pacific (Mumbai)",
+          "value": "ap-south-1"
+        },
+        {
+          "description": "AWS Region Code : ap-southeast-6",
+          "displayName": "Asia Pacific (New Zealand)",
+          "value": "ap-southeast-6"
+        },
+        {
+          "description": "AWS Region Code : ap-northeast-3",
+          "displayName": "Asia Pacific (Osaka)",
+          "value": "ap-northeast-3"
+        },
+        {
+          "description": "AWS Region Code : ap-northeast-2",
+          "displayName": "Asia Pacific (Seoul)",
+          "value": "ap-northeast-2"
+        },
+        {
+          "description": "AWS Region Code : ap-southeast-1",
+          "displayName": "Asia Pacific (Singapore)",
+          "value": "ap-southeast-1"
+        },
+        {
+          "description": "AWS Region Code : ap-southeast-2",
+          "displayName": "Asia Pacific (Sydney)",
+          "value": "ap-southeast-2"
+        },
+        {
+          "description": "AWS Region Code : ap-east-2",
+          "displayName": "Asia Pacific (Taipei)",
+          "value": "ap-east-2"
+        },
+        {
+          "description": "AWS Region Code : ap-southeast-7",
+          "displayName": "Asia Pacific (Thailand)",
+          "value": "ap-southeast-7"
+        },
+        {
+          "description": "AWS Region Code : ap-northeast-1",
+          "displayName": "Asia Pacific (Tokyo)",
+          "value": "ap-northeast-1"
+        },
+        {
+          "description": "AWS Region Code : eusc-de-east-1",
+          "displayName": "AWS European Sovereign Cloud (Germany)",
+          "value": "eusc-de-east-1"
+        },
+        {
+          "description": "AWS Region Code : aws-global",
+          "displayName": "aws global region",
+          "value": "aws-global"
+        },
+        {
+          "description": "AWS Region Code : us-gov-east-1",
+          "displayName": "AWS GovCloud (US-East)",
+          "value": "us-gov-east-1"
+        },
+        {
+          "description": "AWS Region Code : us-gov-west-1",
+          "displayName": "AWS GovCloud (US-West)",
+          "value": "us-gov-west-1"
+        },
+        {
+          "description": "AWS Region Code : aws-cn-global",
+          "displayName": "aws-cn global region",
+          "value": "aws-cn-global"
+        },
+        {
+          "description": "AWS Region Code : aws-iso-global",
+          "displayName": "aws-iso global region",
+          "value": "aws-iso-global"
+        },
+        {
+          "description": "AWS Region Code : aws-iso-b-global",
+          "displayName": "aws-iso-b global region",
+          "value": "aws-iso-b-global"
+        },
+        {
+          "description": "AWS Region Code : aws-iso-e-global",
+          "displayName": "aws-iso-e global region",
+          "value": "aws-iso-e-global"
+        },
+        {
+          "description": "AWS Region Code : aws-iso-f-global",
+          "displayName": "aws-iso-f global region",
+          "value": "aws-iso-f-global"
+        },
+        {
+          "description": "AWS Region Code : aws-us-gov-global",
+          "displayName": "aws-us-gov global region",
+          "value": "aws-us-gov-global"
+        },
+        {
+          "description": "AWS Region Code : ca-central-1",
+          "displayName": "Canada (Central)",
+          "value": "ca-central-1"
+        },
+        {
+          "description": "AWS Region Code : ca-west-1",
+          "displayName": "Canada West (Calgary)",
+          "value": "ca-west-1"
+        },
+        {
+          "description": "AWS Region Code : cn-north-1",
+          "displayName": "China (Beijing)",
+          "value": "cn-north-1"
+        },
+        {
+          "description": "AWS Region Code : cn-northwest-1",
+          "displayName": "China (Ningxia)",
+          "value": "cn-northwest-1"
+        },
+        {
+          "description": "AWS Region Code : eu-isoe-west-1",
+          "displayName": "EU ISOE West",
+          "value": "eu-isoe-west-1"
+        },
+        {
+          "description": "AWS Region Code : eu-central-1",
+          "displayName": "Europe (Frankfurt)",
+          "value": "eu-central-1"
+        },
+        {
+          "description": "AWS Region Code : eu-west-1",
+          "displayName": "Europe (Ireland)",
+          "value": "eu-west-1"
+        },
+        {
+          "description": "AWS Region Code : eu-west-2",
+          "displayName": "Europe (London)",
+          "value": "eu-west-2"
+        },
+        {
+          "description": "AWS Region Code : eu-south-1",
+          "displayName": "Europe (Milan)",
+          "value": "eu-south-1"
+        },
+        {
+          "description": "AWS Region Code : eu-west-3",
+          "displayName": "Europe (Paris)",
+          "value": "eu-west-3"
+        },
+        {
+          "description": "AWS Region Code : eu-south-2",
+          "displayName": "Europe (Spain)",
+          "value": "eu-south-2"
+        },
+        {
+          "description": "AWS Region Code : eu-north-1",
+          "displayName": "Europe (Stockholm)",
+          "value": "eu-north-1"
+        },
+        {
+          "description": "AWS Region Code : eu-central-2",
+          "displayName": "Europe (Zurich)",
+          "value": "eu-central-2"
+        },
+        {
+          "description": "AWS Region Code : il-central-1",
+          "displayName": "Israel (Tel Aviv)",
+          "value": "il-central-1"
+        },
+        {
+          "description": "AWS Region Code : mx-central-1",
+          "displayName": "Mexico (Central)",
+          "value": "mx-central-1"
+        },
+        {
+          "description": "AWS Region Code : me-south-1",
+          "displayName": "Middle East (Bahrain)",
+          "value": "me-south-1"
+        },
+        {
+          "description": "AWS Region Code : me-central-1",
+          "displayName": "Middle East (UAE)",
+          "value": "me-central-1"
+        },
+        {
+          "description": "AWS Region Code : sa-east-1",
+          "displayName": "South America (Sao Paulo)",
+          "value": "sa-east-1"
+        },
+        {
+          "description": "AWS Region Code : us-east-1",
+          "displayName": "US East (N. Virginia)",
+          "value": "us-east-1"
+        },
+        {
+          "description": "AWS Region Code : us-east-2",
+          "displayName": "US East (Ohio)",
+          "value": "us-east-2"
+        },
+        {
+          "description": "AWS Region Code : us-iso-east-1",
+          "displayName": "US ISO East",
+          "value": "us-iso-east-1"
+        },
+        {
+          "description": "AWS Region Code : us-iso-west-1",
+          "displayName": "US ISO WEST",
+          "value": "us-iso-west-1"
+        },
+        {
+          "description": "AWS Region Code : us-isob-east-1",
+          "displayName": "US ISOB East (Ohio)",
+          "value": "us-isob-east-1"
+        },
+        {
+          "description": "AWS Region Code : us-isob-west-1",
+          "displayName": "US ISOB West",
+          "value": "us-isob-west-1"
+        },
+        {
+          "description": "AWS Region Code : us-isof-east-1",
+          "displayName": "US ISOF EAST",
+          "value": "us-isof-east-1"
+        },
+        {
+          "description": "AWS Region Code : us-isof-south-1",
+          "displayName": "US ISOF SOUTH",
+          "value": "us-isof-south-1"
+        },
+        {
+          "description": "AWS Region Code : us-west-1",
+          "displayName": "US West (N. California)",
+          "value": "us-west-1"
+        },
+        {
+          "description": "AWS Region Code : us-west-2",
+          "displayName": "US West (Oregon)",
+          "value": "us-west-2"
+        },
+        {
+          "description": "User defined Region that can be a non-AWS region and/or come from Expression Language",
+          "displayName": "Use Custom Region",
+          "value": "use-custom-region"
+        }
+      ],
+      "defaultValue": "us-west-2",
+      "description": "AWS Region in which the service is located",
+      "displayName": "Region",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Region",
+      "required": true,
+      "sensitive": false
+    },
+    "Remove Tag Prefix": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "true",
+          "value": "true"
+        },
+        {
+          "description": "",
+          "displayName": "false",
+          "value": "false"
+        }
+      ],
+      "defaultValue": "false",
+      "description": "If set to 'True', the value provided for 'Object Tags Prefix' will be removed from the attribute(s) and then considered as the Tag name. For ex: If the incoming FlowFile carries the attributes tagS3country, tagS3PII and the prefix is set to 'tagS3' then the corresponding tag values would be 'country' and 'PII'",
+      "displayName": "Remove Tag Prefix",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Remove Tag Prefix",
+      "required": false,
+      "sensitive": false
+    },
+    "Resource Transfer Source": {
+      "allowableValues": [
+        {
+          "description": "The content of the incoming FlowFile provides the source for transfer",
+          "displayName": "FlowFile Content",
+          "value": "FLOWFILE_CONTENT"
+        },
+        {
+          "description": "The File Resource Service provides the source for transfer",
+          "displayName": "File Resource Service",
+          "value": "FILE_RESOURCE_SERVICE"
+        }
+      ],
+      "defaultValue": "FLOWFILE_CONTENT",
+      "description": "The source of the content to be transferred",
+      "displayName": "Resource Transfer Source",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Resource Transfer Source",
+      "required": true,
+      "sensitive": false
+    },
+    "SSL Context Service": {
+      "description": "Specifies an optional SSL Context Service that, if provided, will be used to create connections",
+      "displayName": "SSL Context Service",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "SSL Context Service",
+      "required": false,
+      "sensitive": false,
+      "typeProvidedByValue": {
+        "artifact": "nifi-standard-services-api-nar",
+        "group": "org.apache.nifi",
+        "type": "org.apache.nifi.ssl.SSLContextProvider",
+        "version": "2.12.0"
+      }
+    },
+    "Storage Class": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "AWS_BACKUP_LOW_COST_WARM",
+          "value": "AWS_BACKUP_LOW_COST_WARM"
+        },
+        {
+          "description": "",
+          "displayName": "AWS_BACKUP_WARM",
+          "value": "AWS_BACKUP_WARM"
+        },
+        {
+          "description": "",
+          "displayName": "DEEP_ARCHIVE",
+          "value": "DEEP_ARCHIVE"
+        },
+        {
+          "description": "",
+          "displayName": "EXPRESS_ONEZONE",
+          "value": "EXPRESS_ONEZONE"
+        },
+        {
+          "description": "",
+          "displayName": "FSX_ONTAP",
+          "value": "FSX_ONTAP"
+        },
+        {
+          "description": "",
+          "displayName": "FSX_OPENZFS",
+          "value": "FSX_OPENZFS"
+        },
+        {
+          "description": "",
+          "displayName": "GLACIER",
+          "value": "GLACIER"
+        },
+        {
+          "description": "",
+          "displayName": "GLACIER_IR",
+          "value": "GLACIER_IR"
+        },
+        {
+          "description": "",
+          "displayName": "INTELLIGENT_TIERING",
+          "value": "INTELLIGENT_TIERING"
+        },
+        {
+          "description": "",
+          "displayName": "ONEZONE_IA",
+          "value": "ONEZONE_IA"
+        },
+        {
+          "description": "",
+          "displayName": "OUTPOSTS",
+          "value": "OUTPOSTS"
+        },
+        {
+          "description": "",
+          "displayName": "REDUCED_REDUNDANCY",
+          "value": "REDUCED_REDUNDANCY"
+        },
+        {
+          "description": "",
+          "displayName": "SNOW",
+          "value": "SNOW"
+        },
+        {
+          "description": "",
+          "displayName": "STANDARD",
+          "value": "STANDARD"
+        },
+        {
+          "description": "",
+          "displayName": "STANDARD_IA",
+          "value": "STANDARD_IA"
+        },
+        {
+          "description": "",
+          "displayName": "UNKNOWN_TO_SDK_VERSION",
+          "value": "UNKNOWN_TO_SDK_VERSION"
+        }
+      ],
+      "defaultValue": "STANDARD",
+      "description": "",
+      "displayName": "Storage Class",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Storage Class",
+      "required": true,
+      "sensitive": false
+    },
+    "Temporary Directory Multipart State": {
+      "defaultValue": "${java.io.tmpdir}",
+      "description": "Directory in which, for multipart uploads, the processor will locally save the state tracking the upload ID and parts uploaded which must both be provided to complete the upload.",
+      "displayName": "Temporary Directory Multipart State",
+      "dynamic": false,
+      "expressionLanguageScope": "ENVIRONMENT",
+      "expressionLanguageScopeDescription": "Environment variables defined at JVM level and system properties",
+      "name": "Temporary Directory Multipart State",
+      "required": true,
+      "sensitive": false
+    },
+    "Use Chunked Encoding": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "true",
+          "value": "true"
+        },
+        {
+          "description": "",
+          "displayName": "false",
+          "value": "false"
+        }
+      ],
+      "defaultValue": "true",
+      "description": "Enables / disables chunked encoding for upload requests. Set it to false only if your endpoint does not support chunked uploading.",
+      "displayName": "Use Chunked Encoding",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Use Chunked Encoding",
+      "required": false,
+      "sensitive": false
+    },
+    "Use Path Style Access": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "true",
+          "value": "true"
+        },
+        {
+          "description": "",
+          "displayName": "false",
+          "value": "false"
+        }
+      ],
+      "defaultValue": "false",
+      "description": "Path-style access can be enforced by setting this property to true. Set it to true if your endpoint does not support virtual-hosted-style requests, only path-style requests.",
+      "displayName": "Use Path Style Access",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Use Path Style Access",
+      "required": false,
+      "sensitive": false
+    },
+    "Write ACL User List": {
+      "defaultValue": "${s3.permissions.writeacl.users}",
+      "description": "A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have permissions to change the Access Control List for an object",
+      "displayName": "Write ACL User List",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Write ACL User List",
+      "required": false,
+      "sensitive": false
+    }
+  },
+  "readsAttributes": [
+    {
+      "description": "Uses the FlowFile's filename as the filename for the S3 object",
+      "name": "filename"
+    }
+  ],
+  "seeAlso": [
+    "org.apache.nifi.processors.aws.s3.CopyS3Object",
+    "org.apache.nifi.processors.aws.s3.DeleteS3Object",
+    "org.apache.nifi.processors.aws.s3.FetchS3Object",
+    "org.apache.nifi.processors.aws.s3.GetS3ObjectMetadata",
+    "org.apache.nifi.processors.aws.s3.GetS3ObjectTags",
+    "org.apache.nifi.processors.aws.s3.ListS3",
+    "org.apache.nifi.processors.aws.s3.TagS3Object"
+  ],
+  "sideEffectFree": false,
+  "supportedRelationships": [
+    {
+      "description": "FlowFiles are routed to failure relationship",
+      "name": "failure"
+    },
+    {
+      "description": "FlowFiles are routed to success relationship",
+      "name": "success"
+    }
+  ],
+  "supportedSchedulingStrategies": [
+    "TIMER_DRIVEN",
+    "CRON_DRIVEN"
+  ],
+  "supportsBatching": true,
+  "supportsDynamicProperties": true,
+  "supportsDynamicRelationships": false,
+  "supportsSensitiveDynamicProperties": false,
+  "tags": [
+    "AWS",
+    "Amazon",
+    "Archive",
+    "Put",
+    "S3"
+  ],
+  "triggerSerially": false,
+  "triggerWhenAnyDestinationAvailable": false,
+  "triggerWhenEmpty": false,
+  "type": "org.apache.nifi.processors.aws.s3.PutS3Object",
+  "typeDescription": "Writes the contents of a FlowFile as an S3 Object to an Amazon S3 Bucket.",
+  "useCases": [],
+  "version": "2.12.0",
+  "writesAttributes": [
+    {
+      "description": "The URL that can be used to access the S3 object",
+      "name": "s3.url"
+    },
+    {
+      "description": "The S3 bucket where the Object was put in S3",
+      "name": "s3.bucket"
+    },
+    {
+      "description": "The S3 key within where the Object was put in S3",
+      "name": "s3.key"
+    },
+    {
+      "description": "The S3 content type of the S3 Object that put in S3",
+      "name": "s3.contenttype"
+    },
+    {
+      "description": "The version of the S3 Object that was put to S3",
+      "name": "s3.version"
+    },
+    {
+      "description": "The class name of the exception thrown during processor execution",
+      "name": "s3.exception"
+    },
+    {
+      "description": "The S3 supplied detail from the failed operation",
+      "name": "s3.additionalDetails"
+    },
+    {
+      "description": "The HTTP error code (if available) from the failed operation",
+      "name": "s3.statusCode"
+    },
+    {
+      "description": "The S3 moniker of the failed operation",
+      "name": "s3.errorCode"
+    },
+    {
+      "description": "The S3 exception message from the failed operation",
+      "name": "s3.errorMessage"
+    },
+    {
+      "description": "The ETag of the S3 Object",
+      "name": "s3.etag"
+    },
+    {
+      "description": "The content disposition of the S3 Object that put in S3",
+      "name": "s3.contentdisposition"
+    },
+    {
+      "description": "The cache-control header of the S3 Object",
+      "name": "s3.cachecontrol"
+    },
+    {
+      "description": "The uploadId used to upload the Object to S3",
+      "name": "s3.uploadId"
+    },
+    {
+      "description": "If the S3 object has been assigned an expiration time, this attribute will be set, containing the milliseconds since epoch in UTC time",
+      "name": "s3.expirationTime"
+    },
+    {
+      "description": "If the S3 object has been assigned an expiration time, this attribute will be set, containing the ID of the rule that dictates this object's expiration time",
+      "name": "s3.expirationTimeRuleId"
+    },
+    {
+      "description": "The server side encryption algorithm of the object",
+      "name": "s3.sseAlgorithm"
+    },
+    {
+      "description": "A human-readable form of the User Metadata of the S3 object, if any was set",
+      "name": "s3.usermetadata"
+    },
+    {
+      "description": "The name of the encryption strategy, if any was set",
+      "name": "s3.encryptionStrategy"
+    }
+  ]
+}

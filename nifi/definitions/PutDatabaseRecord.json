@@ -1,0 +1,716 @@
+{
+  "additionalDetails": false,
+  "artifact": "nifi-standard-nar",
+  "buildInfo": {
+    "revision": "1"
+  },
+  "defaultBulletinLevel": "WARN",
+  "defaultConcurrentTasksBySchedulingStrategy": {
+    "CRON_DRIVEN": 1,
+    "TIMER_DRIVEN": 1
+  },
+  "defaultPenaltyDuration": "30 sec",
+  "defaultSchedulingPeriodBySchedulingStrategy": {
+    "CRON_DRIVEN": "* * * * * ?",
+    "TIMER_DRIVEN": "0 sec"
+  },
+  "defaultSchedulingStrategy": "TIMER_DRIVEN",
+  "defaultYieldDuration": "1 sec",
+  "group": "org.apache.nifi",
+  "inputRequirement": "INPUT_REQUIRED",
+  "multiProcessorUseCases": [],
+  "primaryNodeOnly": false,
+  "propertyDescriptors": {
+    "Allow Multiple SQL Statements": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "true",
+          "value": "true"
+        },
+        {
+          "description": "",
+          "displayName": "false",
+          "value": "false"
+        }
+      ],
+      "defaultValue": "false",
+      "dependencies": [
+        {
+          "dependentValues": [
+            "Use Record Path",
+            "Use statement.type Attribute"
+          ],
+          "propertyDisplayName": "Statement Type",
+          "propertyName": "Statement Type"
+        }
+      ],
+      "description": "If the Statement Type is 'SQL' (as set in the statement.type attribute), this field indicates whether to split the field value by a semicolon and execute each statement separately. If any statement causes an error, the entire set of statements will be rolled back. If the Statement Type is not 'SQL', this field is ignored.",
+      "displayName": "Allow Multiple SQL Statements",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Allow Multiple SQL Statements",
+      "required": true,
+      "sensitive": false
+    },
+    "Binary String Format": {
+      "allowableValues": [
+        {
+          "description": "String values for binary columns contain the original value as text via UTF-8 character encoding",
+          "displayName": "UTF-8",
+          "value": "UTF-8"
+        },
+        {
+          "description": "String values for binary columns contain the original value in hexadecimal format",
+          "displayName": "Hexadecimal",
+          "value": "Hexadecimal"
+        },
+        {
+          "description": "String values for binary columns contain the original value in Base64 encoded format",
+          "displayName": "Base64",
+          "value": "Base64"
+        }
+      ],
+      "defaultValue": "UTF-8",
+      "description": "The format to be applied when decoding string values to binary.",
+      "displayName": "Binary String Format",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Binary String Format",
+      "required": true,
+      "sensitive": false
+    },
+    "Column Name Translation Pattern": {
+      "dependencies": [
+        {
+          "dependentValues": [
+            "PATTERN"
+          ],
+          "propertyDisplayName": "Column Name Translation Strategy",
+          "propertyName": "Column Name Translation Strategy"
+        }
+      ],
+      "description": "Column name will be normalized with this regular expression",
+      "displayName": "Column Name Translation Pattern",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Column Name Translation Pattern",
+      "required": true,
+      "sensitive": false
+    },
+    "Column Name Translation Strategy": {
+      "allowableValues": [
+        {
+          "description": "Underscores '_' will be removed from column names Ex: 'Pics_1_23' becomes 'PICS123'",
+          "displayName": "Remove Underscore",
+          "value": "REMOVE_UNDERSCORE"
+        },
+        {
+          "description": "Spaces will be removed from column names Ex. 'User Name' becomes 'USERNAME'",
+          "displayName": "Remove Space",
+          "value": "REMOVE_SPACE"
+        },
+        {
+          "description": "Spaces and Underscores will be removed from column names Ex. 'User_1 Name' becomes 'USER1NAME'",
+          "displayName": "Remove Underscores and Spaces",
+          "value": "REMOVE_UNDERSCORE_AND_SPACE"
+        },
+        {
+          "description": "Remove Regular Expression Characters Ex. 'user-id' becomes USERID ,total(estimated) become TOTALESTIMATED",
+          "displayName": "Remove Regular Expression Characters",
+          "value": "REMOVE_ALL_SPECIAL_CHAR"
+        },
+        {
+          "description": "Remove characters matching this Regular Expression from the column names Ex.1. '\\d' will  Remove all numbers 2. '[^a-zA-Z0-9_]' will remove special characters except underscore",
+          "displayName": "Regular Expression",
+          "value": "PATTERN"
+        }
+      ],
+      "defaultValue": "REMOVE_UNDERSCORE",
+      "dependencies": [
+        {
+          "dependentValues": [
+            "true"
+          ],
+          "propertyDisplayName": "Translate Field Names",
+          "propertyName": "Translate Field Names"
+        }
+      ],
+      "description": "The strategy used to normalize table column name. Column Name will be uppercased to do case-insensitive matching irrespective of strategy",
+      "displayName": "Column Name Translation Strategy",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Column Name Translation Strategy",
+      "required": true,
+      "sensitive": false
+    },
+    "Data Record Path": {
+      "description": "If specified, this property denotes a RecordPath that will be evaluated against each incoming Record and the Record that results from evaluating the RecordPath will be sent to the database instead of sending the entire incoming Record. If not specified, the entire incoming Record will be published to the database.",
+      "displayName": "Data Record Path",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Data Record Path",
+      "required": false,
+      "sensitive": false
+    },
+    "Database Connection Pooling Service": {
+      "description": "The Controller Service that is used to obtain a connection to the database for sending records.",
+      "displayName": "Database Connection Pooling Service",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Database Connection Pooling Service",
+      "required": true,
+      "sensitive": false,
+      "typeProvidedByValue": {
+        "artifact": "nifi-standard-services-api-nar",
+        "group": "org.apache.nifi",
+        "type": "org.apache.nifi.dbcp.DBCPService",
+        "version": "2.12.0"
+      }
+    },
+    "Database Dialect Service": {
+      "dependencies": [
+        {
+          "dependentValues": [
+            "Database Dialect Service"
+          ],
+          "propertyDisplayName": "Database Type",
+          "propertyName": "Database Type"
+        }
+      ],
+      "description": "Database Dialect Service for generating statements specific to a particular service or vendor.",
+      "displayName": "Database Dialect Service",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Database Dialect Service",
+      "required": true,
+      "sensitive": false,
+      "typeProvidedByValue": {
+        "artifact": "nifi-standard-services-api-nar",
+        "group": "org.apache.nifi",
+        "type": "org.apache.nifi.database.dialect.service.api.DatabaseDialectService",
+        "version": "2.12.0"
+      }
+    },
+    "Database Name": {
+      "description": "The name of the database (or the name of the catalog, depending on the destination system) that the statement should update. This may not apply\nfor the database that you are updating. In this case, leave the field empty. Note that if the  property is set and the database is case-sensitive,\nthe catalog name must match the database's catalog name exactly.\n",
+      "displayName": "Database Name",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Database Name",
+      "required": false,
+      "sensitive": false
+    },
+    "Database Session AutoCommit": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "true",
+          "value": "true"
+        },
+        {
+          "description": "",
+          "displayName": "false",
+          "value": "false"
+        }
+      ],
+      "defaultValue": "false",
+      "description": "The autocommit mode to set on the database connection being used. If set to false, the operation(s) will be explicitly committed or rolled back (based on success or failure respectively). If set to true, the driver/database automatically handles the commit/rollback.",
+      "displayName": "Database Session AutoCommit",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Database Session AutoCommit",
+      "required": false,
+      "sensitive": false
+    },
+    "Database Type": {
+      "allowableValues": [
+        {
+          "description": "Requires configuring a Database Dialect Service for SQL statements",
+          "displayName": "Database Dialect Service",
+          "value": "Database Dialect Service"
+        },
+        {
+          "description": "Generates ANSI SQL",
+          "displayName": "Generic",
+          "value": "Generic"
+        },
+        {
+          "description": "Generates Oracle compliant SQL",
+          "displayName": "Oracle",
+          "value": "Oracle"
+        },
+        {
+          "description": "Generates Oracle compliant SQL for version 12 or greater",
+          "displayName": "Oracle 12+",
+          "value": "Oracle 12+"
+        },
+        {
+          "description": "Generates MS SQL Compatible SQL, for version 2012 or greater",
+          "displayName": "MS SQL 2012+",
+          "value": "MS SQL 2012+"
+        },
+        {
+          "description": "Generates MS SQL Compatible SQL for version 2008",
+          "displayName": "MS SQL 2008",
+          "value": "MS SQL 2008"
+        },
+        {
+          "description": "Generates MySQL compatible SQL",
+          "displayName": "MySQL",
+          "value": "MySQL"
+        },
+        {
+          "description": "Generates PostgreSQL compatible SQL",
+          "displayName": "PostgreSQL",
+          "value": "PostgreSQL"
+        },
+        {
+          "description": "Generates Phoenix compliant SQL",
+          "displayName": "Phoenix",
+          "value": "Phoenix"
+        }
+      ],
+      "defaultValue": "Generic",
+      "description": "Database Type for generating statements specific to a particular service or vendor.\nThe Generic Type supports most cases but selecting a specific type enables optimal processing\nor additional features.\n",
+      "displayName": "Database Type",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Database Type",
+      "required": true,
+      "sensitive": false
+    },
+    "Delete Keys": {
+      "dependencies": [
+        {
+          "dependentValues": [
+            "DELETE",
+            "SQL",
+            "Use Record Path",
+            "Use statement.type Attribute"
+          ],
+          "propertyDisplayName": "Statement Type",
+          "propertyName": "Statement Type"
+        }
+      ],
+      "description": "A comma-separated list of column names that uniquely identifies a row in the database for DELETE statements. If the Statement Type is DELETE and this property is not set, the table's columns are used. This property is ignored if the Statement Type is not DELETE",
+      "displayName": "Delete Keys",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Delete Keys",
+      "required": false,
+      "sensitive": false
+    },
+    "Field Containing SQL": {
+      "dependencies": [
+        {
+          "dependentValues": [
+            "Use Record Path",
+            "Use statement.type Attribute"
+          ],
+          "propertyDisplayName": "Statement Type",
+          "propertyName": "Statement Type"
+        }
+      ],
+      "description": "If the Statement Type is 'SQL' (as set in the statement.type attribute), this field indicates which field in the record(s) contains the SQL statement to execute. The value of the field must be a single SQL statement. If the Statement Type is not 'SQL', this field is ignored.",
+      "displayName": "Field Containing SQL",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Field Containing SQL",
+      "required": false,
+      "sensitive": false
+    },
+    "Max Wait Time": {
+      "defaultValue": "0 seconds",
+      "description": "The maximum amount of time allowed for a running SQL statement , zero means there is no limit. Max time less than 1 second will be equal to zero.",
+      "displayName": "Max Wait Time",
+      "dynamic": false,
+      "expressionLanguageScope": "ENVIRONMENT",
+      "expressionLanguageScopeDescription": "Environment variables defined at JVM level and system properties",
+      "name": "Max Wait Time",
+      "required": true,
+      "sensitive": false
+    },
+    "Maximum Batch Size": {
+      "defaultValue": "1000",
+      "description": "Specifies maximum number of sql statements to be included in each batch sent to the database. Zero means the batch size is not limited, and all statements are put into a single batch which can cause high memory usage issues for a very large number of statements.",
+      "displayName": "Maximum Batch Size",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Maximum Batch Size",
+      "required": false,
+      "sensitive": false
+    },
+    "Post-Processing SQL": {
+      "description": "One or more SQL statements, separated by semicolons, executed on the current database connection,\nafter processing records for each FlowFile. Literal semicolons can be included in SQL statements\nby prefixing the semicolon with a backslash.\n",
+      "displayName": "Post-Processing SQL",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Post-Processing SQL",
+      "required": false,
+      "sensitive": false
+    },
+    "Pre-Processing SQL": {
+      "description": "One or more SQL statements, separated by semicolons, executed on the current database connection,\nbefore processing records for each FlowFile. Literal semicolons can be included in SQL statements\nby prefixing the semicolon with a backslash character.\n",
+      "displayName": "Pre-Processing SQL",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Pre-Processing SQL",
+      "required": false,
+      "sensitive": false
+    },
+    "Quote Column Identifiers": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "true",
+          "value": "true"
+        },
+        {
+          "description": "",
+          "displayName": "false",
+          "value": "false"
+        }
+      ],
+      "defaultValue": "false",
+      "description": "Enabling this option will cause all column names to be quoted, allowing you to use reserved words as column names in your tables.",
+      "displayName": "Quote Column Identifiers",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Quote Column Identifiers",
+      "required": false,
+      "sensitive": false
+    },
+    "Quote Table Identifiers": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "true",
+          "value": "true"
+        },
+        {
+          "description": "",
+          "displayName": "false",
+          "value": "false"
+        }
+      ],
+      "defaultValue": "false",
+      "description": "Enabling this option will cause the table name to be quoted to support the use of special characters in the table name.",
+      "displayName": "Quote Table Identifiers",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Quote Table Identifiers",
+      "required": false,
+      "sensitive": false
+    },
+    "Record Reader": {
+      "description": "Specifies the Controller Service to use for parsing incoming data and determining the data's schema.",
+      "displayName": "Record Reader",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Record Reader",
+      "required": true,
+      "sensitive": false,
+      "typeProvidedByValue": {
+        "artifact": "nifi-standard-services-api-nar",
+        "group": "org.apache.nifi",
+        "type": "org.apache.nifi.serialization.RecordReaderFactory",
+        "version": "2.12.0"
+      }
+    },
+    "Rollback On Failure": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "true",
+          "value": "true"
+        },
+        {
+          "description": "",
+          "displayName": "false",
+          "value": "false"
+        }
+      ],
+      "defaultValue": "false",
+      "description": "Specify how to handle error. By default (false), if an error occurs while processing a FlowFile, the FlowFile will be routed to 'failure' or 'retry' relationship based on error type, and processor can continue with next FlowFile. Instead, you may want to rollback currently processed FlowFiles and stop further processing immediately. In that case, you can do so by enabling this 'Rollback On Failure' property.  If enabled, failed FlowFiles will stay in the input relationship without penalizing it and being processed repeatedly until it gets processed successfully or removed by other means. It is important to set adequate 'Yield Duration' to avoid retrying too frequently.",
+      "displayName": "Rollback On Failure",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Rollback On Failure",
+      "required": true,
+      "sensitive": false
+    },
+    "Schema Name": {
+      "description": "The name of the schema that the table belongs to. This may not apply for the database that you are updating. In this case, leave the field empty. Note that if the property is set and the database is case-sensitive, the schema name must match the database's schema name exactly.",
+      "displayName": "Schema Name",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Schema Name",
+      "required": false,
+      "sensitive": false
+    },
+    "Statement Type": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "UPDATE",
+          "value": "UPDATE"
+        },
+        {
+          "description": "",
+          "displayName": "INSERT",
+          "value": "INSERT"
+        },
+        {
+          "description": "",
+          "displayName": "UPSERT",
+          "value": "UPSERT"
+        },
+        {
+          "description": "",
+          "displayName": "INSERT_IGNORE",
+          "value": "INSERT_IGNORE"
+        },
+        {
+          "description": "",
+          "displayName": "DELETE",
+          "value": "DELETE"
+        },
+        {
+          "description": "",
+          "displayName": "Use statement.type Attribute",
+          "value": "Use statement.type Attribute"
+        },
+        {
+          "description": "",
+          "displayName": "Use Record Path",
+          "value": "Use Record Path"
+        }
+      ],
+      "description": "Specifies the type of SQL Statement to generate. Please refer to the database documentation for a description of the behavior of each operation. Please note that some Database Types may not support certain Statement Types. If 'Use statement.type Attribute' is chosen, then the value is taken from the statement.type attribute in the FlowFile. The 'Use statement.type Attribute' option is the only one that allows the 'SQL' statement type. If 'SQL' is specified, the value of the field specified by the 'Field Containing SQL' property is expected to be a valid SQL statement on the target database, and will be executed as-is.",
+      "displayName": "Statement Type",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Statement Type",
+      "required": true,
+      "sensitive": false
+    },
+    "Statement Type Record Path": {
+      "dependencies": [
+        {
+          "dependentValues": [
+            "Use Record Path"
+          ],
+          "propertyDisplayName": "Statement Type",
+          "propertyName": "Statement Type"
+        }
+      ],
+      "description": "Specifies a RecordPath to evaluate against each Record in order to determine the Statement Type. The RecordPath should equate to either INSERT, UPDATE, UPSERT, or DELETE. (Debezium style operation types are also supported: \"r\" and \"c\" for INSERT, \"u\" for UPDATE, and \"d\" for DELETE)",
+      "displayName": "Statement Type Record Path",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Statement Type Record Path",
+      "required": true,
+      "sensitive": false
+    },
+    "Table Name": {
+      "description": "The name of the table that the statement should affect. Note that if the database is case-sensitive, the table name must match the database's table name exactly.",
+      "displayName": "Table Name",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Table Name",
+      "required": true,
+      "sensitive": false
+    },
+    "Table Schema Cache Size": {
+      "defaultValue": "100",
+      "description": "Specifies how many Table Schemas should be cached",
+      "displayName": "Table Schema Cache Size",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Table Schema Cache Size",
+      "required": true,
+      "sensitive": false
+    },
+    "Translate Field Names": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "true",
+          "value": "true"
+        },
+        {
+          "description": "",
+          "displayName": "false",
+          "value": "false"
+        }
+      ],
+      "defaultValue": "true",
+      "description": "If true, the Processor will attempt to translate field names into the appropriate column names for the table specified. If false, the field names must match the column names exactly, or the column will not be updated",
+      "displayName": "Translate Field Names",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Translate Field Names",
+      "required": false,
+      "sensitive": false
+    },
+    "Unmatched Column Behavior": {
+      "allowableValues": [
+        {
+          "description": "Any column in the database that does not have a field in the document will be assumed to not be required.  No notification will be logged",
+          "displayName": "Ignore Unmatched Columns",
+          "value": "Ignore Unmatched Columns"
+        },
+        {
+          "description": "Any column in the database that does not have a field in the document will be assumed to not be required.  A warning will be logged",
+          "displayName": "Warn on Unmatched Columns",
+          "value": "Warn on Unmatched Columns"
+        },
+        {
+          "description": "A flow will fail if any column in the database that does not have a field in the document.  An error will be logged",
+          "displayName": "Fail on Unmatched Columns",
+          "value": "Fail on Unmatched Columns"
+        }
+      ],
+      "defaultValue": "Fail on Unmatched Columns",
+      "description": "If an incoming record does not have a field mapping for all of the database table's columns, this property specifies how to handle the situation",
+      "displayName": "Unmatched Column Behavior",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Unmatched Column Behavior",
+      "required": false,
+      "sensitive": false
+    },
+    "Unmatched Field Behavior": {
+      "allowableValues": [
+        {
+          "description": "Any field in the document that cannot be mapped to a column in the database is ignored",
+          "displayName": "Ignore Unmatched Fields",
+          "value": "Ignore Unmatched Fields"
+        },
+        {
+          "description": "If the document has any field that cannot be mapped to a column in the database, the FlowFile will be routed to the failure relationship",
+          "displayName": "Fail on Unmatched Fields",
+          "value": "Fail on Unmatched Fields"
+        }
+      ],
+      "defaultValue": "Ignore Unmatched Fields",
+      "description": "If an incoming record has a field that does not map to any of the database table's columns, this property specifies how to handle the situation",
+      "displayName": "Unmatched Field Behavior",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Unmatched Field Behavior",
+      "required": false,
+      "sensitive": false
+    },
+    "Update Keys": {
+      "dependencies": [
+        {
+          "dependentValues": [
+            "SQL",
+            "UPDATE",
+            "UPSERT",
+            "Use Record Path",
+            "Use statement.type Attribute"
+          ],
+          "propertyDisplayName": "Statement Type",
+          "propertyName": "Statement Type"
+        }
+      ],
+      "description": "A comma-separated list of column names that uniquely identifies a row in the database for UPDATE statements. If the Statement Type is UPDATE and this property is not set, the table's Primary Keys are used. In this case, if no Primary Key exists, the conversion to SQL will fail if Unmatched Column Behaviour is set to FAIL. This property is ignored if the Statement Type is INSERT",
+      "displayName": "Update Keys",
+      "dynamic": false,
+      "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+      "expressionLanguageScopeDescription": "Environment variables and FlowFile Attributes",
+      "name": "Update Keys",
+      "required": false,
+      "sensitive": false
+    }
+  },
+  "readsAttributes": [
+    {
+      "description": "If 'Use statement.type Attribute' is selected for the Statement Type property, the value of this attribute will be used to determine the type of statement (INSERT, UPDATE, DELETE, SQL, etc.) to generate and execute.",
+      "name": "statement.type"
+    }
+  ],
+  "sideEffectFree": false,
+  "supportedRelationships": [
+    {
+      "description": "A FlowFile is routed to this relationship if the database cannot be updated and retrying the operation will also fail, such as an invalid query or an integrity constraint violation",
+      "name": "failure"
+    },
+    {
+      "description": "A FlowFile is routed to this relationship if the database cannot be updated but attempting the operation again may succeed",
+      "name": "retry"
+    },
+    {
+      "description": "Successfully created FlowFile from SQL query result set.",
+      "name": "success"
+    }
+  ],
+  "supportedSchedulingStrategies": [
+    "TIMER_DRIVEN",
+    "CRON_DRIVEN"
+  ],
+  "supportsBatching": false,
+  "supportsDynamicProperties": false,
+  "supportsDynamicRelationships": false,
+  "supportsSensitiveDynamicProperties": false,
+  "tags": [
+    "database",
+    "delete",
+    "insert",
+    "jdbc",
+    "put",
+    "record",
+    "sql",
+    "update"
+  ],
+  "triggerSerially": false,
+  "triggerWhenAnyDestinationAvailable": false,
+  "triggerWhenEmpty": false,
+  "type": "org.apache.nifi.processors.standard.PutDatabaseRecord",
+  "typeDescription": "The PutDatabaseRecord processor uses a specified RecordReader to input (possibly multiple) records from an incoming FlowFile. These records are translated to SQL statements and executed as a single transaction. If any errors occur, the FlowFile is routed to failure or retry, and if the records are transmitted successfully, the incoming FlowFile is routed to success.  The type of statement executed by the processor is specified via the Statement Type property, which accepts some hard-coded values such as INSERT, UPDATE, and DELETE, as well as 'Use statement.type Attribute', which causes the processor to get the statement type from a FlowFile attribute.  IMPORTANT: If the Statement Type is UPDATE, then the incoming records must not alter the value(s) of the primary keys (or user-specified Update Keys). If such records are encountered, the UPDATE statement issued to the database may do nothing (if no existing records with the new primary key values are found), or could inadvertently corrupt the existing data (by changing records for which the new values of the primary keys exist).",
+  "useCases": [
+    {
+      "configuration": "",
+      "description": "Insert records into a database",
+      "keywords": [],
+      "notes": ""
+    }
+  ],
+  "version": "2.12.0",
+  "writesAttributes": [
+    {
+      "description": "If an error occurs during processing, the FlowFile will be routed to failure or retry, and this attribute will be populated with the cause of the error.",
+      "name": "putdatabaserecord.error"
+    }
+  ]
+}

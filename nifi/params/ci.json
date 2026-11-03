@@ -1,0 +1,36 @@
+{
+  "oltp_jdbc_url": "jdbc:postgresql://oltp:5432/retail",
+  "oltp_user": "nifi",
+  "oltp_password": {
+    "env": "OLTP_NIFI_PASSWORD"
+  },
+  "control_jdbc_url": "jdbc:postgresql://control-db:5432/control",
+  "control_user": "nifi",
+  "control_password": {
+    "env": "CONTROL_NIFI_PASSWORD"
+  },
+  "jdbc_driver_dir": "/opt/nifi/nifi-current/jdbc",
+  "s3_endpoint": "http://s3:9000",
+  "s3_bucket": "retail-raw",
+  "s3_access_key": {
+    "env": "S3_ACCESS_KEY"
+  },
+  "s3_secret_key": {
+    "env": "S3_SECRET_KEY"
+  },
+  "ch_url": "http://clickhouse:8123",
+  "ch_user": "nifi",
+  "ch_password": {
+    "env": "CLICKHOUSE_NIFI_PASSWORD"
+  },
+  "dbt_runner_url": "http://dbt-runner:8580",
+  "trigger_port": "8081",
+  "page_rows": "5000",
+  "fetch_size": "10000",
+  "extract_concurrency": "4",
+  "retry_max": "3",
+  "retry_penalty": "30 sec",
+  "dbt_poll_penalty": "10 sec",
+  "dbt_poll_max": "720",
+  "ch_read_timeout": "30 min"
+}

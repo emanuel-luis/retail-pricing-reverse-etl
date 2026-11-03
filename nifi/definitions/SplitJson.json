@@ -1,0 +1,128 @@
+{
+  "additionalDetails": false,
+  "artifact": "nifi-standard-nar",
+  "buildInfo": {
+    "revision": "1"
+  },
+  "defaultBulletinLevel": "WARN",
+  "defaultConcurrentTasksBySchedulingStrategy": {
+    "CRON_DRIVEN": 1,
+    "TIMER_DRIVEN": 1
+  },
+  "defaultPenaltyDuration": "30 sec",
+  "defaultSchedulingPeriodBySchedulingStrategy": {
+    "CRON_DRIVEN": "* * * * * ?",
+    "TIMER_DRIVEN": "0 sec"
+  },
+  "defaultSchedulingStrategy": "TIMER_DRIVEN",
+  "defaultYieldDuration": "1 sec",
+  "group": "org.apache.nifi",
+  "inputRequirement": "INPUT_REQUIRED",
+  "multiProcessorUseCases": [],
+  "primaryNodeOnly": false,
+  "propertyDescriptors": {
+    "JsonPath Expression": {
+      "description": "A JsonPath expression that indicates the array element to split into JSON/scalar fragments.",
+      "displayName": "JsonPath Expression",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "JsonPath Expression",
+      "required": true,
+      "sensitive": false
+    },
+    "Max String Length": {
+      "defaultValue": "20 MB",
+      "description": "The maximum allowed length of a string value when parsing the JSON document",
+      "displayName": "Max String Length",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Max String Length",
+      "required": true,
+      "sensitive": false
+    },
+    "Null Value Representation": {
+      "allowableValues": [
+        {
+          "description": "",
+          "displayName": "empty string",
+          "value": "empty string"
+        },
+        {
+          "description": "",
+          "displayName": "the string 'null'",
+          "value": "the string 'null'"
+        }
+      ],
+      "defaultValue": "empty string",
+      "description": "Indicates the desired representation of JSON Path expressions resulting in a null value.",
+      "displayName": "Null Value Representation",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Null Value Representation",
+      "required": true,
+      "sensitive": false
+    }
+  },
+  "sideEffectFree": true,
+  "supportedRelationships": [
+    {
+      "description": "If a FlowFile fails processing for any reason (for example, the FlowFile is not valid JSON or the specified path does not exist), it will be routed to this relationship",
+      "name": "failure"
+    },
+    {
+      "description": "The original FlowFile that was split into segments. If the FlowFile fails processing, nothing will be sent to this relationship",
+      "name": "original"
+    },
+    {
+      "description": "All segments of the original FlowFile will be routed to this relationship",
+      "name": "split"
+    }
+  ],
+  "supportedSchedulingStrategies": [
+    "TIMER_DRIVEN",
+    "CRON_DRIVEN"
+  ],
+  "supportsBatching": true,
+  "supportsDynamicProperties": false,
+  "supportsDynamicRelationships": false,
+  "supportsSensitiveDynamicProperties": false,
+  "systemResourceConsiderations": [
+    {
+      "description": "The entirety of the FlowFile's content (as a JsonNode object) is read into memory, in addition to all of the generated FlowFiles representing the split JSON. If many splits are generated due to the size of the JSON, or how the JSON is configured to be split, a two-phase approach may be necessary to avoid excessive use of memory.",
+      "resource": "MEMORY"
+    }
+  ],
+  "tags": [
+    "json",
+    "jsonpath",
+    "split"
+  ],
+  "triggerSerially": false,
+  "triggerWhenAnyDestinationAvailable": false,
+  "triggerWhenEmpty": false,
+  "type": "org.apache.nifi.processors.standard.SplitJson",
+  "typeDescription": "Splits a JSON File into multiple, separate FlowFiles for an array element specified by a JsonPath expression. Each generated FlowFile is comprised of an element of the specified array and transferred to relationship 'split,' with the original file transferred to the 'original' relationship. If the specified JsonPath is not found or does not evaluate to an array element, the original file is routed to 'failure' and no files are generated.",
+  "useCases": [],
+  "version": "2.12.0",
+  "writesAttributes": [
+    {
+      "description": "All split FlowFiles produced from the same parent FlowFile will have the same randomly generated UUID added for this attribute",
+      "name": "fragment.identifier"
+    },
+    {
+      "description": "A one-up number that indicates the ordering of the split FlowFiles that were created from a single parent FlowFile",
+      "name": "fragment.index"
+    },
+    {
+      "description": "The number of split FlowFiles generated from the parent FlowFile",
+      "name": "fragment.count"
+    },
+    {
+      "description": "The filename of the parent FlowFile",
+      "name": "segment.original.filename"
+    }
+  ]
+}

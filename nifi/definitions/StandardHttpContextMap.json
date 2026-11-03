@@ -1,0 +1,54 @@
+{
+  "additionalDetails": false,
+  "artifact": "nifi-http-context-map-nar",
+  "buildInfo": {
+    "revision": "1"
+  },
+  "group": "org.apache.nifi",
+  "propertyDescriptors": {
+    "Maximum Outstanding Requests": {
+      "defaultValue": "5000",
+      "description": "The maximum number of HTTP requests that can be outstanding at any one time. Any attempt to register an additional HTTP Request will cause an error",
+      "displayName": "Maximum Outstanding Requests",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Maximum Outstanding Requests",
+      "required": true,
+      "sensitive": false
+    },
+    "Request Expiration": {
+      "defaultValue": "1 min",
+      "description": "Specifies how long an HTTP Request should be left unanswered before being evicted from the cache and being responded to with a Service Unavailable status code",
+      "displayName": "Request Expiration",
+      "dynamic": false,
+      "expressionLanguageScope": "NONE",
+      "expressionLanguageScopeDescription": "Not Supported",
+      "name": "Request Expiration",
+      "required": true,
+      "sensitive": false
+    }
+  },
+  "providedApiImplementations": [
+    {
+      "artifact": "nifi-standard-services-api-nar",
+      "group": "org.apache.nifi",
+      "type": "org.apache.nifi.http.HttpContextMap",
+      "version": "2.12.0"
+    }
+  ],
+  "seeAlso": [
+    "org.apache.nifi.processors.standard.HandleHttpRequest",
+    "org.apache.nifi.processors.standard.HandleHttpResponse"
+  ],
+  "supportsDynamicProperties": false,
+  "supportsSensitiveDynamicProperties": false,
+  "tags": [
+    "http",
+    "request",
+    "response"
+  ],
+  "type": "org.apache.nifi.http.StandardHttpContextMap",
+  "typeDescription": "Provides the ability to store and retrieve HTTP requests and responses external to a Processor, so that multiple Processors can interact with the same HTTP request.",
+  "version": "2.12.0"
+}
