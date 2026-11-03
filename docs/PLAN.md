@@ -670,7 +670,7 @@ Prometheus scrape jobs:
 - `workload` (:9108)
 - `prometheus`
 
-`nifi-token` (`retail-pricing nifi token-refresh --interval 6h`) writes the JWT atomically to a
+`nifi-token` (`retail-pricing nifi token --out ... --interval 21600`, every 6 h) writes the JWT atomically to a
 named volume mounted read-only in Prometheus. Prometheus re-reads the file on every scrape, and
 the token lasts about 8 h.
 
@@ -705,7 +705,7 @@ The Makefile follows the sibling repos: bash with `-eu -o pipefail`, `##` help a
 them.
 
 Targets: `help install lint fmt test test-fast test-sql test-clickhouse test-integration data
-load up up-monitoring down ps logs deploy flows cycle workload workload-stop demo heavy report
+load up monitoring down ps logs deploy flows cycle workload workload-stop demo heavy report
 check d2-install diagrams diagrams-check diagrams-watch`. `SF ?= 1`. `data` = generate + build.
 `load` = `oltp load`. `up` = `docker compose up -d --build --wait`. `down` = `down -v
 --remove-orphans` across all profiles.

@@ -4,7 +4,7 @@ SHELL := bash
 # Git Bash on Windows would rewrite container paths such as /var/lib/... into Windows paths.
 export MSYS_NO_PATHCONV := 1
 
-.PHONY: help install lint fmt test test-fast test-data test-sql data env up down ps logs load control-init ch-init ch-load s3-init dbt-build test-clickhouse workload workload-stop runner-logs flows deploy cycle test-integration demo heavy report check d2-install diagrams diagrams-check diagrams-watch
+.PHONY: help install lint fmt test test-fast test-data test-sql data env up down ps logs load control-init ch-init ch-load s3-init dbt-build test-clickhouse workload workload-stop monitoring runner-logs flows deploy cycle test-integration demo heavy report check d2-install diagrams diagrams-check diagrams-watch
 
 # Scale factor of the TPC-DS data: 0.01 (CI), 1 (default demo), 10 (documented heavy run).
 SF ?= 1
@@ -39,7 +39,7 @@ test-sql: ## SQL tests against the compose Postgres services (make up load contr
 	uv run pytest -m sql
 
 # Stack. Every service has a profile; .env sets COMPOSE_PROFILES=core for a bare `up`.
-ALL_PROFILES := --profile core --profile workload
+ALL_PROFILES := --profile core --profile workload --profile monitoring
 
 env: ## Copy .env.example to .env when .env is missing (local-only passwords)
 	@[ -f .env ] || { cp .env.example .env; echo "created .env from .env.example (local-only values)"; }
@@ -87,6 +87,9 @@ workload: env ## Start the OLTP workload generator (profile workload)
 
 workload-stop: ## Stop the workload generator
 	docker compose $(ALL_PROFILES) stop workload
+
+monitoring: env ## Start Prometheus, Grafana, the exporters and nifi-token (profile monitoring) with core
+	docker compose --profile core --profile monitoring up -d --build --wait
 
 runner-logs: ## Follow the dbt runner logs
 	docker compose $(ALL_PROFILES) logs -f --tail 100 dbt-runner

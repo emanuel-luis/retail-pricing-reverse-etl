@@ -12,9 +12,10 @@ def _client(handler: httpx.MockTransport, url: str = "https://127.0.0.1:28443/ni
     return Client(url, "admin", SecretStr(PASSWORD), transport=handler)
 
 
-def test_tls_verification_is_off_only_on_loopback() -> None:
+def test_tls_verification_is_off_only_on_loopback_and_the_compose_nifi() -> None:
     assert verify_tls("https://127.0.0.1:28443/nifi-api") is False
     assert verify_tls("https://localhost:28443/nifi-api") is False
+    assert verify_tls("https://nifi:8443/nifi-api") is False
     assert verify_tls("https://nifi.example.org:8443/nifi-api") is True
     assert verify_tls("https://127.0.0.1.example.org/nifi-api") is True
 

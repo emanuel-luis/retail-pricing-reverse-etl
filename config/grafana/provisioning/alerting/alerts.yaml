@@ -1,0 +1,277 @@
+# Alert rules of docs/PLAN.md section 10. Each rule is query A (one number per series: SQL rows
+# or a Prometheus instant query) and threshold C. There is no external channel on a laptop (DECISIONS 29): the one contact point is
+# an email receiver with SMTP left unconfigured, so a notification only lands in Grafana's log;
+# the rules themselves show in Alerting > Alert rules. Pipeline rules also mirror audit.alert.
+apiVersion: 1
+
+contactPoints:
+  - orgId: 1
+    name: log-only
+    receivers:
+      - uid: log-only
+        type: email
+        disableResolveMessage: true
+        settings:
+          addresses: alerts@example.invalid
+          singleEmail: true
+
+policies:
+  - orgId: 1
+    receiver: log-only
+    group_by: [grafana_folder, alertname]
+
+groups:
+  - orgId: 1
+    name: pipeline
+    folder: Retail pricing
+    interval: 1m
+    rules:
+      - uid: cycle-failed
+        title: CycleFailed
+        condition: C
+        for: 0s
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: error}
+        annotations:
+          summary: A cycle failed in the last 15 minutes (audit.cycle; failed_stage says where).
+        data:
+          - refId: A
+            relativeTimeRange: {from: 900, to: 0}
+            datasourceUid: control
+            model:
+              refId: A
+              format: table
+              rawQuery: true
+              editorMode: code
+              rawSql: >-
+                SELECT count(*) AS value FROM audit.cycle
+                WHERE status = 'failed'
+                AND coalesce(ended_at, started_at) > now() - interval '15 minutes'
+          - &above_zero
+            refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions: [{evaluator: {type: gt, params: [0]}}]
+
+      - uid: sla-breach
+        title: SlaBreach
+        condition: C
+        for: 0s
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: error}
+        annotations:
+          summary: A run of the latest cycle took (or is taking) longer than its job's SLA.
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: control
+            model:
+              refId: A
+              format: table
+              rawQuery: true
+              editorMode: code
+              rawSql: >-
+                SELECT count(*) AS value FROM audit.v_sla
+                WHERE breached AND cycle_id = (SELECT max(cycle_id) FROM audit.cycle)
+          - *above_zero
+
+      - uid: reconcile-failed
+        title: ReconcileFailed
+        condition: C
+        for: 0s
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: error}
+        annotations:
+          summary: A reconcile check failed in the last reconciled cycle (audit.reconcile_result).
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: control
+            model:
+              refId: A
+              format: table
+              rawQuery: true
+              editorMode: code
+              rawSql: >-
+                SELECT count(*) FILTER (WHERE NOT passed) AS value FROM audit.reconcile_result
+                WHERE cycle_id = (SELECT max(cycle_id) FROM audit.reconcile_result)
+          - *above_zero
+
+      - uid: dq-errors
+        title: DqErrors
+        condition: C
+        for: 0s
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: error}
+        annotations:
+          summary: dbt tests failed or errored in the last transformed cycle (audit.dbt_node_result).
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: control
+            model:
+              refId: A
+              format: table
+              rawQuery: true
+              editorMode: code
+              rawSql: >-
+                SELECT count(*) AS value FROM audit.dbt_node_result d
+                JOIN audit.v_latest_run r USING (run_id)
+                WHERE d.cycle_id = (SELECT max(cycle_id) FROM audit.dbt_node_result)
+                AND d.resource_type IN ('test', 'unit_test') AND d.status IN ('fail', 'error')
+          - *above_zero
+
+      - uid: conflict-rate-high
+        title: ConflictRateHigh
+        condition: C
+        for: 0s
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: warning}
+        annotations:
+          summary: More than 5% of the rows sent in the last reverse load were version conflicts.
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: control
+            model:
+              refId: A
+              format: table
+              rawQuery: true
+              editorMode: code
+              rawSql: >-
+                SELECT coalesce(sum(conflicts)::float8 / nullif(sum(sent), 0), 0) AS value
+                FROM audit.reverse_batch
+                WHERE cycle_id = (SELECT max(cycle_id) FROM audit.reverse_batch)
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions: [{evaluator: {type: gt, params: [0.05]}}]
+
+      - uid: watermark-lag
+        title: WatermarkLag
+        condition: C
+        for: 0s
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: warning}
+        annotations:
+          summary: The oldest watermark is more than twice the cycle schedule interval behind.
+        data:
+          # No schedule (control schedule --off) gives 0: there is no interval to lag behind.
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: control
+            model:
+              refId: A
+              format: table
+              rawQuery: true
+              editorMode: code
+              rawSql: >-
+                SELECT coalesce(extract(epoch FROM now() - min(w.high_value))
+                / nullif(extract(epoch FROM j.schedule_interval), 0), 0)::float8 AS value
+                FROM registry.watermark w CROSS JOIN registry.job j
+                WHERE j.job_id = 'cycle' GROUP BY j.schedule_interval
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions: [{evaluator: {type: gt, params: [2]}}]
+
+  - orgId: 1
+    name: platform
+    folder: Retail pricing
+    interval: 1m
+    rules:
+      - uid: target-down
+        title: TargetDown
+        condition: C
+        for: 2m
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: error}
+        annotations:
+          summary: 'Prometheus cannot scrape {{ $labels.job }}.'
+        data:
+          - refId: A
+            relativeTimeRange: {from: 300, to: 0}
+            datasourceUid: prometheus
+            model:
+              refId: A
+              # postgres-exporter stays up (1) with pg_up 0 when its database is down, so the
+              # rule takes the lower of both per job.
+              expr: min by (job) ({__name__=~"up|pg_up", job=~"nifi|clickhouse|postgres-.*"})
+              instant: true
+              range: false
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions: [{evaluator: {type: lt, params: [1]}}]
+
+      - uid: nifi-backpressure
+        title: NiFiBackpressure
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: warning}
+        annotations:
+          summary: NiFi has had more than 1 GB queued for 5 minutes.
+        data:
+          - refId: A
+            relativeTimeRange: {from: 300, to: 0}
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: sum(nifi_size_content_queued_total{component_type="RootProcessGroup"})
+              instant: true
+              range: false
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions: [{evaluator: {type: gt, params: [1000000000]}}]
+
+      # The server limit is max_server_memory_usage_to_ram_ratio (0.8) of the cgroup limit.
+      - uid: clickhouse-memory-high
+        title: ClickHouseMemoryHigh
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: warning}
+        annotations:
+          summary: ClickHouse has tracked more than 90% of its server memory limit for 5 minutes.
+        data:
+          - refId: A
+            relativeTimeRange: {from: 300, to: 0}
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: ClickHouseMetrics_MemoryTracking / (0.8 * ClickHouseAsyncMetrics_CGroupMemoryTotal)
+              instant: true
+              range: false
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions: [{evaluator: {type: gt, params: [0.9]}}]

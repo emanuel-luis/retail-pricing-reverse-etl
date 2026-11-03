@@ -8,7 +8,7 @@ export MSYS_NO_PATHCONV=1  # Git Bash would rewrite container paths such as /var
 SF="${SF:-1}"
 RP="uv run retail-pricing"
 # --profile on the command line replaces COMPOSE_PROFILES, so the core profile is named again.
-ALL_PROFILES="--profile core --profile workload"
+ALL_PROFILES="--profile core --profile workload --profile monitoring"
 STEPS=""
 
 init_run() {
@@ -51,7 +51,8 @@ env_file() {
   fi
 }
 data_all() { $RP data all --sf "$SF"; }
-stack_up() { docker compose up -d --build --wait; }
+# PLAN 11 step 3: the core loop plus monitoring, so Prometheus and Grafana see every cycle.
+stack_up() { docker compose --profile core --profile monitoring up -d --build --wait; }
 oltp_load() { $RP oltp load --sf "$SF"; }
 control_init() { $RP control init; }
 # The demo triggers every cycle itself: a scheduled cycle started by the fresh deploy would make

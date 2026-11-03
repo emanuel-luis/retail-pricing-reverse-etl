@@ -1,0 +1,419 @@
+{
+  "uid": "pipeline-overview",
+  "title": "Pipeline overview",
+  "description": "Cycles, stages, reverse outcomes and checks from the control database (audit and registry).",
+  "tags": [
+    "retail-pricing"
+  ],
+  "editable": false,
+  "schemaVersion": 41,
+  "version": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timezone": "utc",
+  "panels": [
+    {
+      "title": "Cycles",
+      "type": "table",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "control"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "control"
+          },
+          "rawSql": "SELECT cycle_id, mode, business_date, status, failed_stage, attempt, started_at,\n       ended_at,\n       extract(epoch FROM coalesce(ended_at, now()) - started_at) AS duration_s\nFROM audit.cycle\nORDER BY cycle_id DESC\nLIMIT 50",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code"
+        }
+      ],
+      "gridPos": {
+        "w": 24,
+        "h": 8,
+        "x": 0,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {},
+      "id": 1
+    },
+    {
+      "title": "Stage duration per cycle",
+      "type": "barchart",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "control"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "control"
+          },
+          "rawSql": "SELECT cycle_id::text AS cycle,\n       sum(duration_s) FILTER (WHERE job_id = 'extract') AS extract,\n       sum(duration_s) FILTER (WHERE job_id = 'load') AS load,\n       sum(duration_s) FILTER (WHERE job_id = 'transform') AS transform,\n       sum(duration_s) FILTER (WHERE job_id LIKE 'reverse.%') AS reverse,\n       sum(duration_s) FILTER (WHERE job_id = 'reconcile') AS reconcile\nFROM audit.v_cycle_stage_duration\nGROUP BY cycle_id\nORDER BY cycle_id",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code"
+        }
+      ],
+      "gridPos": {
+        "w": 12,
+        "h": 8,
+        "x": 0,
+        "y": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "xTickLabelRotation": 0,
+        "stacking": "normal",
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
+      },
+      "id": 2
+    },
+    {
+      "title": "Rows and bytes per stage",
+      "type": "table",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "control"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "control"
+          },
+          "rawSql": "SELECT cycle_id, job_id, status, rows_in, rows_out, bytes\nFROM audit.v_rows_per_stage\nORDER BY cycle_id DESC, stage_order\nLIMIT 100",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code"
+        }
+      ],
+      "gridPos": {
+        "w": 12,
+        "h": 8,
+        "x": 12,
+        "y": 8
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {},
+      "id": 3
+    },
+    {
+      "title": "Extract vs load per table",
+      "type": "table",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "control"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "control"
+          },
+          "rawSql": "SELECT r.cycle_id, s.item AS table_name,\n       sum(s.rows) FILTER (WHERE s.step_name = 'extract.table') AS extract_rows,\n       sum(s.rows) FILTER (WHERE s.step_name = 'load.table') AS load_rows,\n       sum(s.bytes) FILTER (WHERE s.step_name = 'extract.table') AS extract_bytes\nFROM audit.step s\nJOIN audit.v_latest_run r USING (run_id)\nWHERE s.step_name IN ('extract.table', 'load.table') AND s.status = 'succeeded'\nGROUP BY r.cycle_id, s.item\nORDER BY r.cycle_id DESC, s.item\nLIMIT 200",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code"
+        }
+      ],
+      "gridPos": {
+        "w": 12,
+        "h": 8,
+        "x": 0,
+        "y": 16
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {},
+      "description": "Rows each table extracted (Parquet written) and loaded (rows checked in ClickHouse), latest run of each stage.",
+      "id": 4
+    },
+    {
+      "title": "Reverse outcomes per target (latest cycle)",
+      "type": "barchart",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "control"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "control"
+          },
+          "rawSql": "SELECT target, sent, applied, unchanged, conflicts, rejects\nFROM audit.v_reverse_totals\nWHERE cycle_id = (SELECT max(cycle_id) FROM audit.reverse_batch)\nORDER BY target",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code"
+        }
+      ],
+      "gridPos": {
+        "w": 12,
+        "h": 8,
+        "x": 12,
+        "y": 16
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "xTickLabelRotation": 0,
+        "stacking": "none",
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
+      },
+      "id": 5
+    },
+    {
+      "title": "Conflict rate per cycle",
+      "type": "timeseries",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "control"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "control"
+          },
+          "rawSql": "SELECT cycle_started_at AS time,\n       sum(conflicts)::float8 / nullif(sum(sent), 0) AS conflict_rate\nFROM audit.v_reverse_totals\nWHERE $__timeFilter(cycle_started_at)\nGROUP BY cycle_started_at\nORDER BY 1",
+          "format": "time_series",
+          "rawQuery": true,
+          "editorMode": "code"
+        }
+      ],
+      "gridPos": {
+        "w": 12,
+        "h": 8,
+        "x": 0,
+        "y": 24
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "options": {},
+      "id": 6
+    },
+    {
+      "title": "dbt test results per cycle",
+      "type": "barchart",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "control"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "control"
+          },
+          "rawSql": "SELECT d.cycle_id::text AS cycle,\n       count(*) FILTER (WHERE d.status = 'pass') AS pass,\n       count(*) FILTER (WHERE d.status = 'warn') AS warn,\n       count(*) FILTER (WHERE d.status IN ('fail', 'error')) AS error\nFROM audit.dbt_node_result d\nJOIN audit.v_latest_run r USING (run_id)\nWHERE d.resource_type IN ('test', 'unit_test')\nGROUP BY d.cycle_id\nORDER BY d.cycle_id",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code"
+        }
+      ],
+      "gridPos": {
+        "w": 12,
+        "h": 8,
+        "x": 12,
+        "y": 24
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "xTickLabelRotation": 0,
+        "stacking": "normal",
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
+      },
+      "id": 7
+    },
+    {
+      "title": "Reconciliation",
+      "type": "table",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "control"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "control"
+          },
+          "rawSql": "SELECT cycle_id, target,\n       count(*) FILTER (WHERE passed) AS passed,\n       count(*) FILTER (WHERE NOT passed) AS failed\nFROM audit.reconcile_result\nGROUP BY cycle_id, target\nORDER BY cycle_id DESC, target\nLIMIT 80",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code"
+        }
+      ],
+      "gridPos": {
+        "w": 12,
+        "h": 8,
+        "x": 0,
+        "y": 32
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {},
+      "id": 8
+    },
+    {
+      "title": "Run duration vs SLA",
+      "type": "table",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "control"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "control"
+          },
+          "rawSql": "SELECT cycle_id, job_id, status, round(duration_s::numeric, 1) AS duration_s,\n       sla_s, breached\nFROM audit.v_sla\nORDER BY cycle_id DESC, job_id\nLIMIT 100",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code"
+        }
+      ],
+      "gridPos": {
+        "w": 12,
+        "h": 8,
+        "x": 12,
+        "y": 32
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {},
+      "id": 9
+    },
+    {
+      "title": "Open alerts",
+      "type": "table",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "control"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "control"
+          },
+          "rawSql": "SELECT raised_at, severity, kind, cycle_id, message\nFROM audit.alert\nWHERE resolved_at IS NULL\nORDER BY raised_at DESC\nLIMIT 50",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code"
+        }
+      ],
+      "gridPos": {
+        "w": 12,
+        "h": 8,
+        "x": 0,
+        "y": 40
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {},
+      "id": 10
+    },
+    {
+      "title": "Watermark lag per table",
+      "type": "bargauge",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "control"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "control"
+          },
+          "rawSql": "SELECT table_name, extract(epoch FROM now() - high_value) AS lag_s\nFROM registry.watermark\nORDER BY lag_s DESC",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code"
+        }
+      ],
+      "gridPos": {
+        "w": 24,
+        "h": 10,
+        "x": 0,
+        "y": 48
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {},
+      "id": 11
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  }
+}

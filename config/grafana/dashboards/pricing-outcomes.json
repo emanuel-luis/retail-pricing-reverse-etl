@@ -1,0 +1,371 @@
+{
+  "uid": "pricing-outcomes",
+  "title": "Pricing outcomes",
+  "description": "What the engine proposed and what the OLTP applied, from the ClickHouse pricing and marts databases. A cycle's apply outcome is complete once the next cycle has extracted.",
+  "tags": [
+    "retail-pricing"
+  ],
+  "editable": false,
+  "schemaVersion": 41,
+  "version": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timezone": "utc",
+  "panels": [
+    {
+      "title": "Changes per cycle by reason",
+      "type": "barchart",
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "clickhouse"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "clickhouse"
+          },
+          "editorType": "sql",
+          "rawSql": "SELECT toString(cycle_id) AS cycle, primary_reason, sum(n_changed) AS n_changed\nFROM marts.mart_price_change_impact\nGROUP BY cycle_id, primary_reason\nORDER BY cycle_id, primary_reason",
+          "format": 1,
+          "queryType": "table"
+        }
+      ],
+      "gridPos": {
+        "w": 12,
+        "h": 8,
+        "x": 0,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "xTickLabelRotation": 0,
+        "stacking": "normal",
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
+      },
+      "transformations": [
+        {
+          "id": "groupingToMatrix",
+          "options": {
+            "rowField": "cycle",
+            "columnField": "primary_reason",
+            "valueField": "n_changed",
+            "emptyValue": "zero"
+          }
+        }
+      ],
+      "id": 1
+    },
+    {
+      "title": "Average change by category (latest cycle)",
+      "type": "barchart",
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "clickhouse"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "clickhouse"
+          },
+          "editorType": "sql",
+          "rawSql": "SELECT toString(category_id) AS category,\n       round(sum(avg_change_pct * n_changed) / sum(n_changed), 4) AS avg_change\nFROM marts.mart_price_change_impact\nWHERE cycle_id = (SELECT max(cycle_id) FROM marts.mart_price_change_impact)\nGROUP BY category_id\nORDER BY category_id",
+          "format": 1,
+          "queryType": "table"
+        }
+      ],
+      "gridPos": {
+        "w": 12,
+        "h": 8,
+        "x": 12,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "options": {
+        "xTickLabelRotation": 0,
+        "stacking": "none",
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
+      },
+      "id": 2
+    },
+    {
+      "title": "Zone price changes up and down by percent (latest cycle)",
+      "type": "barchart",
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "clickhouse"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "clickhouse"
+          },
+          "editorType": "sql",
+          "rawSql": "SELECT toString(bucket) AS pct_bucket,\n       countIf(is_up) AS up, countIf(NOT is_up) AS down\nFROM (\n    SELECT toInt32(floor(toFloat64(change_pct) * 100)) AS bucket,\n           change_pct > 0 AS is_up\n    FROM pricing.pricing_price_change_log\n    WHERE target = 'zone_price'\n      AND cycle_id = (SELECT max(cycle_id) FROM pricing.pricing_price_change_log)\n)\nGROUP BY bucket\nORDER BY bucket",
+          "format": 1,
+          "queryType": "table"
+        }
+      ],
+      "gridPos": {
+        "w": 12,
+        "h": 8,
+        "x": 0,
+        "y": 8
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "xTickLabelRotation": 0,
+        "stacking": "none",
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
+      },
+      "description": "Changed zone prices per whole-percent bucket of change.",
+      "id": 3
+    },
+    {
+      "title": "Projected 28-day delta by zone (latest cycle)",
+      "type": "barchart",
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "clickhouse"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "clickhouse"
+          },
+          "editorType": "sql",
+          "rawSql": "SELECT toString(zone_id) AS zone,\n       round(sum(projected_margin_delta), 2) AS margin_delta,\n       round(sum(projected_revenue_delta), 2) AS revenue_delta\nFROM marts.mart_price_change_impact\nWHERE cycle_id = (SELECT max(cycle_id) FROM marts.mart_price_change_impact)\nGROUP BY zone_id\nORDER BY zone_id",
+          "format": 1,
+          "queryType": "table"
+        }
+      ],
+      "gridPos": {
+        "w": 12,
+        "h": 8,
+        "x": 12,
+        "y": 8
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "xTickLabelRotation": 0,
+        "stacking": "none",
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
+      },
+      "id": 4
+    },
+    {
+      "title": "Proposed vs applied vs conflicts per cycle",
+      "type": "barchart",
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "clickhouse"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "clickhouse"
+          },
+          "editorType": "sql",
+          "rawSql": "SELECT toString(cycle_id) AS cycle,\n       countIf(outcome = 'applied') AS applied,\n       countIf(outcome = 'unchanged') AS unchanged,\n       countIf(outcome = 'conflict') AS conflicts,\n       countIf(outcome = 'rejected') AS rejected,\n       countIf(outcome IN ('staged', 'not_sent')) AS pending\nFROM marts.mart_proposed_vs_applied\nGROUP BY cycle_id\nORDER BY cycle_id",
+          "format": 1,
+          "queryType": "table"
+        }
+      ],
+      "gridPos": {
+        "w": 12,
+        "h": 8,
+        "x": 0,
+        "y": 16
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "xTickLabelRotation": 0,
+        "stacking": "normal",
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
+      },
+      "description": "Every proposed row by apply outcome; pending rows are not yet extracted back (the next cycle completes them).",
+      "id": 5
+    },
+    {
+      "title": "Top conflicts by price gap",
+      "type": "table",
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "clickhouse"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "clickhouse"
+          },
+          "editorType": "sql",
+          "rawSql": "SELECT cycle_id, target, key_text, expected_version, actual_version,\n       proposed_price, human_price,\n       abs(toFloat64(proposed_price) - toFloat64(human_price)) AS gap,\n       editor, detected_at\nFROM marts.mart_conflicts\nORDER BY gap DESC, detected_at DESC\nLIMIT 50",
+          "format": 1,
+          "queryType": "table"
+        }
+      ],
+      "gridPos": {
+        "w": 12,
+        "h": 8,
+        "x": 12,
+        "y": 16
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {},
+      "id": 6
+    },
+    {
+      "title": "Shelf labels per store (latest cycle)",
+      "type": "barchart",
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "clickhouse"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "clickhouse"
+          },
+          "editorType": "sql",
+          "rawSql": "SELECT toString(store_id) AS store, count() AS labels\nFROM pricing.pricing_shelf_label\nWHERE cycle_id = (SELECT max(cycle_id) FROM pricing.pricing_shelf_label)\nGROUP BY store_id\nORDER BY labels DESC\nLIMIT 30",
+          "format": 1,
+          "queryType": "table"
+        }
+      ],
+      "gridPos": {
+        "w": 12,
+        "h": 8,
+        "x": 0,
+        "y": 24
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "xTickLabelRotation": 0,
+        "stacking": "none",
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
+      },
+      "id": 7
+    },
+    {
+      "title": "Held zone prices by hold reason",
+      "type": "barchart",
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "clickhouse"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "clickhouse"
+          },
+          "editorType": "sql",
+          "rawSql": "SELECT toString(cycle_id) AS cycle, primary_reason AS hold_reason, count() AS n\nFROM pricing.pricing_zone_price\nWHERE startsWith(primary_reason, 'HOLD_')\nGROUP BY cycle_id, primary_reason\nORDER BY cycle_id, primary_reason",
+          "format": 1,
+          "queryType": "table"
+        }
+      ],
+      "gridPos": {
+        "w": 12,
+        "h": 8,
+        "x": 12,
+        "y": 24
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "xTickLabelRotation": 0,
+        "stacking": "normal",
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
+      },
+      "transformations": [
+        {
+          "id": "groupingToMatrix",
+          "options": {
+            "rowField": "cycle",
+            "columnField": "hold_reason",
+            "valueField": "n",
+            "emptyValue": "zero"
+          }
+        }
+      ],
+      "id": 8
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  }
+}

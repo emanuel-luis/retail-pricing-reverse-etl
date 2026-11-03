@@ -19,7 +19,8 @@ contract and the table below says what exists today.
 | ClickHouse, dbt pricing procedure, dbt runner | done |
 | NiFi image, flows as code, extract and load | done |
 | Transform, reverse load, reconciliation, `make demo` | done |
-| Monitoring, heavy SF10 run, results | next |
+| Monitoring: Prometheus, Grafana dashboards and alert rules | done |
+| Heavy SF10 run, results, dashboard screenshots | next |
 
 ## What this demonstrates
 
@@ -73,6 +74,21 @@ injected conflicts (not TPC-DS benchmark results).
 ![One cycle as a sequence: the trigger, then extract, load, transform, reverse and reconcile, with every call between NiFi, the control database, the OLTP, S3, ClickHouse and the dbt runner, and where the audit rows are written.](docs/diagrams/cycle.svg)
 
 Source: [cycle.d2](docs/diagrams/cycle.d2).
+
+## Monitoring
+
+Prometheus scrapes NiFi (with a JWT a sidecar refreshes), ClickHouse, both Postgres databases
+through postgres-exporter, the dbt runner and the workload. Grafana is provisioned as code: three
+dashboards (the pipeline overview from the audit views, pricing outcomes from the ClickHouse
+marts, and the platform from Prometheus) and nine alert rules (cycle failed, SLA breach,
+reconcile failed, dbt test errors, conflict rate, watermark lag, target down, NiFi backpressure,
+ClickHouse memory). `make demo` starts it; Grafana is on http://127.0.0.1:23000 with anonymous
+read access. Operations, recovery and the audit tables to read are in
+[docs/RUNBOOK.md](docs/RUNBOOK.md).
+
+![Monitoring: Prometheus scrapes NiFi (bearer token from a sidecar), ClickHouse, two postgres-exporters, the dbt runner and the workload; Grafana reads Prometheus, the control database's audit views and the ClickHouse marts for three dashboards and nine alert rules.](docs/diagrams/monitoring.svg)
+
+Source: [monitoring.d2](docs/diagrams/monitoring.d2).
 
 ## OLTP and control model
 
@@ -179,7 +195,8 @@ nifi/                 generated flow, parameters per environment, processor defi
 dbt/                  the pricing procedure: staging, intermediate, pricing, reverse, marts
 tests/                unit, SF0.01 data checks (slow), SQL tests (sql), ClickHouse tests
                       (clickhouse)
-docs/                 PLAN (the contract), DECISIONS, D2 diagrams
+config/prometheus/, config/grafana/   scrape config, datasources, dashboards, alert rules
+docs/                 PLAN (the contract), DECISIONS, RUNBOOK, D2 diagrams
 ```
 
 ## Data and licence notice

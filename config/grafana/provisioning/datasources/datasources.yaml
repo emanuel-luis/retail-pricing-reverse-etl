@@ -1,0 +1,40 @@
+# Passwords come from the container environment (compose.yaml), never from this file.
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    uid: prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+
+  # Read-only role grafana_ro: SELECT on the audit and registry tables and views.
+  - name: Control
+    uid: control
+    type: grafana-postgresql-datasource
+    access: proxy
+    url: control-db:5432
+    user: grafana_ro
+    editable: false
+    jsonData:
+      database: $CONTROL_DB
+      sslmode: disable
+      postgresVersion: 1800
+    secureJsonData:
+      password: $CONTROL_GRAFANA_PASSWORD
+
+  # User grafana, profile dashboards (readonly=2): SELECT on pricing, reverse and marts.
+  - name: ClickHouse
+    uid: clickhouse
+    type: grafana-clickhouse-datasource
+    editable: false
+    jsonData:
+      host: clickhouse
+      port: 8123
+      protocol: http
+      username: grafana
+      defaultDatabase: marts
+    secureJsonData:
+      password: $CLICKHOUSE_GRAFANA_PASSWORD

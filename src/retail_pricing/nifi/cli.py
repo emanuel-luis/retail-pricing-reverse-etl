@@ -16,29 +16,40 @@ def token_command(
     out: Annotated[Path | None, typer.Option(help="File to write the JWT to (mode 600).")] = None,
     stdout: Annotated[bool, typer.Option("--stdout", help="Print the JWT instead.")] = False,
     wait: Annotated[float, typer.Option(help="Seconds to wait for NiFi to boot.")] = 300.0,
+    interval: Annotated[
+        float, typer.Option(help="With --out: fetch again every N seconds, forever (0: once).")
+    ] = 0.0,
 ) -> None:
     """Fetch a NiFi JWT into a file (Prometheus credentials_file); never printed unless asked."""
     import os
+    import time
 
     from retail_pricing.nifi.client import connect
     from retail_pricing.settings import NifiSettings
 
     if (out is None) == (not stdout):
         raise typer.BadParameter("give exactly one of --out FILE or --stdout")
-    with connect(NifiSettings()) as client:
-        token = client.fetch_token(wait_s=wait)
-    if out is None:
-        typer.echo(token)
-        return
-    # Write next to the target and rename, so a reader never sees a half-written token.
-    # A leftover temp file would keep its old mode, so it goes first and O_EXCL makes a new one.
-    tmp = out.with_name(out.name + ".tmp")
-    tmp.unlink(missing_ok=True)
-    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-    with os.fdopen(fd, "w", encoding="utf-8") as f:
-        f.write(token)
-    os.replace(tmp, out)
-    typer.echo(f"token written to {out}")
+    if interval and out is None:
+        raise typer.BadParameter("--interval needs --out")
+    while True:
+        with connect(NifiSettings()) as client:
+            token = client.fetch_token(wait_s=wait)
+        if out is None:
+            typer.echo(token)
+            return
+        # Write next to the target and rename, so a reader never sees a half-written token.
+        # A leftover temp file would keep its old mode, so it goes first and O_EXCL makes a new one.
+        tmp = out.with_name(out.name + ".tmp")
+        tmp.unlink(missing_ok=True)
+        fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(token)
+        os.replace(tmp, out)
+        typer.echo(f"token written to {out}")
+        if not interval:
+            return
+        # The single-user JWT lasts about 8 h; the sidecar refreshes it well before that.
+        time.sleep(interval)
 
 
 @definitions_app.command("pull")

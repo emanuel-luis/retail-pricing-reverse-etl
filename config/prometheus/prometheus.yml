@@ -1,0 +1,44 @@
+# Scrape jobs of docs/PLAN.md section 10. Targets are compose services on the internal network;
+# tests/unit/test_monitoring.py checks each one names a service and a port compose declares.
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # The single-user JWT comes from the nifi-token sidecar; Prometheus re-reads the file on every
+  # scrape, so a refreshed token needs no reload. TLS is unchecked only here (self-signed NiFi).
+  - job_name: nifi
+    scheme: https
+    metrics_path: /nifi-api/flow/metrics/prometheus
+    scrape_interval: 30s
+    scrape_timeout: 20s
+    authorization:
+      credentials_file: /var/run/nifi-token/token
+    tls_config:
+      insecure_skip_verify: true
+    static_configs:
+      - targets: ["nifi:8443"]
+
+  - job_name: clickhouse
+    static_configs:
+      - targets: ["clickhouse:9363"]
+
+  - job_name: postgres-oltp
+    static_configs:
+      - targets: ["pg-exporter-oltp:9187"]
+
+  - job_name: postgres-control
+    static_configs:
+      - targets: ["pg-exporter-control:9187"]
+
+  - job_name: dbt-runner
+    static_configs:
+      - targets: ["dbt-runner:8580"]
+
+  - job_name: workload
+    static_configs:
+      - targets: ["workload:9108"]
+
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]

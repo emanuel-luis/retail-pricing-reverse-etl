@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # The one Python image of the stack: workload generator, dbt runner (dbt installed from the `dbt`
-# extra, run only as a subprocess) and NiFi token refresher later. Built once (compose service
+# extra, run only as a subprocess) and the NiFi token refresher. Built once (compose service
 # `dbt-runner`), reused by tag elsewhere.
 
 FROM ghcr.io/astral-sh/uv:0.13.6@sha256:af22a52f5eafef3d78e551599d405c02df61919d18028f0cea8eda93bc9986d0 AS uv
@@ -34,6 +34,9 @@ ENV PATH="/opt/venv/bin:${PATH}" \
 # state, dbt targets and logs live on a volume that inherits this directory's owner.
 COPY --chown=app:app dbt /home/app/dbt
 RUN mkdir /var/lib/dbt-runner && chown app:app /var/lib/dbt-runner
+# nifi-token runs as nobody (65534), the user Prometheus runs as, so the mode-600 token it writes
+# is readable there. Its volume inherits this directory's owner.
+RUN install -d -o 65534 -g 65534 -m 0700 /var/run/nifi-token
 WORKDIR /home/app
 USER app
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD ["retail-pricing", "version"]
