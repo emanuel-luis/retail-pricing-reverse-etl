@@ -6,6 +6,10 @@
             <max_bytes_before_external_sort>536870912</max_bytes_before_external_sort>
             <max_threads>4</max_threads>
             <join_algorithm>grace_hash,parallel_hash</join_algorithm>
+            <!-- Joins run in the written order (big table left, hash table right). The greedy
+                 reorder, without statistics, built a 1.5 GiB hash table for
+                 pricing_shelf_label at SF10 (DECISIONS 146). -->
+            <query_plan_optimize_join_order_limit>0</query_plan_optimize_join_order_limit>
         </etl>
         <dashboards>
             <readonly>2</readonly>

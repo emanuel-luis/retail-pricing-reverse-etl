@@ -50,7 +50,9 @@ def build(parent: Group) -> Group:
         "clickhouse insert",
         {
             "HTTP Method": "POST",
-            "HTTP URL": "#{ch_url}/?wait_end_of_query=1&max_insert_threads=2",
+            # One insert pipeline: two doubled the squash and sort buffers and broke the 1.2 GiB
+            # etl query limit on sale_line at SF10 (DECISIONS 143).
+            "HTTP URL": "#{ch_url}/?wait_end_of_query=1&max_insert_threads=1",
             "Request Username": "#{ch_user}",
             "Request Password": "#{ch_password}",
             "Request Content-Type": "text/plain",

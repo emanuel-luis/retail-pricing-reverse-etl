@@ -9,8 +9,7 @@
 ![license](https://img.shields.io/github/license/emanuel-luis/retail-pricing-reverse-etl)
 ![python](https://img.shields.io/badge/python-3.12-blue)
 
-**Status: work in progress.** The project lands in six pull requests; `docs/PLAN.md` is the
-contract and the table below says what exists today.
+`docs/PLAN.md` is the contract; the table below maps it to what exists.
 
 | Piece | State |
 | --- | --- |
@@ -20,7 +19,7 @@ contract and the table below says what exists today.
 | NiFi image, flows as code, extract and load | done |
 | Transform, reverse load, reconciliation, `make demo` | done |
 | Monitoring: Prometheus, Grafana dashboards and alert rules | done |
-| Heavy SF10 run, results, dashboard screenshots | next |
+| Heavy SF10 run, results, dashboard screenshots | done |
 
 ## What this demonstrates
 
@@ -29,13 +28,12 @@ contract and the table below says what exists today.
   targets, KVI flags, price zones, pack-size and brand-tier ladders), with manifests of row counts
   and content hashes.
 - Incremental extraction by watermark from an OLTP under load, landing Parquet in an
-  S3-compatible raw zone, loaded into ClickHouse (planned).
+  S3-compatible raw zone, loaded into ClickHouse.
 - A multi-step pricing procedure in dbt on ClickHouse with guardrail tests and unit tests on the
-  rule logic (planned).
+  rule logic.
 - Reverse ETL of changed rows only, applied with optimistic concurrency (version checks),
-  idempotent per cycle, with conflicts recorded and reconciliation by checksums (planned).
-- Job registry and run audit in Postgres, and Prometheus plus Grafana over the whole loop
-  (planned).
+  idempotent per cycle, with conflicts recorded and reconciliation by checksums.
+- Job registry and run audit in Postgres, and Prometheus plus Grafana over the whole loop.
 
 ## Architecture
 
@@ -89,6 +87,23 @@ read access. Operations, recovery and the audit tables to read are in
 ![Monitoring: Prometheus scrapes NiFi (bearer token from a sidecar), ClickHouse, two postgres-exporters, the dbt runner and the workload; Grafana reads Prometheus, the control database's audit views and the ClickHouse marts for three dashboards and nine alert rules.](docs/diagrams/monitoring.svg)
 
 Source: [monitoring.d2](docs/diagrams/monitoring.d2).
+
+![The pipeline overview dashboard over three SF10 cycles: cycle table, stage durations, rows per stage, reverse outcomes, conflict rate, dbt tests, reconciliation and run duration against the SLA.](docs/images/pipeline-overview.png)
+
+## Results
+
+Three cycles at TPC-DS scale factor 10 on a laptop (Ryzen 7 4800H, Docker VM with 16 CPUs and
+11.7 GiB), with the workload running throughout. Details, memory, the SF0.01 and SF1 numbers, the
+fixes SF10 needed and an SF100 estimate are in [docs/RESULTS.md](docs/RESULTS.md).
+
+| Cycle | Extract | Load | Transform | Reverse (4 targets) | Zone prices applied | Conflicts | Total |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 full | 137 s, 50.2M rows | 39 s | 131 s | 38 s | 31,472 | 4 | 347 s |
+| 2 incremental | 6 s, 1.6M rows | 2 s | 121 s | 248 s | 25,619 | 9 | 379 s |
+| 3 incremental | 4 s, 0.9M rows | 1 s | 131 s | 290 s | 20,510 | 3 | 430 s |
+
+Reconciliation passed in every cycle. The OLTP seed (50.5M rows) loads in about 33 minutes. These
+timings are not TPC-DS benchmark results and are not comparable to TPC Benchmark results.
 
 ## OLTP and control model
 
@@ -196,7 +211,8 @@ dbt/                  the pricing procedure: staging, intermediate, pricing, rev
 tests/                unit, SF0.01 data checks (slow), SQL tests (sql), ClickHouse tests
                       (clickhouse)
 config/prometheus/, config/grafana/   scrape config, datasources, dashboards, alert rules
-docs/                 PLAN (the contract), DECISIONS, RUNBOOK, D2 diagrams
+docs/                 PLAN (the contract), DECISIONS, RUNBOOK, RESULTS, D2 diagrams,
+                      dashboard screenshots
 ```
 
 ## Data and licence notice
