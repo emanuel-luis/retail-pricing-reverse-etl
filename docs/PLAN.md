@@ -46,7 +46,7 @@ service has a healthcheck. Volumes are named. `.env` sets `COMPOSE_PROFILES=core
 |---|---|---|---|---|---|---|
 | oltp | postgres:18.6-alpine | core | Store-operations OLTP, db `retail` | OLTP_PG_PORT=25432 | 1280m | shared_buffers=256MB, effective_cache_size=768MB, work_mem=16MB, maintenance_work_mem=128MB, max_connections=60, max_wal_size=4GB, shared_preload_libraries=pg_stat_statements, track_io_timing=on |
 | control-db | postgres:18.6-alpine | core | Registry and audit, db `control` | CONTROL_PG_PORT=25433 | 256m | shared_buffers=32MB, work_mem=4MB, max_connections=40 |
-| s3 | rustfs/rustfs:1.0.4 | core | S3-compatible raw zone, bucket `retail-raw` | S3_API_PORT=29000, S3_CONSOLE_PORT=29001 | 384m | none |
+| s3 | rustfs/rustfs:1.0.4 | core | S3-compatible raw zone, bucket `retail-raw` | S3_API_PORT=29000, S3_CONSOLE_PORT=29001 | 1024m | none; `restart: unless-stopped` |
 | clickhouse | clickhouse/clickhouse-server:26.3.62.3 | core | Raw tables, dbt models, reverse diffs | CLICKHOUSE_HTTP_PORT=28123 | 2304m | server: max_server_memory_usage_to_ram_ratio=0.8, mark_cache_size=256MiB, index_mark_cache_size=64MiB, uncompressed cache off, background_pool_size=4. Profile `etl`: max_memory_usage=1.2GB, max_bytes_before_external_group_by=512MiB, max_bytes_before_external_sort=512MiB, max_threads=4, join_algorithm=grace_hash,parallel_hash |
 | nifi | retail-pricing-nifi:local (built from apache/nifi:2.12.0) | core | All flows | NIFI_HTTPS_PORT=28443 (UI/API), NIFI_TRIGGER_PORT=28081 (cycle trigger) | 2048m | NIFI_JVM_HEAP_INIT=NIFI_JVM_HEAP_MAX=1280m |
 | dbt-runner | retail-pricing-app:local | core | Runs `dbt build` on request | DBT_RUNNER_PORT=28580 | 512m | dbt threads=2 |
