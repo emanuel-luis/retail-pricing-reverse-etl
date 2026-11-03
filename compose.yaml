@@ -1,7 +1,7 @@
 # Memory limits are sized so the whole loop fits a laptop Docker VM (docs/PLAN.md section 1).
-# This file grows with each pull request; today: the OLTP and the control/audit Postgres,
-# ClickHouse, the S3-compatible store, the dbt runner and NiFi (profile core), and the workload
-# generator (profile workload). Measured on 2026-11-02 at SF0.01: oltp 119 MiB, control-db 95 MiB,
+# Profiles: core (the OLTP and the control/audit Postgres, ClickHouse, the S3-compatible store,
+# the dbt runner and NiFi), workload (the workload generator) and monitoring (Prometheus, Grafana,
+# two postgres-exporters and the NiFi token sidecar). `expose` lists the ports Prometheus scrapes. Measured on 2026-11-02 at SF0.01: oltp 119 MiB, control-db 95 MiB,
 # workload 47 MiB (20 sales/s); clickhouse 719 MiB, s3 133 MiB and dbt-runner 61 MiB after two
 # dbt builds (largest dbt query 166 MiB). On 2026-11-03 at SF1 (full extract and load of 4.7M
 # rows): nifi 0.94 GiB idle and 1.9 GiB peak of its 2 GiB, clickhouse 637 MiB, oltp 804 MiB.
@@ -114,6 +114,7 @@ services:
       RAW_S3_URL: ${RAW_S3_URL:-http://s3:9000/retail-raw/}
     ports:
       - "127.0.0.1:${CLICKHOUSE_HTTP_PORT:-28123}:8123"
+    expose: ["9363"]
     volumes:
       - clickhouse_data:/var/lib/clickhouse
       # Single files: the image entrypoint writes its own file into users.d at start.
@@ -169,6 +170,9 @@ services:
     image: retail-pricing-nifi:local
     profiles: [core]
     mem_limit: 2048m
+    # The self-signed certificate NiFi generates on first start names the hostname, and Jetty
+    # refuses a TLS name it does not carry (400 Invalid SNI): Prometheus and nifi-token use `nifi`.
+    hostname: nifi
     # No depends_on: flows retry their own connections, and NiFi boots slower than the rest.
     environment:
       SINGLE_USER_CREDENTIALS_USERNAME: ${NIFI_USERNAME:-nifi_admin}
@@ -196,6 +200,7 @@ services:
     profiles: [workload]
     mem_limit: 256m
     command: ["workload", "run"]
+    expose: ["9108"]
     depends_on:
       oltp:
         condition: service_healthy
@@ -218,6 +223,131 @@ services:
       timeout: 5s
       retries: 6
 
+  prometheus:
+    image: prom/prometheus:v3.15.1@sha256:fa3302279710be2f21a8301ec17a8b4f2301fd829bd113839b3b6b02b6f191a2
+    profiles: [monitoring]
+    mem_limit: 384m
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=7d
+      - --storage.tsdb.retention.size=1GB
+    ports:
+      - "127.0.0.1:${PROMETHEUS_PORT:-29090}:9090"
+    volumes:
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+      # The NiFi JWT nifi-token writes; Prometheus re-reads it on every scrape.
+      - nifi_token:/var/run/nifi-token:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:9090/-/ready"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  grafana:
+    image: grafana/grafana:13.2.5@sha256:9f7aa1e1e3246aade5792d35a738049f7f32f89cd51d1956cf426a4e86268a84
+    profiles: [monitoring]
+    mem_limit: 320m
+    environment:
+      # Manual pin (Dependabot does not see it); the plugin persists in grafana_data.
+      GF_PLUGINS_PREINSTALL: grafana-clickhouse-datasource@4.23.2
+      GF_PLUGINS_PREINSTALL_AUTO_UPDATE: "false"
+      # Grafana starts every bundled backend plugin as its own process (about 25 MiB each), which
+      # alone would fill mem_limit: only Prometheus, PostgreSQL and ClickHouse are needed.
+      GF_PLUGINS_DISABLE_PLUGINS: >-
+        cloudwatch,elasticsearch,grafana-advisor-app,grafana-azure-monitor-datasource,
+        grafana-exploretraces-app,grafana-lokiexplore-app,grafana-metricsdrilldown-app,
+        grafana-pyroscope-app,grafana-pyroscope-datasource,grafana-testdata-datasource,graphite,
+        influxdb,jaeger,loki,mssql,mysql,opentsdb,stackdriver,tempo,zipkin
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?set GRAFANA_ADMIN_PASSWORD in .env}
+      # Anyone on this machine can look; only the admin can change anything.
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_SERVER_ROOT_URL: http://127.0.0.1:${GRAFANA_PORT:-23000}/
+      # Read by config/grafana/provisioning/datasources through $VAR interpolation.
+      CONTROL_DB: ${CONTROL_DB:-control}
+      CONTROL_GRAFANA_PASSWORD: ${CONTROL_GRAFANA_PASSWORD:?set CONTROL_GRAFANA_PASSWORD in .env}
+      CLICKHOUSE_GRAFANA_PASSWORD: ${CLICKHOUSE_GRAFANA_PASSWORD:?set CLICKHOUSE_GRAFANA_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:${GRAFANA_PORT:-23000}:3000"
+    volumes:
+      # One mount per folder: the image keeps its own empty plugins folder.
+      - ./config/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./config/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./config/grafana/provisioning/alerting:/etc/grafana/provisioning/alerting:ro
+      - ./config/grafana/dashboards:/etc/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3000/api/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 10s
+
+  # The exporters log in as the `exporter` roles (pg_monitor only) that `oltp load` and
+  # `control init` create; until then they serve pg_up 0.
+  pg-exporter-oltp:
+    image: prometheuscommunity/postgres-exporter:v0.20.1@sha256:ac5ec343104fae0e2d84a27bb8d69b38430a11910c5382cad85d478d2bab713e
+    profiles: [monitoring]
+    mem_limit: 64m
+    environment:
+      DATA_SOURCE_URI: oltp:5432/${OLTP_DB:-retail}?sslmode=disable
+      DATA_SOURCE_USER: exporter
+      DATA_SOURCE_PASS: ${OLTP_EXPORTER_PASSWORD:?set OLTP_EXPORTER_PASSWORD in .env}
+    expose: ["9187"]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:9187/"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  pg-exporter-control:
+    image: prometheuscommunity/postgres-exporter:v0.20.1@sha256:ac5ec343104fae0e2d84a27bb8d69b38430a11910c5382cad85d478d2bab713e
+    profiles: [monitoring]
+    mem_limit: 64m
+    environment:
+      DATA_SOURCE_URI: control-db:5432/${CONTROL_DB:-control}?sslmode=disable
+      DATA_SOURCE_USER: exporter
+      DATA_SOURCE_PASS: ${CONTROL_EXPORTER_PASSWORD:?set CONTROL_EXPORTER_PASSWORD in .env}
+    expose: ["9187"]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:9187/"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  nifi-token:
+    # The NiFi single-user JWT lasts about 8 h: fetch a new one every 6 h into the shared volume.
+    image: retail-pricing-app:local
+    pull_policy: never
+    profiles: [monitoring]
+    mem_limit: 96m
+    # The user Prometheus runs as, so it can read the mode-600 file (docker/app.Dockerfile).
+    user: "65534:65534"
+    working_dir: /tmp
+    command: ["nifi", "token", "--out", "/var/run/nifi-token/token", "--interval", "21600"]
+    # A NiFi that stays down past --wait ends the process; the restart tries again.
+    restart: unless-stopped
+    depends_on:
+      nifi:
+        condition: service_healthy
+    environment:
+      NIFI_HOST: nifi
+      NIFI_HTTPS_PORT: "8443"
+      NIFI_USERNAME: ${NIFI_USERNAME:-nifi_admin}
+      NIFI_PASSWORD: ${NIFI_PASSWORD:?set NIFI_PASSWORD in .env (12+ characters)}
+    volumes:
+      - nifi_token:/var/run/nifi-token
+    healthcheck:
+      test: ["CMD", "test", "-s", "/var/run/nifi-token/token"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+
 volumes:
   oltp_data:
   control_data:
@@ -230,3 +360,6 @@ volumes:
   nifi_flowfile:
   nifi_provenance:
   nifi_database:
+  prometheus_data:
+  grafana_data:
+  nifi_token:
