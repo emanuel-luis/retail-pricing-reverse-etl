@@ -1,9 +1,11 @@
 """Deploy the spike's reference flow to the running NiFi (marker `integration`).
 
 Needs `docker compose up -d --wait nifi` and a `.env` copied from `.env.example`. The upload
-replaces the retail-pricing group, so the generated flow is deployed again afterwards.
+replaces the retail-pricing group, so the generated flow is deployed again afterwards, with the
+parameters of `NIFI_DEPLOY_ENV` (default `local`; CI sets `ci`).
 """
 
+import os
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -15,6 +17,8 @@ from retail_pricing.settings import ControlSettings, NifiSettings
 
 pytestmark = pytest.mark.integration
 
+ENV = os.environ.get("NIFI_DEPLOY_ENV", "local")
+
 
 @pytest.fixture(autouse=True)
 def _restore_generated_flow() -> Iterator[None]:
@@ -23,8 +27,8 @@ def _restore_generated_flow() -> Iterator[None]:
         deploy(
             c,
             Path("nifi/flows/retail-pricing.json"),
-            "local",
-            Path("nifi/params/local.json"),
+            ENV,
+            Path(f"nifi/params/{ENV}.json"),
             control=ControlSettings(),
         )
 

@@ -243,3 +243,68 @@ def test_failed_load_fails_the_cycle_and_a_rerun_recovers(incremental: dict[str,
     assert (status, body) == (202, {"cycle_id": cycle_id, "status": "rerun"})
     assert wait_cycle(cycle_id, 900, echo=print) == SUCCEEDED
     assert raw_final_counts() == oltp_counts()
+
+
+@pytest.mark.timeout(900)  # the lost item runs out of every retry first (about 4 min)
+def test_an_item_lost_before_its_first_event_fails_the_cycle(incremental: dict[str, Any]) -> None:
+    """Every step event of one planned table is refused, as when the control DB is down past the
+    retries: the item never writes a step, end_run still fails the extract run, the cycle fails
+    and no watermark moves. A rerun after the fault extracts the table and commits it."""
+    from retail_pricing.cycle import FAILED
+
+    table = tables()[0]
+    with control() as c:
+        before = c.execute(
+            "SELECT high_value, cycle_id FROM registry.watermark WHERE table_name = %s", (table,)
+        ).fetchone()
+        c.execute(
+            "CREATE FUNCTION audit.test_refuse_event() RETURNS trigger LANGUAGE plpgsql AS $$"
+            f" BEGIN IF NEW.item = '{table}' THEN RAISE EXCEPTION 'test: refused'; END IF;"
+            " RETURN NEW; END $$;"
+            "CREATE TRIGGER test_refuse_event BEFORE INSERT ON audit.step_event"
+            " FOR EACH ROW EXECUTE FUNCTION audit.test_refuse_event()"
+        )
+    try:
+        status, body = post_trigger("incremental", None)
+        assert status == 202, body
+        cycle_id = int(body["cycle_id"])
+        assert wait_cycle(cycle_id, 900, echo=print) == FAILED
+    finally:
+        with control() as c:
+            c.execute(
+                "DROP TRIGGER test_refuse_event ON audit.step_event;"
+                "DROP FUNCTION audit.test_refuse_event()"
+            )
+    with control() as c:
+        cycle = c.execute(
+            "SELECT status, failed_stage FROM audit.cycle WHERE cycle_id = %s", (cycle_id,)
+        ).fetchone()
+        run = c.execute(
+            "SELECT status, error FROM audit.job_run WHERE cycle_id = %s AND job_id = 'extract'",
+            (cycle_id,),
+        ).fetchone()
+        steps = c.execute(
+            "SELECT count(*) FROM audit.step s JOIN audit.job_run r USING (run_id)"
+            " WHERE r.cycle_id = %s AND split_part(s.item, '#', 1) = %s",
+            (cycle_id, table),
+        ).fetchone()
+        after = c.execute(
+            "SELECT high_value, cycle_id FROM registry.watermark WHERE table_name = %s", (table,)
+        ).fetchone()
+        moved = c.execute(
+            "SELECT count(*) FROM registry.watermark WHERE cycle_id = %s", (cycle_id,)
+        ).fetchone()
+    assert cycle == ("failed", "extract")
+    assert run is not None and run[0] == "failed"
+    assert f"never started: {table}" in run[1]
+    assert steps == (0,)
+    assert after == before
+    assert moved == (0,)
+
+    status, body = post_trigger("incremental", cycle_id)
+    assert (status, body) == (202, {"cycle_id": cycle_id, "status": "rerun"})
+    assert wait_cycle(cycle_id, 900, echo=print) == SUCCEEDED
+    with control() as c:
+        assert c.execute(
+            "SELECT cycle_id FROM registry.watermark WHERE table_name = %s", (table,)
+        ).fetchone() == (cycle_id,)
