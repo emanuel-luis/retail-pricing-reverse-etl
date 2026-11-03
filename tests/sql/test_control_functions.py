@@ -30,10 +30,11 @@ def run(db: Conn, cycle_id: int, job: str) -> uuid.UUID:
 def event(db: Conn, run_id: uuid.UUID, step_id: uuid.UUID, kind: str, **kw: Any) -> None:
     db.execute(
         "INSERT INTO audit.step_event (run_id, step_id, step_name, item, event, rows, bytes,"
-        " detail) VALUES (%s, %s, 'item', %s, %s, %s, %s, %s::jsonb)",
+        " detail) VALUES (%s, %s, %s, %s, %s, %s, %s, %s::jsonb)",
         (
             run_id,
             step_id,
+            kw.get("name", "item"),
             kw.get("item", "t#0-0"),
             kind,
             kw.get("rows"),
@@ -272,12 +273,75 @@ def test_load_plan_counts_only_tables_with_rows(db: Conn) -> None:
     assert got[0][1] == f"raw/master.category/cycle={cycle_id}/run={run_id}/"
 
 
+def planned(db: Conn, cycle_id: int) -> list[str]:
+    return [
+        r[0]
+        for r in db.execute(
+            "SELECT table_name FROM audit.extract_plan WHERE cycle_id = %s ORDER BY 1", (cycle_id,)
+        )
+    ]
+
+
+def finish_extract(
+    db: Conn, cycle_id: int, rows: dict[str, int] | None = None, skip: str | None = None
+) -> uuid.UUID:
+    """An extract run with a succeeded table step per planned table (but `skip`) and one file
+    step per table in `rows`."""
+    run_id = run(db, cycle_id, "extract")
+    for t in planned(db, cycle_id):
+        if t == skip:
+            continue
+        event(db, run_id, uuid.uuid4(), "succeeded", item=t, name="extract.table")
+        if rows and t in rows:
+            event(
+                db,
+                run_id,
+                uuid.uuid4(),
+                "succeeded",
+                item=f"{t}#0-0",
+                name="extract.file",
+                rows=rows[t],
+            )
+    db.execute("SELECT * FROM audit.end_run(%s)", (run_id,))
+    return run_id
+
+
+def test_end_run_fails_an_extract_with_a_planned_table_never_started(db: Conn) -> None:
+    cycle_id = start(db)
+    plan(db, cycle_id)
+    run_id = finish_extract(db, cycle_id, skip="master.brand")
+    assert one(db, "SELECT status, error FROM audit.job_run WHERE run_id = %s", run_id) == (
+        "failed",
+        "1 step(s) still open; 1 planned item(s) never started: master.brand",
+    )
+    assert one(db, "SELECT * FROM audit.end_run(%s)", run_id) == ("failed", 0, 1)
+    assert "master.brand" in one(db, "SELECT message FROM audit.alert")[0]
+
+
+def test_end_run_fails_a_load_with_a_planned_table_never_started(db: Conn) -> None:
+    cycle_id = start(db)
+    plan(db, cycle_id)
+    finish_extract(db, cycle_id, {"master.brand": 4, "master.category": 3})
+    run_id = run(db, cycle_id, "load")
+    event(db, run_id, uuid.uuid4(), "succeeded", item="master.brand", name="load.table", rows=4)
+    assert one(db, "SELECT * FROM audit.end_run(%s)", run_id) == ("failed", 0, 1)
+    assert (
+        "never started: master.category"
+        in one(db, "SELECT error FROM audit.job_run WHERE run_id = %s", run_id)[0]
+    )
+
+
 # commit_watermarks -----------------------------------------------------------------------
 
 
-def finish_load(db: Conn, cycle_id: int) -> None:
+def finish_load(
+    db: Conn, cycle_id: int, rows: dict[str, int] | None = None, loaded: tuple[str, ...] = ()
+) -> str:
+    finish_extract(db, cycle_id, rows)
     run_id = run(db, cycle_id, "load")
-    db.execute("SELECT * FROM audit.end_run(%s)", (run_id,))
+    for t in loaded:
+        event(db, run_id, uuid.uuid4(), "succeeded", item=t, name="load.table")
+    return str(one(db, "SELECT status FROM audit.end_run(%s)", run_id)[0])
 
 
 def test_commit_watermarks_requires_a_succeeded_load(db: Conn) -> None:
@@ -286,6 +350,37 @@ def test_commit_watermarks_requires_a_succeeded_load(db: Conn) -> None:
     with pytest.raises(RaiseException):
         db.execute("SELECT * FROM registry.commit_watermarks(%s)", (cycle_id,))
     assert one(db, "SELECT count(*) FROM registry.watermark")[0] == 0
+
+
+def test_commit_watermarks_needs_the_tables_extract_and_load_steps(db: Conn) -> None:
+    cycle_id = start(db)
+    plan(db, cycle_id)
+    assert finish_load(db, cycle_id, {"master.brand": 4}, ("master.brand",)) == "succeeded"
+    # a planned table with no succeeded load step of the latest load run stays behind
+    db.execute(
+        "UPDATE audit.step SET status = 'failed' WHERE step_name = 'extract.table'"
+        " AND item = 'master.category'"
+    )
+    db.execute("SELECT * FROM registry.commit_watermarks(%s)", (cycle_id,))
+    moved = {r[0] for r in db.execute("SELECT table_name FROM registry.watermark")}
+    assert "master.brand" in moved  # extracted and loaded
+    assert "master.supplier" in moved  # zero rows: not in load_plan, still advances
+    assert "master.category" not in moved  # its extract step did not succeed
+
+
+def test_commit_watermarks_skips_a_table_whose_load_step_is_missing(db: Conn) -> None:
+    cycle_id = start(db)
+    plan(db, cycle_id)
+    finish_extract(db, cycle_id, {"master.brand": 4})
+    load = run(db, cycle_id, "load")
+    db.execute(
+        "UPDATE audit.job_run SET status = 'succeeded', ended_at = now() WHERE run_id = %s",
+        (load,),
+    )  # as if end_run had passed without the step
+    db.execute("SELECT * FROM registry.commit_watermarks(%s)", (cycle_id,))
+    moved = {r[0] for r in db.execute("SELECT table_name FROM registry.watermark")}
+    assert "master.brand" not in moved
+    assert "master.category" in moved
 
 
 def test_commit_watermarks_only_advances(db: Conn) -> None:

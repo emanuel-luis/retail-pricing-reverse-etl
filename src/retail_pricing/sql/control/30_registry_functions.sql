@@ -127,21 +127,41 @@ BEGIN
 END $$;
 
 -- registry.commit_watermarks(p_cycle_id) -> (table_name, high_value)
--- Moves each planned table's watermark to the plan's wm_high, only forward (an older or equal
--- value changes nothing). Raises unless the cycle has a succeeded 'load' run. Returns the
--- watermarks of the planned tables after the commit. Safe to call twice.
+-- Moves a planned table's watermark to the plan's wm_high, only forward (an older or equal value
+-- changes nothing), and only when the table's 'extract.table' step succeeded in the cycle's latest
+-- succeeded extract run and its 'load.table' step succeeded in the latest succeeded load run. A
+-- table that load_plan leaves out (no rows in the window) needs no load step. Raises unless the
+-- cycle has a succeeded 'load' run. Returns the watermarks of the planned tables after the commit.
+-- Safe to call twice.
 CREATE OR REPLACE FUNCTION registry.commit_watermarks(p_cycle_id bigint)
 RETURNS TABLE(table_name text, high_value timestamptz)
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
 #variable_conflict use_column
+DECLARE
+    v_load uuid;
+    v_extract uuid;
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM audit.job_run r WHERE r.cycle_id = p_cycle_id
-                   AND r.job_id = 'load' AND r.status = 'succeeded') THEN
+    SELECT r.run_id INTO v_load FROM audit.job_run r
+    WHERE r.cycle_id = p_cycle_id AND r.job_id = 'load' AND r.status = 'succeeded'
+    ORDER BY r.started_at DESC LIMIT 1;
+    IF NOT FOUND THEN
         RAISE EXCEPTION 'cycle % has no succeeded load run; watermarks not committed', p_cycle_id;
     END IF;
+    SELECT r.run_id INTO v_extract FROM audit.job_run r
+    WHERE r.cycle_id = p_cycle_id AND r.job_id = 'extract' AND r.status = 'succeeded'
+    ORDER BY r.started_at DESC LIMIT 1;
     INSERT INTO registry.watermark AS w (table_name, high_value, cycle_id, updated_at)
     SELECT p.table_name, p.wm_high, p.cycle_id, now()
-    FROM audit.extract_plan p WHERE p.cycle_id = p_cycle_id
+    FROM audit.extract_plan p
+    WHERE p.cycle_id = p_cycle_id
+      AND EXISTS (SELECT 1 FROM audit.step s WHERE s.run_id = v_extract
+                  AND s.step_name = 'extract.table' AND s.item = p.table_name
+                  AND s.status = 'succeeded')
+      AND (EXISTS (SELECT 1 FROM audit.step s WHERE s.run_id = v_load
+                   AND s.step_name = 'load.table' AND s.item = p.table_name
+                   AND s.status = 'succeeded')
+           OR NOT EXISTS (SELECT 1 FROM audit.load_plan(p_cycle_id, v_extract) lp
+                          WHERE lp.table_name = p.table_name))
     ON CONFLICT ON CONSTRAINT watermark_pkey DO UPDATE
         SET high_value = excluded.high_value, cycle_id = excluded.cycle_id,
             updated_at = excluded.updated_at
