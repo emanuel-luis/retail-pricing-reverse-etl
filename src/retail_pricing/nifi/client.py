@@ -77,6 +77,9 @@ class Client:
                 reason = type(e).__name__
             else:
                 if resp.status_code in (200, 201):
+                    # NiFi also sets the token as a cookie; a client that sends it back is held to
+                    # the browser CSRF check and gets 403 on every POST, PUT and DELETE.
+                    self._http.cookies.clear()
                     return resp.text.strip()
                 if resp.status_code not in _BOOTING:
                     # The body is NiFi's message; it never contains the submitted password.

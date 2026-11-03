@@ -175,15 +175,36 @@ def _errors(entity: dict[str, Any]) -> list[str]:
 
 
 def invalid_components(c: Client, gid: str) -> list[str]:
-    """One line per invalid processor, port or controller service in the tree (step 6)."""
+    """One line per invalid processor, port or controller service in the tree (step 6).
+
+    DISABLED components are skipped: they never run, and NiFi does not revalidate them, so one
+    uploaded before its connection existed keeps a stale "no upstream connection" error.
+    """
     lines = []
     for path, flow in walk(c, gid):
         for kind in ("processors", "inputPorts", "outputPorts"):
             for e in flow[kind]:
+                if e["component"].get("state") == "DISABLED":
+                    continue
                 lines += [f"{path}/{e['component']['name']}: {err}" for err in _errors(e)]
     for s in _services(c, gid):
         lines += [f"service {s['component']['name']}: {err}" for err in _errors(s)]
     return lines
+
+
+def settled_invalid(
+    c: Client, gid: str, timeout_s: float = 20.0, every_s: float = 2.0
+) -> list[str]:
+    """Invalid components once validation settles.
+
+    NiFi validates in the background: right after an upload a component can still report the
+    state it had before its connections existed, so a non-empty list is re-read until it clears
+    or `timeout_s` passes.
+    """
+    deadline = time.monotonic() + timeout_s
+    while (bad := invalid_components(c, gid)) and time.monotonic() < deadline:
+        time.sleep(every_s)
+    return bad
 
 
 def enable_services(c: Client, gid: str, timeout_s: float = 120.0) -> None:
@@ -279,7 +300,7 @@ def deploy(
     for _, f in tree:
         bind_context(c, f["id"], pc_id)
     enable_services(c, gid)  # 5
-    if bad := invalid_components(c, gid):  # 6
+    if bad := settled_invalid(c, gid):  # 6
         raise NifiError(f"{len(bad)} invalid component(s):\n  " + "\n  ".join(bad))
     if start:  # 7
         c.put(f"/flow/process-groups/{gid}", json={"id": gid, "state": "RUNNING"})

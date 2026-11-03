@@ -1,10 +1,10 @@
 {
-  "oltp_jdbc_url": "jdbc:postgresql://oltp:5432/retail",
+  "oltp_jdbc_url": "jdbc:postgresql://oltp:5432/retail?stringtype=unspecified",
   "oltp_user": "nifi",
   "oltp_password": {
     "env": "OLTP_NIFI_PASSWORD"
   },
-  "control_jdbc_url": "jdbc:postgresql://control-db:5432/control",
+  "control_jdbc_url": "jdbc:postgresql://control-db:5432/control?stringtype=unspecified",
   "control_user": "nifi",
   "control_password": {
     "env": "CONTROL_NIFI_PASSWORD"
