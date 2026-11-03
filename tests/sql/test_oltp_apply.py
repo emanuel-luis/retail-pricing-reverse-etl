@@ -3,12 +3,14 @@
 import random
 import threading
 import uuid
+from collections.abc import Iterator
 from decimal import Decimal
 from typing import Any
 
 import psycopg
 import pytest
 
+from retail_pricing.data.contract import APPLY_TABLES
 from retail_pricing.settings import OltpSettings
 
 pytestmark = pytest.mark.sql
@@ -17,8 +19,14 @@ STORE = 1
 
 
 @pytest.fixture
-def cycle() -> int:
-    return uuid.uuid4().int % 10**12
+def cycle(oltp_owner: psycopg.Connection) -> Iterator[int]:
+    """A random cycle id; its pricing_apply rows (and those of the next 9 ids) are removed after
+    the test. The extract partitions batch and conflict on cycle_id by value, so 12-digit ids
+    left behind would plan billions of empty pages in the next cycle's extract."""
+    c = uuid.uuid4().int % 10**12
+    yield c
+    for t in APPLY_TABLES:
+        oltp_owner.execute(f"DELETE FROM {t} WHERE cycle_id BETWEEN %s AND %s".encode(), (c, c + 9))
 
 
 def _apply(conn: psycopg.Connection, cycle: int, target: str, batch: int = 1) -> tuple[Any, ...]:
@@ -286,3 +294,143 @@ def test_single_row_edits_during_apply_never_deadlock(
         for t in threads:
             t.join()
     assert errors == []
+
+
+@pytest.mark.parametrize("table", list(APPLY_TABLES))
+def test_apply_tables_match_the_extract_contract(
+    oltp_owner: psycopg.Connection, table: str
+) -> None:
+    """050_apply.sql and the extract-only contract agree: names, order and nullability."""
+    schema, name = table.split(".")
+    rows = oltp_owner.execute(
+        "SELECT column_name, is_nullable = 'YES' FROM information_schema.columns"
+        " WHERE table_schema = %s AND table_name = %s ORDER BY ordinal_position",
+        (schema, name),
+    ).fetchall()
+    assert rows == [(c.name, c.nullable) for c in APPLY_TABLES[table]]
+
+
+def test_apply_versions_the_outcome_rows(oltp_owner: psycopg.Connection, cycle: int) -> None:
+    """Stage rows and the batch row get version + 1 and a new updated_at, so they extract."""
+    conn, zone = oltp_owner, _store_zone(oltp_owner)
+    ((p, pr, v),) = _zone_rows(conn, 1, zone)
+    _stage_zone(conn, cycle, [(p, zone, pr + Decimal("0.20"), v)])
+    before = conn.execute(
+        "SELECT version, updated_at FROM pricing_apply.zone_price_stage WHERE cycle_id = %s",
+        (cycle,),
+    ).fetchone()
+    _apply(conn, cycle, "zone_price")
+    stage = conn.execute(
+        "SELECT version, updated_at FROM pricing_apply.zone_price_stage WHERE cycle_id = %s",
+        (cycle,),
+    ).fetchone()
+    batch = conn.execute(
+        "SELECT version FROM pricing_apply.batch WHERE cycle_id = %s", (cycle,)
+    ).fetchone()
+    assert before is not None and stage is not None
+    assert before[0] == 1 and stage[0] == 2 and stage[1] >= before[1]
+    assert batch == (2,)
+
+
+def _checks(conn: psycopg.Connection, fn: str, cycle: int) -> dict[tuple[Any, ...], Any]:
+    return {
+        (z, c, check): (n, s, w)
+        for _, z, c, check, n, s, w in conn.execute(
+            f"SELECT * FROM pricing_apply.{fn}(%s, 'zone_price')".encode(), (cycle,)
+        ).fetchall()
+    }
+
+
+def test_expected_applied_matches_actual_and_follows_later_edits(
+    oltp_owner: psycopg.Connection, cycle: int
+) -> None:
+    """The expected 'applied' check (proposed values) equals the actual one (current values),
+    with a row per staged group; a manual edit after the apply takes the row out of both."""
+    conn, zone = oltp_owner, _store_zone(oltp_owner)
+    rows = _zone_rows(conn, 4, zone)
+    _stage_zone(conn, cycle, [(p, zone, pr + Decimal("0.30"), v) for p, pr, v in rows[:3]])
+    _stage_zone(conn, cycle, [(p, zone, pr + Decimal("0.30"), v + 7) for p, pr, v in rows[3:]])
+    _apply(conn, cycle, "zone_price")
+
+    actual = _checks(conn, "reconcile_actual", cycle)
+    expected = _checks(conn, "reconcile_expected_applied", cycle)
+    assert {k[2] for k in expected} == {"applied"}
+    assert expected == {k: v for k, v in actual.items() if k[2] == "applied"}
+    assert sum(v[0] for v in expected.values()) == 3
+
+    p = rows[0][0]
+    conn.execute("SET app.actor = 'store-ops'")
+    conn.execute(
+        "UPDATE pricing.zone_price SET price = price + 1 WHERE product_id = %s AND zone_id = %s",
+        (p, zone),
+    )
+    actual = _checks(conn, "reconcile_actual", cycle)
+    expected = _checks(conn, "reconcile_expected_applied", cycle)
+    assert expected == {k: v for k, v in actual.items() if k[2] == "applied"}
+    assert sum(v[0] for v in expected.values()) == 2
+
+
+def test_transit_leaves_out_rows_staged_but_never_applied(
+    oltp_owner: psycopg.Connection, cycle: int
+) -> None:
+    """A stage row apply_batch never processed (a batch lost on a rerun) is not in 'transit',
+    so the OLTP transit differs from ClickHouse's, which counts every row it sent."""
+    conn, zone = oltp_owner, _store_zone(oltp_owner)
+    rows = _zone_rows(conn, 3, zone)
+    staged = [(p, zone, pr + Decimal("0.40"), v) for p, pr, v in rows]
+    _stage_zone(conn, cycle, staged)
+    none = _checks(conn, "reconcile_actual", cycle)
+    assert {k[2] for k in none} == {"transit", "applied"}  # the groups stay, with zeros
+    assert all(v == (0, 0, 0) for v in none.values())
+
+    _apply(conn, cycle, "zone_price")
+    applied = _checks(conn, "reconcile_actual", cycle)
+    assert sum(v[0] for k, v in applied.items() if k[2] == "transit") == 3
+
+
+def test_one_statement_reads_both_sides_from_one_snapshot(
+    oltp_owner: psycopg.Connection, oltp_settings: OltpSettings, cycle: int
+) -> None:
+    """The flow's single OLTP statement (DECISIONS 129) while edits clear last_cycle_id: the
+    expected and actual 'applied' sides always agree. Both functions are STABLE, so they run on
+    the statement's snapshot; an edit that commits mid-statement is in neither side or both."""
+    from retail_pricing.nifi.builder.reconcile import OLTP_SQL
+
+    conn, zone = oltp_owner, _store_zone(oltp_owner)
+    rows = _zone_rows(conn, 40, zone)
+    _stage_zone(conn, cycle, [(p, zone, pr + Decimal("0.30"), v) for p, pr, v in rows])
+    _apply(conn, cycle, "zone_price")
+    sql = OLTP_SQL.replace("${cycle_id}", str(cycle)).replace("${target}", "zone_price")
+    s = oltp_settings
+    first_read = threading.Event()
+
+    def edit() -> None:
+        with psycopg.connect(s.conninfo(s.owner_user, s.owner_password), autocommit=True) as c:
+            c.execute("SET app.actor = 'store-ops'")
+            first_read.wait(30)
+            for p, _, _ in rows:
+                c.execute(
+                    "UPDATE pricing.zone_price SET price = price + 1"
+                    " WHERE product_id = %s AND zone_id = %s",
+                    (p, zone),
+                )
+
+    t = threading.Thread(target=edit)
+    t.start()
+    seen = set()
+    try:
+        while True:
+            alive = t.is_alive()
+            sides: dict[str, dict[tuple[Any, ...], Any]] = {"expected": {}, "actual": {}}
+            for side, _, _, z, c, check, n, cents, w in conn.execute(sql.encode()).fetchall():
+                if check == "applied":
+                    sides[side][(z, c)] = (n, cents, w)
+            assert sides["expected"] == sides["actual"]
+            seen.add(sum(v[0] for v in sides["actual"].values()))
+            first_read.set()
+            if not alive:
+                break
+    finally:
+        first_read.set()
+        t.join()
+    assert {0, 40} <= seen and len(seen) > 1  # the edits ran while the statement was read

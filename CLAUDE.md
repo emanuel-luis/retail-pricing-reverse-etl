@@ -46,6 +46,15 @@ synthetic tables. `docs/PLAN.md` is the contract and lists what each pull reques
   nifi definitions pull` refreshes the processor definitions from a running NiFi; `nifi token`
   writes a JWT to a file. NiFi UI and API: https://127.0.0.1:28443/nifi (self-signed), trigger
   http://127.0.0.1:28081/cycles.
+- `make demo [SF=1]`: `scripts/demo.sh` (shared steps in `scripts/lib.sh`): env check, data,
+  stack, load, control init, `control schedule --off`, ch init, s3 init, deploy, cycle 1 full,
+  workload on, cycle 2 with 50 KVI edits injected during transform, cycle 3, workload off,
+  `retail-pricing check --cycles 1-3 --expect-conflicts-in 2`, `retail-pricing report`; each step
+  timed into `runs/<utc>-sf<SF>/steps.json`. `make heavy SF=10`: `scripts/heavy.sh`, workload on
+  throughout, `scripts/sample-stats.sh` samples `docker stats` into `stats.jsonl`. `make report`:
+  `timings.json` and `timings.md` for the latest run. `retail-pricing control schedule --off |
+  --every '10 minutes'`: the registry interval NiFi polls. `retail-pricing cycle wait-stage
+  --stage transform [--cycle N]`.
 - `make d2-install`, `make diagrams`, `make diagrams-check`, `make diagrams-watch NAME=<name>`:
   pinned D2 (`D2_VERSION`, sha256 `D2_SHA256`, Linux x86_64). On the owner's machine render through
   WSL: `wsl -d Ubuntu -e bash -lc 'cd /mnt/d/dev/Pessoal/retail-pricing-reverse-etl && make diagrams'`.
@@ -53,8 +62,9 @@ synthetic tables. `docs/PLAN.md` is the contract and lists what each pull reques
 - CI (`.github/workflows/ci.yml`): `lint` gates `test-fast` (unit plus SF0.01 data) and `sql`
   (compose Postgres, SF0.01 load, control init, `pytest -m sql`) and `dbt` (ClickHouse, RustFS
   and the runner from compose, two cycles of `dbt build` through the runner,
-  `pytest -m clickhouse`) and `e2e` (the core stack without the runner, SF0.01, deploy,
-  `pytest -m integration`, NiFi's log as an artifact on failure); `diagrams` runs on its own;
+  `pytest -m clickhouse`) and `e2e` (`make demo SF=0.01` with the `ci` parameters, then
+  `pytest -m integration` on the same stack; the run directory always and NiFi's log on failure
+  as artifacts); `diagrams` runs on its own;
   `UV_LOCKED=1`; actions pinned by SHA.
   `security.yml`: pip-audit and zizmor.
   Dependabot is monthly with a 7-day cooldown, minor and patch grouped, majors ignored;
@@ -83,7 +93,9 @@ synthetic tables. `docs/PLAN.md` is the contract and lists what each pull reques
   names, generic tests, the ending grid and the checksum.
 - `nifi/` package: `client.py` (httpx; bearer only, never the login cookie; TLS check off only
   for the local NiFi), `definitions.py`, `deploy.py`, `builder/` (`dsl.py` and one module per
-  group: `trigger`, `extract`, `load`, `gate`, `finalize`); `cycle.py` (trigger, wait, status).
+  group: `trigger`, `extract`, `load`, `transform`, `reverse`, `reconcile`, `gate`, `finalize`);
+  `cycle.py` (trigger, wait, wait-stage, status), `check.py` (the demo's end-to-end assertions,
+  pure functions over rows), `report.py` (timings per run).
   Repo folder `nifi/`: `flows/` (generated, never edited by hand), `params/{local,ci}.json`
   (sensitive entries name env vars), `definitions/` (pulled from NiFi 2.12), `spike/` (the
   reference export that pinned the format). `scripts/nifi_spike.py` reruns the spike.
@@ -109,8 +121,10 @@ synthetic tables. `docs/PLAN.md` is the contract and lists what each pull reques
 - The NiFi flow JSON is generated: change the builder, run `make flows`, commit both. Every group
   sets its parameter context; every component carries `propertyDescriptors`; ids are uuid5 from
   the component path. Stage groups are barriers (Single FlowFile Per Node + Batch Output); item
-  status lives in the audit database; watermarks commit only after a good load. PR 5 inserts
-  transform, reverse and reconcile between the load gate and finalize (PLAN 6.5).
+  status lives in the audit database; `end_run` also fails a run whose planned items never
+  started; watermarks commit only for tables extracted and loaded. Order: trigger, extract,
+  load, transform, reverse (zone price, store override, promo price, shelf label), reconcile,
+  finalize. A cycle's marts are complete only after the next cycle's extract.
 - The OLTP applies engine prices only through `pricing_apply.apply_batch`: a row changes only when
   its `version` equals the extracted one; anything else is a recorded conflict, never an
   overwrite. A batch is idempotent per (cycle, target, batch). Workload edits run with

@@ -12,7 +12,7 @@ from retail_pricing.clickhouse import ddl
 from retail_pricing.clickhouse.client import Client
 from retail_pricing.clickhouse.init import init
 from retail_pricing.clickhouse.load_raw import load_raw
-from retail_pricing.data.contract import TABLES, Column, primary_key
+from retail_pricing.data.contract import EXTRACT_TABLES, TABLES, Column, primary_key
 from retail_pricing.settings import ClickHouseSettings
 
 pytestmark = pytest.mark.clickhouse
@@ -36,13 +36,13 @@ def test_init_twice_is_a_no_op(ch_settings: ClickHouseSettings, admin: Client) -
     result = CliRunner().invoke(app, ["ch", "init"])
     assert result.exit_code == 0, result.output
     assert snapshot() == first
-    assert len([r for r in first if r[0] == "raw"]) == len(TABLES)
+    assert len([r for r in first if r[0] == "raw"]) == len(EXTRACT_TABLES)
     dbs = {r[0] for r in admin.rows("SELECT name FROM system.databases")}
     assert {"raw", "stg", "int", "pricing", "reverse", "marts"} <= dbs
 
 
 def test_columns_follow_the_contract_plus_meta(admin: Client) -> None:
-    for table, cols in TABLES.items():
+    for table, cols in EXTRACT_TABLES.items():
         rows = admin.rows(
             "SELECT name, type FROM system.columns "
             f"WHERE database = 'raw' AND table = '{ddl.raw_name(table).removeprefix('raw.')}' "

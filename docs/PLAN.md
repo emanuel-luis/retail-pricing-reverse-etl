@@ -284,7 +284,7 @@ with `last_cycle_id = cycle`. Otherwise it is rejected with `price_not_applied`.
 `shelf_label_queue` ON CONFLICT DO NOTHING.
 
 `pricing_apply.reconcile_actual(p_cycle_id bigint, p_target text) RETURNS TABLE(target, zone_id, category_id, check_name, rows bigint, sum_cents numeric, wsum numeric)` returns two checks per group:
-- `transit`: all staged rows with their proposed values.
+- `transit`: the stage rows `apply_batch` processed (any status but `staged`) with their proposed values.
 - `applied`: target rows with `last_cycle_id = cycle`, current values, joined to stage rows with status applied.
 
 The checksum works the same in both engines: rows, `sum(price_cents)`,
@@ -472,22 +472,22 @@ Group `30 transform`:
 
 Groups `40 reverse zone_price`, `41 reverse store_override`, `42 reverse promo_price`, `43 reverse shelf_label` share one template parameterized by target. Chaining the groups enforces the order.
 - Plan: InvokeHTTP POST ClickHouse `SELECT batch_no, count() AS rows FROM reverse.rev_<target> WHERE cycle_id = ${cycle_id} GROUP BY batch_no ORDER BY batch_no FORMAT JSON`, then SplitJson `$.data.*`. Zero batches means zero items and the run succeeds.
-- Item work: ReplaceText `SELECT <stage columns> FROM reverse.rev_<target> WHERE cycle_id=… AND batch_no=… FORMAT JSONEachRow SETTINGS output_format_json_quote_64bit_integers=0` -> InvokeHTTP POST ClickHouse -> PutDatabaseRecord[oltp] (`json-reader`, INSERT_IGNORE into `pricing_apply.<target>_stage`, Max Batch Size 1000, Rollback On Failure true) -> ExecuteSQLRecord[oltp] `select * from pricing_apply.apply_batch(${cycle_id}, '<target>', ${batch_no})` -> EvaluateJsonPath(counts) -> PutSQL[control] upsert `audit.reverse_batch` -> step succeeded.
+- Item work: ReplaceText `SELECT <stage columns> FROM reverse.rev_<target> WHERE cycle_id=… AND batch_no=… FORMAT JSONEachRow` -> InvokeHTTP POST ClickHouse (`output_format_json_quote_64bit_integers=0&output_format_json_quote_decimals=1` in the URL) -> PutDatabaseRecord[oltp] (`json-reader`, INSERT_IGNORE into `pricing_apply.<target>_stage`, Max Batch Size 1000, Rollback On Failure true) -> ExecuteSQLRecord[oltp] `select * from pricing_apply.apply_batch(${cycle_id}, '<target>', ${batch_no})` -> EvaluateJsonPath(counts) -> PutSQL[control] upsert `audit.reverse_batch` -> step succeeded.
 
 Group `50 reconcile`:
 - Plan: the 4 targets.
-- Item work: InvokeHTTP POST ClickHouse `SELECT * FROM reverse.rev_reconcile_expected WHERE cycle_id=… AND target='…' FORMAT JSONEachRow` -> PutDatabaseRecord[control] UPSERT `audit.reconcile_expected` -> ExecuteSQLRecord[oltp] `pricing_apply.reconcile_actual(...)` with `json-writer` -> PutDatabaseRecord[control] UPSERT `audit.reconcile_actual`.
+- Item work: InvokeHTTP POST ClickHouse `SELECT * FROM reverse.rev_reconcile_expected WHERE cycle_id=… AND target='…' FORMAT JSONEachRow` (the `transit` check) -> PutDatabaseRecord[control] UPSERT `audit.reconcile_expected` -> ExecuteSQLRecord[oltp] one statement, `pricing_apply.reconcile_expected_applied(...)` (the `applied` check) UNION ALL `pricing_apply.reconcile_actual(...)`, tagged by `side`, so both share one snapshot -> EvaluateJsonPath (expected rows to an attribute, actual rows as content) -> PutDatabaseRecord[control] UPSERT `audit.reconcile_actual` -> ReplaceText (expected rows as content) -> PutDatabaseRecord[control] UPSERT `audit.reconcile_expected` (DECISIONS 129). `wsum` is a decimal string on every hop.
 - The parent gate then runs `audit.reconcile`.
 
 Group `90 finalize`: ExecuteSQLRecord[control] `audit.finish_cycle(...)`, then terminate.
 
 Built in PR 4 (`src/retail_pricing/nifi/builder/`, one module per group): `00 trigger`, `10 extract`,
 the extract gate, `20 load`, the load gate (end_run, then commit_watermarks) and `90 finalize`.
-Step names and items are in DECISIONS 108, retries and error texts in 111. PR 5 seam: in
-`builder/__init__.py` the load gate's `success` goes straight to `90 finalize`; PR 5 inserts
-`30 transform`, `40`-`43 reverse` and `50 reconcile` there, each followed by `gate.build` (the
-reconcile gate with `audit.reconcile` as its follow-up query). Group names equal
-`registry.job.process_group_name`, which is how deploy step 8 finds them.
+Step names and items are in DECISIONS 108, retries and error texts in 111. Built in PR 5:
+`30 transform`, `40`-`43 reverse` (`reverse.py`, one template) and `50 reconcile`, chained from
+the load gate's `success`, each followed by `gate.build`; the reconcile gate calls
+`audit.reconcile` and fails the cycle at `reconcile` when a check differs (DECISIONS 120-123).
+Group names equal `registry.job.process_group_name`, which is how deploy step 8 finds them.
 
 Retry and idempotency summary: S3 keys include the extract run id, so a rerun never reads stale
 files. Raw tables are ReplacingMergeTree, so a re-load is harmless. dbt cycle models delete their
@@ -750,7 +750,7 @@ event and ref.
 | `diagrams (D2 render check)` | `make d2-install diagrams-check` | 1 min | 1 |
 | `sql (Postgres functions)` | `docker compose up -d --wait oltp control-db`, `data` SF0.01, `oltp load`, `control init`, `pytest -m sql` | 4 min | 2 |
 | `dbt (ClickHouse, SF0.01)` | section 8.4, artifacts run_results.json on failure | 6 min | 3 |
-| `e2e (compose loop, SF0.01)` | `make demo SF=0.01` with the `ci` params, then `pytest -m integration`; logs on failure; `make down` always | 15-25 min, timeout 40 | 4 (extract and load), 5 (full loop), 6 (monitoring) |
+| `e2e (compose loop, SF0.01)` | `make demo SF=0.01` with the `ci` params, then `pytest -m integration` on the same stack; the run directory always, logs and the NiFi log on failure; `make down` always | 20-35 min, timeout 55 | 4 (extract and load), 5 (full loop), 6 (monitoring) |
 
 Until `make demo` exists (PR 5), e2e runs the steps itself: `make data SF=0.01`, compose up of
 oltp, control-db, s3, clickhouse and nifi, `make load control-init ch-init s3-init`, `nifi deploy
@@ -830,7 +830,7 @@ marts exist. Neither is committed outside its PR.
 | ClickHouse OOM at SF10 | max_threads 2, lower external thresholds, grace_hash joins, narrow `history_days`, split int_sales_daily by month (incremental). Report the remaining peak |
 | NiFi heap at SF10 | Lower `page_rows` to 100k, concurrency to 2, row group to 16 MB |
 | OLTP load time at SF10 | Indexes after COPY, `synchronous_commit=off` only during load, measured and reported |
-| CI e2e time (NiFi image ~1.1 GB, startup) | SF0.01 with ci params, timeout 40. If it is over 30 min regularly, run e2e on main, schedule and a `run-e2e` label, and the owner updates the required checks |
+| CI e2e time (NiFi image ~1.1 GB, startup) | SF0.01 with ci params, timeout 55 (DECISIONS 128). If it is over 30 min regularly, run e2e on main, schedule and a `run-e2e` label, and the owner updates the required checks |
 | GenerateTableFetch EL limits | ReplaceText-built paged SQL from an OLTP `ops.page_ranges(table, page_rows)` function |
 | ClickHouse named-collection override or XML from_env grants | Full url in the collection per prefix, or SQL users by `ch init` |
 | dbt-core / adapter drift | Pin dbt-core 1.10.x; Dependabot PRs for dbt need the dbt job green |
@@ -838,17 +838,13 @@ marts exist. Neither is committed outside its PR.
 
 ---
 
-### Open items found in PR 3 (owned by PR 5)
+### Open items found in PR 3 (closed in PR 5)
 
-- `rev_reconcile_expected` emits only the `transit` check, while `reconcile_actual` returns
-  `transit` and `applied` rows, and `audit.reconcile` fails a check missing on either side. PR 5
-  adds the expected `applied` check (the rows the cycle proposed, joined to the OLTP outcome
-  once extracted) or compares `applied` against the stage outcome, and records the choice.
-- The `pricing_apply` stage tables carry no `version`/`updated_at`, so they are not in the
-  extract list and `raw.pricing_apply__*` does not exist; `stg_apply_outcome` and
-  `stg_apply_conflict` return empty typed relations until then (every sent row shows as
-  `not_sent` in `mart_proposed_vs_applied`). PR 5 adds an extract path for the stage outcome and
-  conflict tables (append-only by cycle) and the matching raw tables.
+- The expected `applied` check comes from the OLTP stage outcome:
+  `pricing_apply.reconcile_expected_applied` (DECISIONS 120).
+- The `pricing_apply` stage, batch and conflict tables carry `version`/`updated_at`, are in the
+  extract list and have raw tables; `stg_apply_outcome` and `stg_apply_conflict` read them
+  (DECISIONS 121).
 
 ## 15. Low-impact decisions for docs/DECISIONS.md
 

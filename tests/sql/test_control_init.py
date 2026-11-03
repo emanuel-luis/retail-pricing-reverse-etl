@@ -7,7 +7,7 @@ import pytest
 from control_helpers import one
 
 from retail_pricing.control.init import init
-from retail_pricing.data.contract import TABLES
+from retail_pricing.data.contract import EXTRACT_TABLES
 from retail_pricing.settings import ControlSettings
 
 pytestmark = pytest.mark.sql
@@ -40,12 +40,12 @@ def test_seed_covers_every_contract_table(db: Conn) -> None:
         "SELECT table_name, pk_column, select_list, load_order, page_rows, enabled"
         " FROM registry.extract_table ORDER BY load_order"
     ).fetchall()
-    assert [r[0] for r in rows] == list(TABLES)
-    assert [r[3] for r in rows] == list(range(1, len(TABLES) + 1))
+    assert [r[0] for r in rows] == list(EXTRACT_TABLES)
+    assert [r[3] for r in rows] == list(range(1, len(EXTRACT_TABLES) + 1))
     assert {r[4] for r in rows} == {250000}
     assert all(r[5] for r in rows)
     for name, pk, select_list, *_ in rows:
-        assert select_list.split(", ") == [c.name for c in TABLES[name]]
+        assert select_list.split(", ") == [c.name for c in EXTRACT_TABLES[name]]
         assert pk in select_list.split(", ")
     jobs = [r[0] for r in db.execute("SELECT job_id FROM registry.job ORDER BY stage_order")]
     assert jobs == [

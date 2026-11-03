@@ -8,6 +8,15 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- The rest of the loop in NiFi: `30 transform` (the dbt runner, results into the audit DB),
+  `40-43 reverse` (changed rows in batches to the OLTP staging tables, `apply_batch` with version
+  checks, in the order zone prices, store overrides, promo prices, shelf labels) and
+  `50 reconcile` (transit and applied checksums), each a barrier with a gate.
+- The OLTP apply outcome and conflicts carry `version`/`updated_at` and are extracted to
+  ClickHouse, so the marts compare proposed, applied and conflicted rows after the next cycle.
+- `make demo`, `make heavy`, `make report`, `retail-pricing check` and `report`,
+  `retail-pricing control schedule` and `cycle wait-stage`; CI e2e runs `make demo SF=0.01`;
+  the `architecture` and `cycle` diagrams.
 - Apache NiFi 2.12 in compose (custom image with the Parquet NARs and the PostgreSQL JDBC driver,
   sha256-checked), a REST client, `retail-pricing nifi definitions pull`, `nifi token` and
   `nifi deploy` (secrets from env, refuses invalid components).

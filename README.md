@@ -18,8 +18,8 @@ contract and the table below says what exists today.
 | OLTP and control databases, apply functions, workload generator | done |
 | ClickHouse, dbt pricing procedure, dbt runner | done |
 | NiFi image, flows as code, extract and load | done |
-| Transform, reverse load, reconciliation, `make demo` | next |
-| Monitoring, heavy SF10 run, results | planned |
+| Transform, reverse load, reconciliation, `make demo` | done |
+| Monitoring, heavy SF10 run, results | next |
 
 ## What this demonstrates
 
@@ -35,6 +35,44 @@ contract and the table below says what exists today.
   idempotent per cycle, with conflicts recorded and reconciliation by checksums (planned).
 - Job registry and run audit in Postgres, and Prometheus plus Grafana over the whole loop
   (planned).
+
+## Architecture
+
+![The compose services and one pricing cycle across them: the workload keeps the OLTP busy; NiFi extracts it by watermark into Parquet on S3, has ClickHouse load the files, asks the dbt runner to build the pricing models, reads the changed rows back from ClickHouse and applies them to the OLTP with version checks, and records every step in the control database.](docs/diagrams/architecture.svg)
+
+Source: [architecture.d2](docs/diagrams/architecture.d2).
+
+## The loop: one cycle end to end
+
+A cycle runs seven NiFi stages in order, each a barrier with a gate that fails the cycle on any
+failed or missing step:
+
+1. **extract**: every OLTP table by watermark into Parquet on S3 (full loads in pages);
+2. **load**: ClickHouse pulls the files into the raw tables; the written rows must equal the
+   extracted ones, and only then do the watermarks move;
+3. **transform**: the dbt runner builds the pricing procedure for the cycle; a guardrail error
+   stops the cycle here, before anything goes back;
+4. **reverse** (zone prices, store overrides, promo prices, shelf labels, in that order): the
+   changed rows go to OLTP staging tables in batches and `pricing_apply.apply_batch` applies a row
+   only if its version still equals the extracted one; a human edit in between is kept and
+   recorded as a conflict; a replayed batch returns its stored counts;
+5. **reconcile**: row counts and integer checksums by zone and category, computed the same way in
+   ClickHouse and Postgres, for what was sent and what was applied;
+6. **finalize**, and the next cycle's extract brings the applied prices, the outcome and the
+   conflicts back to ClickHouse, where the marts compare proposed, applied and conflicted rows.
+
+`make demo` runs three cycles with the workload on and 50 manual edits to KVI prices injected
+while cycle 2 is in transform, then `retail-pricing check` (every cycle succeeded, every
+reconcile passed, sent = applied + unchanged + conflicts + rejects, no guardrail error, conflicts
+equal in the OLTP, the audit and the mart, applied prices equal the proposals) and
+`retail-pricing report`. At SF0.01 the whole demo takes about five minutes on a laptop once the
+images are built; a cycle
+spends about 40 s in dbt and under a second in each reverse stage, and cycle 2 records the
+injected conflicts (not TPC-DS benchmark results).
+
+![One cycle as a sequence: the trigger, then extract, load, transform, reverse and reconcile, with every call between NiFi, the control database, the OLTP, S3, ClickHouse and the dbt runner, and where the audit rows are written.](docs/diagrams/cycle.svg)
+
+Source: [cycle.d2](docs/diagrams/cycle.d2).
 
 ## OLTP and control model
 
@@ -101,11 +139,12 @@ Source: [data-prep.d2](docs/diagrams/data-prep.d2).
 Python 3.12 · DuckDB · PostgreSQL · Apache NiFi · ClickHouse · dbt · RustFS (S3) · Prometheus ·
 Grafana · Docker Compose · GitHub Actions · uv · ruff · mypy · pytest · Hypothesis · D2
 
-## Quickstart (today)
+## Quickstart
 
 ```bash
 git clone https://github.com/emanuel-luis/retail-pricing-reverse-etl && cd retail-pricing-reverse-etl
 make install
+make demo SF=0.01   # the whole loop from scratch: about five minutes once the images are built
 make data SF=0.01   # TPC-DS SF0.01 plus the OLTP seed under data/ (seconds)
 make test           # unit tests plus the SF0.01 generation checks
 make up             # OLTP and control Postgres, ClickHouse, RustFS, the dbt runner (builds the

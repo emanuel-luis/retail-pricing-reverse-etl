@@ -4,8 +4,17 @@ import json
 from pathlib import Path
 from typing import Any
 
-from retail_pricing.nifi.builder import extract, finalize, gate, load, trigger
-from retail_pricing.nifi.builder.common import TOP, add_services
+from retail_pricing.nifi.builder import (
+    extract,
+    finalize,
+    gate,
+    load,
+    reconcile,
+    reverse,
+    transform,
+    trigger,
+)
+from retail_pricing.nifi.builder.common import TOP, add_services, attrs
 from retail_pricing.nifi.builder.dsl import DEFINITIONS, Group, load_definitions
 
 CONTEXT = "retail-pricing-local"  # deploy points every group at retail-pricing-<env>
@@ -33,9 +42,49 @@ def build(definitions: Path = DEFINITIONS, params: Path = PARAMS) -> dict[str, A
             "select table_name, high_value::text from registry.commit_watermarks(${cycle_id})",
         ),
     )
-    # PR 5 seam: 30 transform, 40-43 reverse and 50 reconcile go here, each with its gate
-    # (the reconcile gate also calls audit.reconcile), chained from `after_load` to finalize.
-    top.connect(after_load, fin_in, "success")
+    tr = transform.build(top)
+    top.connect(after_load, tr.port("in"), "success")
+    nxt = gate.build(top, "transform", tr.port("out"), fin_in)
+    for target in reverse.TARGETS:  # chained: prices land before the labels (DECISIONS 21)
+        rev = reverse.build(top, target)
+        top.connect(nxt, rev.port("in"), "ok")
+        nxt = gate.build(top, f"reverse.{target}", rev.port("out"), fin_in)
+    rec = reconcile.build(top)
+    top.connect(nxt, rec.port("in"), "ok")
+    after_rec = gate.build(
+        top,
+        "reconcile",
+        rec.port("out"),
+        fin_in,
+        ("reconcile", "select passed, failed_checks from audit.reconcile(${cycle_id})"),
+    )
+    # A failed check fails the cycle at reconcile (audit.reconcile has raised the alert).
+    result = attrs(
+        top,
+        "gate reconcile: result",
+        {"reconcile_passed": "$[0].passed", "failed_checks": "$[0].failed_checks"},
+    )
+    passed = top.proc(
+        "RouteOnAttribute",
+        "gate reconcile: passed",
+        {"passed": "${reconcile_passed:equals('true')}"},
+    )
+    differ = top.proc(
+        "UpdateAttribute",
+        "gate reconcile: checks differ",
+        {
+            "cycle.status": "failed",
+            "failed_stage": "reconcile",
+            "cycle.error": "${failed_checks:replaceNull('?')} reconcile check(s) differ:"
+            " see audit.reconcile_result",
+        },
+    )
+    top.connect(after_rec, result, "success")
+    top.connect(result, passed, "matched")
+    top.connect(result, differ, "unmatched", "failure")
+    top.connect(passed, fin_in, "passed")
+    top.connect(passed, differ, "unmatched")
+    top.connect(differ, fin_in, "success")
     raw: dict[str, Any] = json.loads(params.read_text(encoding="utf-8"))
     parameters = [
         {"name": k, "provided": False, "sensitive": True}

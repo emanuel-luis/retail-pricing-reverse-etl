@@ -1,0 +1,60 @@
+# One cycle as a sequence: who calls whom, in order, and where the audit rows are written.
+# Grounded in src/retail_pricing/nifi/builder/ (trigger, extract, load, transform, reverse,
+# reconcile, gate, finalize), src/retail_pricing/sql/control/ (start_cycle, start_run,
+# extract_plan, end_run, commit_watermarks, reconcile, finish_cycle) and
+# src/retail_pricing/sql/oltp/050_apply.sql (apply_batch, reconcile_actual).
+...@_style
+
+cycle: "One cycle: extract, load, transform, reverse, reconcile" {
+  shape: sequence_diagram
+  style: {font-size: 24; bold: true}
+
+  op: "operator" {shape: person}
+  nifi: "NiFi"
+  ctl: "control-db"
+  oltp: "oltp"
+  s3: "s3"
+  ch: "ClickHouse"
+  dbt: "dbt runner"
+
+  op -> nifi: "POST /cycles"
+  nifi -> ctl: "start_cycle: id"
+  nifi -> op: "202 cycle_id"
+
+  extract: "10 extract" {
+    nifi -> ctl: "start_run,\nextract_plan"
+    nifi -> oltp: "page queries\nby watermark"
+    nifi -> s3: "put Parquet"
+    nifi -> ctl: "step events"
+    nifi -> ctl: "end_run (gate)"
+  }
+
+  load: "20 load" {
+    nifi -> ch: "INSERT ... SELECT\nFROM s3()"
+    ch -> s3: "read files"
+    nifi -> ctl: "rows check,\nend_run,\ncommit_watermarks"
+  }
+
+  transform: "30 transform" {
+    nifi -> dbt: "POST /runs"
+    dbt -> ch: "dbt build:\nprices, diffs,\nguardrails"
+    nifi -> dbt: "poll, results"
+    nifi -> ctl: "dbt_node_result,\nend_run"
+  }
+
+  reverse: "40-43 reverse" {
+    nifi -> ch: "rev_* batches"
+    nifi -> oltp: "stage rows,\napply_batch"
+    oltp -> nifi: "applied,\nconflicts, rejects"
+    nifi -> ctl: "reverse_batch,\nend_run"
+  }
+
+  reconcile: "50 reconcile" {
+    nifi -> ch: "expected transit\nchecksums"
+    nifi -> oltp: "expected applied\n+ actual, one read"
+    nifi -> ctl: "reconcile_expected,\nreconcile_actual"
+    nifi -> ctl: "reconcile: passed"
+  }
+
+  nifi -> ctl: "finish_cycle"
+}

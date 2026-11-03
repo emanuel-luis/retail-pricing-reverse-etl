@@ -18,6 +18,7 @@ def test_no_definer_function_is_owned_by_a_superuser(oltp_owner: psycopg.Connect
         ("pricing.zone_price_history()", "price_history_writer"),
         ("pricing_apply.apply_batch(bigint,text,integer)", "pricing_engine"),
         ("pricing_apply.reconcile_actual(bigint,text)", "pricing_engine"),
+        ("pricing_apply.reconcile_expected_applied(bigint,text)", "pricing_engine"),
     ]
     for _, _, superuser, config in rows:
         assert not superuser

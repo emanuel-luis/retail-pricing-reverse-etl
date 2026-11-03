@@ -14,12 +14,14 @@ PARQUET_WRITER = uid(f"{TOP}/parquet-writer")
 HTTP_CONTEXT = uid(f"{TOP}/http-context")
 
 # The first error text a failed processor left on the FlowFile: our own step.error, then the
-# attributes ExecuteSQLRecord, PutS3Object and InvokeHTTP (a non-2xx body) write on failure.
+# attributes ExecuteSQLRecord, PutDatabaseRecord, PutS3Object and InvokeHTTP (a non-2xx body)
+# write on failure.
 _ERROR = (
     "step.error:replaceNull(${executesql.error.message:replaceNull("
+    "${putdatabaserecord.error:replaceNull("
     "${s3.errorMessage:replaceNull(${s3.exception:replaceNull("
     "${invokehttp.response.body:replaceNull("
-    "${invokehttp.status.message:replaceNull('see the NiFi bulletins')})})})})})"
+    "${invokehttp.status.message:replaceNull('see the NiFi bulletins')})})})})})})"
 )
 ERROR_TEXT = "${" + _ERROR + "}"
 ERROR_SQL = "${" + _ERROR + """:replace("'", "''")}"""  # inside a SQL string literal
@@ -145,14 +147,14 @@ class Stage:
         self.g.connect(retried, proc, "success", "failure", "retry")
         self.g.connect(retry, self.step_failed, "retries_exceeded", "failure")
 
-    def split(self, plan: Ref) -> Ref:
+    def split(self, plan: Ref, path: str = "$.*", rel: str = "success") -> Ref:
         """SplitJson the plan: the original leaves when the group is empty (Batch Output).
 
         Returns an UpdateAttribute whose `success` is each item, with its step_id and a stand-in
         item name already set, so every failure path can write a valid step event. The token's
         last SQL error is dropped so items never report it as theirs.
         """
-        split = self.g.proc("SplitJson", "split plan", {"JsonPath Expression": "$.*"})
+        split = self.g.proc("SplitJson", "split plan", {"JsonPath Expression": path})
         item = self.g.proc(
             "UpdateAttribute",
             "item step",
@@ -162,7 +164,7 @@ class Stage:
                 "Delete Attributes Expression": "executesql\\.error\\.message",
             },
         )
-        self.g.connect(plan, split, "success")
+        self.g.connect(plan, split, rel)
         self.g.connect(split, item, "split")
         self.g.connect(split, self.out, "original")
         self.g.connect(split, self.token_failed, "failure")
@@ -235,3 +237,67 @@ def stage(parent: Group, name: str, job: str) -> Stage:
     g.connect(enabled, out, "disabled")
     g.connect(token_failed, out, "success")
     return s
+
+
+def clickhouse(g: Group, name: str, query_params: str = "") -> Ref:
+    """InvokeHTTP POST of the FlowFile content (one statement) to ClickHouse as the nifi user.
+
+    `Original` is dropped: the Response FlowFile carries the attributes on.
+    """
+    return g.proc(
+        "InvokeHTTP",
+        name,
+        {
+            "HTTP Method": "POST",
+            "HTTP URL": "#{ch_url}/" + (f"?{query_params}" if query_params else ""),
+            "Request Username": "#{ch_user}",
+            "Request Password": "#{ch_password}",
+            "Request Content-Type": "text/plain",
+            "Socket Read Timeout": "#{ch_read_timeout}",
+        },
+        auto=("Original",),
+    )
+
+
+def body(g: Group, name: str, text: str) -> Ref:
+    """ReplaceText: the FlowFile content becomes `text` (Expression Language allowed)."""
+    return g.proc(
+        "ReplaceText",
+        name,
+        {
+            "Replacement Strategy": "Always Replace",
+            "Evaluation Mode": "Entire text",
+            "Replacement Value": text,
+        },
+    )
+
+
+def put_records(
+    g: Group,
+    name: str,
+    pool: str,
+    table: str,
+    statement: str,
+    keys: str | None = None,
+    *,
+    rollback: bool = False,
+    ignore_unmatched_columns: bool = False,
+) -> Ref:
+    """PutDatabaseRecord of the JSON content (`json-reader`) into `schema.table` on Postgres."""
+    schema, name_ = table.split(".")
+    props = {
+        "Database Connection Pooling Service": pool,
+        "Database Type": "PostgreSQL",
+        "Record Reader": JSON_READER,
+        "Statement Type": statement,
+        "Schema Name": schema,
+        "Table Name": name_,
+        "Maximum Batch Size": "1000",
+    }
+    if keys:
+        props["Update Keys"] = keys
+    if rollback:
+        props["Rollback On Failure"] = "true"
+    if ignore_unmatched_columns:
+        props["Unmatched Column Behavior"] = "Ignore Unmatched Columns"
+    return g.proc("PutDatabaseRecord", name, props)

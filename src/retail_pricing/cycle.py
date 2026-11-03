@@ -107,6 +107,34 @@ def wait_cycle(
         time.sleep(every_s)
 
 
+def wait_stage(
+    cycle_id: int | None,
+    stage: str,
+    timeout_s: float,
+    fetch: Callable[[int | None], Snapshot | None] = snapshot,
+    echo: Callable[[str], None] = typer.echo,
+    every_s: float = POLL_S,
+) -> int:
+    """Poll until job `stage` has a run in the cycle (running or ended); the exit code.
+
+    0 when the stage has started, 1 when the cycle ended without ever running it, 2 on timeout.
+    """
+    deadline = time.monotonic() + timeout_s
+    while True:
+        snap = fetch(cycle_id)
+        if snap is not None:
+            if any(r["job_id"] == stage for r in snap["runs"]):
+                echo(f"cycle {cycle_id}: stage {stage} started")
+                return SUCCEEDED
+            if snap["status"] != "running":
+                echo(f"cycle {cycle_id} {snap['status']} without running stage {stage}")
+                return FAILED
+        if time.monotonic() >= deadline:
+            echo(f"cycle {cycle_id}: stage {stage} not started after {timeout_s:.0f} s")
+            return TIMEOUT
+        time.sleep(every_s)
+
+
 TimeoutOption = Annotated[float, typer.Option("--timeout", help="Seconds to wait.")]
 
 
@@ -140,6 +168,16 @@ def wait_cmd(
 ) -> None:
     """Wait for a running cycle to end."""
     raise typer.Exit(wait_cycle(cycle, timeout))
+
+
+@app.command("wait-stage")
+def wait_stage_cmd(
+    stage: Annotated[str, typer.Option(help="Job id of the stage, e.g. transform.")],
+    cycle: Annotated[int | None, typer.Option(help="Cycle id (default: the latest).")] = None,
+    timeout: TimeoutOption = 3600.0,
+) -> None:
+    """Wait until a stage of the cycle has started (e.g. to inject edits during transform)."""
+    raise typer.Exit(wait_stage(cycle, stage, timeout))
 
 
 @app.command("status")

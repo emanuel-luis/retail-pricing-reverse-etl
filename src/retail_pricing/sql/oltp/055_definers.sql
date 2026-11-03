@@ -12,7 +12,8 @@ BEGIN
     END IF;
 END $$;
 
--- pricing_engine: apply_batch (and the _apply_* helpers it calls) and reconcile_actual.
+-- pricing_engine: apply_batch (and the _apply_* helpers it calls), reconcile_actual and
+-- reconcile_expected_applied (and _reconcile, which both call).
 GRANT USAGE ON SCHEMA pricing, pricing_apply, master, ops TO pricing_engine;
 GRANT SELECT ON master.store, master.product, master.product_class, ops.business_clock
     TO pricing_engine;
@@ -28,9 +29,11 @@ GRANT SELECT, INSERT, UPDATE ON pricing_apply.zone_price_stage, pricing_apply.st
     pricing_apply.conflict TO pricing_engine;
 GRANT EXECUTE ON FUNCTION pricing_apply._apply_zone_price(bigint, int),
     pricing_apply._apply_store_override(bigint, int), pricing_apply._apply_promo_price(bigint, int),
-    pricing_apply._apply_shelf_label(bigint, int) TO pricing_engine;
+    pricing_apply._apply_shelf_label(bigint, int),
+    pricing_apply._reconcile(bigint, text, boolean) TO pricing_engine;
 ALTER FUNCTION pricing_apply.apply_batch(bigint, text, int) OWNER TO pricing_engine;
 ALTER FUNCTION pricing_apply.reconcile_actual(bigint, text) OWNER TO pricing_engine;
+ALTER FUNCTION pricing_apply.reconcile_expected_applied(bigint, text) OWNER TO pricing_engine;
 
 -- price_history_writer: the AFTER UPDATE trigger on zone_price.
 GRANT USAGE ON SCHEMA pricing TO price_history_writer;

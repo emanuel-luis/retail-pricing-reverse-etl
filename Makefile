@@ -4,7 +4,7 @@ SHELL := bash
 # Git Bash on Windows would rewrite container paths such as /var/lib/... into Windows paths.
 export MSYS_NO_PATHCONV := 1
 
-.PHONY: help install lint fmt test test-fast test-data test-sql data env up down ps logs load control-init ch-init ch-load s3-init dbt-build test-clickhouse workload workload-stop runner-logs flows deploy cycle test-integration d2-install diagrams diagrams-check diagrams-watch
+.PHONY: help install lint fmt test test-fast test-data test-sql data env up down ps logs load control-init ch-init ch-load s3-init dbt-build test-clickhouse workload workload-stop runner-logs flows deploy cycle test-integration demo heavy report check d2-install diagrams diagrams-check diagrams-watch
 
 # Scale factor of the TPC-DS data: 0.01 (CI), 1 (default demo), 10 (documented heavy run).
 SF ?= 1
@@ -104,6 +104,22 @@ cycle: ## Trigger a cycle and wait for it: make cycle MODE=full (default increme
 
 test-integration: ## Cycles through the deployed flow (stack up, loaded, initialized, deployed)
 	uv run pytest -m integration
+
+# Full runs write runs/<utc>-sf<SF>/ (steps.json, check.txt, timings.json and timings.md).
+demo: ## Whole loop at scale SF: stack, load, deploy, 3 cycles with forced conflicts, check, report
+	SF=$(SF) bash scripts/demo.sh
+
+heavy: ## Documented heavy run, workload on throughout, docker stats sampled (make heavy SF=10)
+	SF=$(if $(filter command line,$(origin SF)),$(SF),10) bash scripts/heavy.sh
+
+RUN_DIR ?= $(lastword $(sort $(wildcard runs/*-sf*)))
+report: ## Write timings.json and timings.md for a run: make report RUN_DIR=runs/<utc>-sf1 (default: latest)
+	@[ -n "$(RUN_DIR)" ] || { echo "no run under runs/: run make demo first, or pass RUN_DIR=" >&2; exit 1; }
+	uv run retail-pricing report --run-dir $(RUN_DIR)
+
+CYCLES ?= 1-3
+check: ## Assert the loop's invariants on finished cycles: make check CYCLES=1-3
+	uv run retail-pricing check --cycles $(CYCLES)
 
 # Diagrams: docs/diagrams/<name>.d2 rendered to <name>.svg (committed). One pinned D2 everywhere.
 # Layout engine, themes and padding live in docs/diagrams/_style.d2 (d2-config), so d2 runs in a
