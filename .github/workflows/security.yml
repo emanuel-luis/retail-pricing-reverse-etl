@@ -29,9 +29,10 @@ jobs:
         with:
           python-version: "3.12"
           enable-cache: true
-      # hashes come with the export, so pip-audit audits exactly the locked files and skips pip
+      # hashes come with the export, so pip-audit audits exactly the locked files and skips pip;
+      # --all-extras includes the dbt extra the runner image installs
       - name: Export locked requirements
-        run: uv export --frozen --all-extras --all-groups --no-emit-project -o "$RUNNER_TEMP/requirements.txt"
+        run: uv export -q --frozen --all-extras --all-groups --no-emit-project -o "$RUNNER_TEMP/requirements.txt"
       - name: Audit
         run: uvx pip-audit==2.10.1 --disable-pip -r "$RUNNER_TEMP/requirements.txt"
 
