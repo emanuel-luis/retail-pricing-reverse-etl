@@ -35040,13 +35040,13 @@
             "componentType": "CONNECTION",
             "destination": {
               "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-              "id": "49d5f0d1-8935-59fe-a608-b9794de2d82b",
-              "name": "applied expected",
+              "id": "acdce4e1-39ac-5b76-8bef-9f63d0b8c454",
+              "name": "oltp sides",
               "type": "PROCESSOR"
             },
             "flowFileExpiration": "0 sec",
             "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-            "identifier": "1ca2ebed-f2ee-57bb-82aa-7d6c944678d6",
+            "identifier": "61a3291c-4d97-5f0c-8031-e88d560c8168",
             "labelIndex": 1,
             "loadBalanceCompression": "DO_NOT_COMPRESS",
             "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
@@ -35194,13 +35194,13 @@
             "componentType": "CONNECTION",
             "destination": {
               "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-              "id": "a6b43998-ab72-5b3f-8c53-3a0c91e2a1c2",
-              "name": "put applied",
+              "id": "9791eebe-2d5d-5da5-8744-9cfa7a34d807",
+              "name": "keep expected",
               "type": "PROCESSOR"
             },
             "flowFileExpiration": "0 sec",
             "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-            "identifier": "7211f0ed-c5b7-5004-86f9-959d7b8b30ee",
+            "identifier": "3be1bf53-d32d-5720-aa7c-c9fc7102ef5d",
             "labelIndex": 1,
             "loadBalanceCompression": "DO_NOT_COMPRESS",
             "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
@@ -35211,8 +35211,8 @@
             "source": {
               "comments": "",
               "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-              "id": "49d5f0d1-8935-59fe-a608-b9794de2d82b",
-              "name": "applied expected",
+              "id": "acdce4e1-39ac-5b76-8bef-9f63d0b8c454",
+              "name": "oltp sides",
               "type": "PROCESSOR"
             },
             "zIndex": 0
@@ -35224,13 +35224,13 @@
             "componentType": "CONNECTION",
             "destination": {
               "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-              "id": "69c6c625-65c7-5c39-a856-40a9836423c0",
-              "name": "applied expected retry",
+              "id": "26f829f9-d884-5344-8240-423c1814da4f",
+              "name": "oltp sides retry",
               "type": "PROCESSOR"
             },
             "flowFileExpiration": "0 sec",
             "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-            "identifier": "05d62156-de21-5435-b77a-0c59cb9903f9",
+            "identifier": "fa3bd840-f276-507a-b742-c51998ac298c",
             "labelIndex": 1,
             "loadBalanceCompression": "DO_NOT_COMPRESS",
             "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
@@ -35241,8 +35241,8 @@
             "source": {
               "comments": "",
               "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-              "id": "49d5f0d1-8935-59fe-a608-b9794de2d82b",
-              "name": "applied expected",
+              "id": "acdce4e1-39ac-5b76-8bef-9f63d0b8c454",
+              "name": "oltp sides",
               "type": "PROCESSOR"
             },
             "zIndex": 0
@@ -35254,13 +35254,13 @@
             "componentType": "CONNECTION",
             "destination": {
               "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-              "id": "b9b08f11-beb3-521d-a408-b99df7c7a3c2",
-              "name": "applied expected retried",
+              "id": "67cd94e8-1f41-5161-a14b-e819580bfb04",
+              "name": "oltp sides retried",
               "type": "PROCESSOR"
             },
             "flowFileExpiration": "0 sec",
             "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-            "identifier": "27ab7d1c-34ca-54b8-aef6-7ff20f5c263a",
+            "identifier": "bd1d3b4f-efc7-54ed-b29f-931f3200400b",
             "labelIndex": 1,
             "loadBalanceCompression": "DO_NOT_COMPRESS",
             "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
@@ -35271,8 +35271,8 @@
             "source": {
               "comments": "",
               "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-              "id": "69c6c625-65c7-5c39-a856-40a9836423c0",
-              "name": "applied expected retry",
+              "id": "26f829f9-d884-5344-8240-423c1814da4f",
+              "name": "oltp sides retry",
               "type": "PROCESSOR"
             },
             "zIndex": 0
@@ -35284,13 +35284,13 @@
             "componentType": "CONNECTION",
             "destination": {
               "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-              "id": "49d5f0d1-8935-59fe-a608-b9794de2d82b",
-              "name": "applied expected",
+              "id": "acdce4e1-39ac-5b76-8bef-9f63d0b8c454",
+              "name": "oltp sides",
               "type": "PROCESSOR"
             },
             "flowFileExpiration": "0 sec",
             "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-            "identifier": "6d410da8-2a93-5a3f-809a-1223d5bc799d",
+            "identifier": "bbf3631d-d763-5359-b879-9dc37200d788",
             "labelIndex": 1,
             "loadBalanceCompression": "DO_NOT_COMPRESS",
             "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
@@ -35303,8 +35303,8 @@
             "source": {
               "comments": "",
               "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-              "id": "b9b08f11-beb3-521d-a408-b99df7c7a3c2",
-              "name": "applied expected retried",
+              "id": "67cd94e8-1f41-5161-a14b-e819580bfb04",
+              "name": "oltp sides retried",
               "type": "PROCESSOR"
             },
             "zIndex": 0
@@ -35322,7 +35322,7 @@
             },
             "flowFileExpiration": "0 sec",
             "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-            "identifier": "06c9c4bb-08e1-5c2f-a2cf-b8527a64b78f",
+            "identifier": "28242506-55ae-5d49-89dd-84f9a50b71ee",
             "labelIndex": 1,
             "loadBalanceCompression": "DO_NOT_COMPRESS",
             "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
@@ -35334,8 +35334,8 @@
             "source": {
               "comments": "",
               "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-              "id": "69c6c625-65c7-5c39-a856-40a9836423c0",
-              "name": "applied expected retry",
+              "id": "26f829f9-d884-5344-8240-423c1814da4f",
+              "name": "oltp sides retry",
               "type": "PROCESSOR"
             },
             "zIndex": 0
@@ -35347,118 +35347,25 @@
             "componentType": "CONNECTION",
             "destination": {
               "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-              "id": "e38b501f-2b99-52d0-9592-f818f29315fe",
-              "name": "actual",
+              "id": "b85d458b-318b-591c-a308-715dd8c52f54",
+              "name": "actual rows",
               "type": "PROCESSOR"
             },
             "flowFileExpiration": "0 sec",
             "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-            "identifier": "b759a8d9-bb50-53cf-bb9a-fab1fee4dbaa",
+            "identifier": "5a2b759b-5c6e-5cc3-bf8b-e9ccd90c2a66",
             "labelIndex": 1,
             "loadBalanceCompression": "DO_NOT_COMPRESS",
             "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
             "prioritizers": [],
             "selectedRelationships": [
-              "success"
+              "matched"
             ],
             "source": {
               "comments": "",
               "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-              "id": "a6b43998-ab72-5b3f-8c53-3a0c91e2a1c2",
-              "name": "put applied",
-              "type": "PROCESSOR"
-            },
-            "zIndex": 0
-          },
-          {
-            "backPressureDataSizeThreshold": "1 GB",
-            "backPressureObjectThreshold": 10000,
-            "bends": [],
-            "componentType": "CONNECTION",
-            "destination": {
-              "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-              "id": "bb2c39ac-6b9b-54b5-bc03-66555cde4aa9",
-              "name": "put applied retry",
-              "type": "PROCESSOR"
-            },
-            "flowFileExpiration": "0 sec",
-            "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-            "identifier": "5875e774-b293-59a0-b8d9-f0f623efe701",
-            "labelIndex": 1,
-            "loadBalanceCompression": "DO_NOT_COMPRESS",
-            "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
-            "prioritizers": [],
-            "selectedRelationships": [
-              "failure",
-              "retry"
-            ],
-            "source": {
-              "comments": "",
-              "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-              "id": "a6b43998-ab72-5b3f-8c53-3a0c91e2a1c2",
-              "name": "put applied",
-              "type": "PROCESSOR"
-            },
-            "zIndex": 0
-          },
-          {
-            "backPressureDataSizeThreshold": "1 GB",
-            "backPressureObjectThreshold": 10000,
-            "bends": [],
-            "componentType": "CONNECTION",
-            "destination": {
-              "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-              "id": "e835d1aa-7386-5b55-a497-5e4b8c5d400d",
-              "name": "put applied retried",
-              "type": "PROCESSOR"
-            },
-            "flowFileExpiration": "0 sec",
-            "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-            "identifier": "20dabf62-5145-5ab9-9916-56458bc6214d",
-            "labelIndex": 1,
-            "loadBalanceCompression": "DO_NOT_COMPRESS",
-            "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
-            "prioritizers": [],
-            "selectedRelationships": [
-              "retry"
-            ],
-            "source": {
-              "comments": "",
-              "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-              "id": "bb2c39ac-6b9b-54b5-bc03-66555cde4aa9",
-              "name": "put applied retry",
-              "type": "PROCESSOR"
-            },
-            "zIndex": 0
-          },
-          {
-            "backPressureDataSizeThreshold": "1 GB",
-            "backPressureObjectThreshold": 10000,
-            "bends": [],
-            "componentType": "CONNECTION",
-            "destination": {
-              "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-              "id": "a6b43998-ab72-5b3f-8c53-3a0c91e2a1c2",
-              "name": "put applied",
-              "type": "PROCESSOR"
-            },
-            "flowFileExpiration": "0 sec",
-            "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-            "identifier": "759dee13-fdb1-5226-a5a0-c1c53ab68e99",
-            "labelIndex": 1,
-            "loadBalanceCompression": "DO_NOT_COMPRESS",
-            "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
-            "prioritizers": [],
-            "selectedRelationships": [
-              "failure",
-              "retry",
-              "success"
-            ],
-            "source": {
-              "comments": "",
-              "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-              "id": "e835d1aa-7386-5b55-a497-5e4b8c5d400d",
-              "name": "put applied retried",
+              "id": "9791eebe-2d5d-5da5-8744-9cfa7a34d807",
+              "name": "keep expected",
               "type": "PROCESSOR"
             },
             "zIndex": 0
@@ -35476,20 +35383,20 @@
             },
             "flowFileExpiration": "0 sec",
             "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-            "identifier": "37f09d11-7f7c-5109-9cd5-39ab85d106ba",
+            "identifier": "7082948d-b47e-55c3-a872-75ecf808e351",
             "labelIndex": 1,
             "loadBalanceCompression": "DO_NOT_COMPRESS",
             "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
             "prioritizers": [],
             "selectedRelationships": [
               "failure",
-              "retries_exceeded"
+              "unmatched"
             ],
             "source": {
               "comments": "",
               "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-              "id": "bb2c39ac-6b9b-54b5-bc03-66555cde4aa9",
-              "name": "put applied retry",
+              "id": "9791eebe-2d5d-5da5-8744-9cfa7a34d807",
+              "name": "keep expected",
               "type": "PROCESSOR"
             },
             "zIndex": 0
@@ -35507,111 +35414,19 @@
             },
             "flowFileExpiration": "0 sec",
             "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-            "identifier": "f6ac6361-8fc8-5fa0-b636-9a3b116c2e53",
+            "identifier": "ea6ffb26-3d4c-59a2-9c87-032f0da61055",
             "labelIndex": 1,
             "loadBalanceCompression": "DO_NOT_COMPRESS",
             "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
             "prioritizers": [],
             "selectedRelationships": [
-              "success"
+              "matched"
             ],
             "source": {
               "comments": "",
               "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-              "id": "e38b501f-2b99-52d0-9592-f818f29315fe",
-              "name": "actual",
-              "type": "PROCESSOR"
-            },
-            "zIndex": 0
-          },
-          {
-            "backPressureDataSizeThreshold": "1 GB",
-            "backPressureObjectThreshold": 10000,
-            "bends": [],
-            "componentType": "CONNECTION",
-            "destination": {
-              "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-              "id": "923df837-0ed5-5db0-8646-15077fbb6d56",
-              "name": "actual retry",
-              "type": "PROCESSOR"
-            },
-            "flowFileExpiration": "0 sec",
-            "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-            "identifier": "75591d58-ad97-59c7-98d4-534c2fab109e",
-            "labelIndex": 1,
-            "loadBalanceCompression": "DO_NOT_COMPRESS",
-            "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
-            "prioritizers": [],
-            "selectedRelationships": [
-              "failure"
-            ],
-            "source": {
-              "comments": "",
-              "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-              "id": "e38b501f-2b99-52d0-9592-f818f29315fe",
-              "name": "actual",
-              "type": "PROCESSOR"
-            },
-            "zIndex": 0
-          },
-          {
-            "backPressureDataSizeThreshold": "1 GB",
-            "backPressureObjectThreshold": 10000,
-            "bends": [],
-            "componentType": "CONNECTION",
-            "destination": {
-              "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-              "id": "93141464-c452-580a-9745-243d7c3ad37d",
-              "name": "actual retried",
-              "type": "PROCESSOR"
-            },
-            "flowFileExpiration": "0 sec",
-            "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-            "identifier": "e783d5d1-f2d1-564d-94bd-eb081ea8ff51",
-            "labelIndex": 1,
-            "loadBalanceCompression": "DO_NOT_COMPRESS",
-            "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
-            "prioritizers": [],
-            "selectedRelationships": [
-              "retry"
-            ],
-            "source": {
-              "comments": "",
-              "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-              "id": "923df837-0ed5-5db0-8646-15077fbb6d56",
-              "name": "actual retry",
-              "type": "PROCESSOR"
-            },
-            "zIndex": 0
-          },
-          {
-            "backPressureDataSizeThreshold": "1 GB",
-            "backPressureObjectThreshold": 10000,
-            "bends": [],
-            "componentType": "CONNECTION",
-            "destination": {
-              "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-              "id": "e38b501f-2b99-52d0-9592-f818f29315fe",
-              "name": "actual",
-              "type": "PROCESSOR"
-            },
-            "flowFileExpiration": "0 sec",
-            "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-            "identifier": "f81fdd52-0462-53b2-9dea-cb3076765f68",
-            "labelIndex": 1,
-            "loadBalanceCompression": "DO_NOT_COMPRESS",
-            "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
-            "prioritizers": [],
-            "selectedRelationships": [
-              "failure",
-              "retry",
-              "success"
-            ],
-            "source": {
-              "comments": "",
-              "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-              "id": "93141464-c452-580a-9745-243d7c3ad37d",
-              "name": "actual retried",
+              "id": "b85d458b-318b-591c-a308-715dd8c52f54",
+              "name": "actual rows",
               "type": "PROCESSOR"
             },
             "zIndex": 0
@@ -35629,20 +35444,20 @@
             },
             "flowFileExpiration": "0 sec",
             "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-            "identifier": "5501d006-fe80-5506-b79b-37940c2682c0",
+            "identifier": "58048448-c794-59ea-86e8-dfe06856bf05",
             "labelIndex": 1,
             "loadBalanceCompression": "DO_NOT_COMPRESS",
             "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
             "prioritizers": [],
             "selectedRelationships": [
               "failure",
-              "retries_exceeded"
+              "unmatched"
             ],
             "source": {
               "comments": "",
               "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-              "id": "923df837-0ed5-5db0-8646-15077fbb6d56",
-              "name": "actual retry",
+              "id": "b85d458b-318b-591c-a308-715dd8c52f54",
+              "name": "actual rows",
               "type": "PROCESSOR"
             },
             "zIndex": 0
@@ -35654,13 +35469,13 @@
             "componentType": "CONNECTION",
             "destination": {
               "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-              "id": "08c6349b-263d-5fd6-bcc9-db27e98d3d02",
-              "name": "target succeeded",
+              "id": "53947fdb-91ad-588b-b1cf-da1f03e02f3d",
+              "name": "applied rows",
               "type": "PROCESSOR"
             },
             "flowFileExpiration": "0 sec",
             "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-            "identifier": "a5188968-a7ee-5d14-907d-8dc604b242f7",
+            "identifier": "650ce533-1ce5-52d7-b442-d40d581a599a",
             "labelIndex": 1,
             "loadBalanceCompression": "DO_NOT_COMPRESS",
             "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
@@ -35797,6 +35612,220 @@
               "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
               "id": "576969c2-6119-5c1d-a605-eefa45f585a1",
               "name": "put actual retry",
+              "type": "PROCESSOR"
+            },
+            "zIndex": 0
+          },
+          {
+            "backPressureDataSizeThreshold": "1 GB",
+            "backPressureObjectThreshold": 10000,
+            "bends": [],
+            "componentType": "CONNECTION",
+            "destination": {
+              "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
+              "id": "a6b43998-ab72-5b3f-8c53-3a0c91e2a1c2",
+              "name": "put applied",
+              "type": "PROCESSOR"
+            },
+            "flowFileExpiration": "0 sec",
+            "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
+            "identifier": "5cb0890d-6b12-5074-b77c-09997b05c073",
+            "labelIndex": 1,
+            "loadBalanceCompression": "DO_NOT_COMPRESS",
+            "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
+            "prioritizers": [],
+            "selectedRelationships": [
+              "success"
+            ],
+            "source": {
+              "comments": "",
+              "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
+              "id": "53947fdb-91ad-588b-b1cf-da1f03e02f3d",
+              "name": "applied rows",
+              "type": "PROCESSOR"
+            },
+            "zIndex": 0
+          },
+          {
+            "backPressureDataSizeThreshold": "1 GB",
+            "backPressureObjectThreshold": 10000,
+            "bends": [],
+            "componentType": "CONNECTION",
+            "destination": {
+              "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
+              "id": "d1f324de-5b71-5055-b4ff-0338b8b6e979",
+              "name": "step failed",
+              "type": "PROCESSOR"
+            },
+            "flowFileExpiration": "0 sec",
+            "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
+            "identifier": "63f148a8-c15c-51ff-9b89-1e3cbecda5d3",
+            "labelIndex": 1,
+            "loadBalanceCompression": "DO_NOT_COMPRESS",
+            "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
+            "prioritizers": [],
+            "selectedRelationships": [
+              "failure"
+            ],
+            "source": {
+              "comments": "",
+              "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
+              "id": "53947fdb-91ad-588b-b1cf-da1f03e02f3d",
+              "name": "applied rows",
+              "type": "PROCESSOR"
+            },
+            "zIndex": 0
+          },
+          {
+            "backPressureDataSizeThreshold": "1 GB",
+            "backPressureObjectThreshold": 10000,
+            "bends": [],
+            "componentType": "CONNECTION",
+            "destination": {
+              "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
+              "id": "08c6349b-263d-5fd6-bcc9-db27e98d3d02",
+              "name": "target succeeded",
+              "type": "PROCESSOR"
+            },
+            "flowFileExpiration": "0 sec",
+            "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
+            "identifier": "e0560606-d592-560f-b83a-241f83b6667b",
+            "labelIndex": 1,
+            "loadBalanceCompression": "DO_NOT_COMPRESS",
+            "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
+            "prioritizers": [],
+            "selectedRelationships": [
+              "success"
+            ],
+            "source": {
+              "comments": "",
+              "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
+              "id": "a6b43998-ab72-5b3f-8c53-3a0c91e2a1c2",
+              "name": "put applied",
+              "type": "PROCESSOR"
+            },
+            "zIndex": 0
+          },
+          {
+            "backPressureDataSizeThreshold": "1 GB",
+            "backPressureObjectThreshold": 10000,
+            "bends": [],
+            "componentType": "CONNECTION",
+            "destination": {
+              "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
+              "id": "bb2c39ac-6b9b-54b5-bc03-66555cde4aa9",
+              "name": "put applied retry",
+              "type": "PROCESSOR"
+            },
+            "flowFileExpiration": "0 sec",
+            "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
+            "identifier": "5875e774-b293-59a0-b8d9-f0f623efe701",
+            "labelIndex": 1,
+            "loadBalanceCompression": "DO_NOT_COMPRESS",
+            "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
+            "prioritizers": [],
+            "selectedRelationships": [
+              "failure",
+              "retry"
+            ],
+            "source": {
+              "comments": "",
+              "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
+              "id": "a6b43998-ab72-5b3f-8c53-3a0c91e2a1c2",
+              "name": "put applied",
+              "type": "PROCESSOR"
+            },
+            "zIndex": 0
+          },
+          {
+            "backPressureDataSizeThreshold": "1 GB",
+            "backPressureObjectThreshold": 10000,
+            "bends": [],
+            "componentType": "CONNECTION",
+            "destination": {
+              "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
+              "id": "e835d1aa-7386-5b55-a497-5e4b8c5d400d",
+              "name": "put applied retried",
+              "type": "PROCESSOR"
+            },
+            "flowFileExpiration": "0 sec",
+            "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
+            "identifier": "20dabf62-5145-5ab9-9916-56458bc6214d",
+            "labelIndex": 1,
+            "loadBalanceCompression": "DO_NOT_COMPRESS",
+            "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
+            "prioritizers": [],
+            "selectedRelationships": [
+              "retry"
+            ],
+            "source": {
+              "comments": "",
+              "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
+              "id": "bb2c39ac-6b9b-54b5-bc03-66555cde4aa9",
+              "name": "put applied retry",
+              "type": "PROCESSOR"
+            },
+            "zIndex": 0
+          },
+          {
+            "backPressureDataSizeThreshold": "1 GB",
+            "backPressureObjectThreshold": 10000,
+            "bends": [],
+            "componentType": "CONNECTION",
+            "destination": {
+              "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
+              "id": "a6b43998-ab72-5b3f-8c53-3a0c91e2a1c2",
+              "name": "put applied",
+              "type": "PROCESSOR"
+            },
+            "flowFileExpiration": "0 sec",
+            "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
+            "identifier": "759dee13-fdb1-5226-a5a0-c1c53ab68e99",
+            "labelIndex": 1,
+            "loadBalanceCompression": "DO_NOT_COMPRESS",
+            "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
+            "prioritizers": [],
+            "selectedRelationships": [
+              "failure",
+              "retry",
+              "success"
+            ],
+            "source": {
+              "comments": "",
+              "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
+              "id": "e835d1aa-7386-5b55-a497-5e4b8c5d400d",
+              "name": "put applied retried",
+              "type": "PROCESSOR"
+            },
+            "zIndex": 0
+          },
+          {
+            "backPressureDataSizeThreshold": "1 GB",
+            "backPressureObjectThreshold": 10000,
+            "bends": [],
+            "componentType": "CONNECTION",
+            "destination": {
+              "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
+              "id": "d1f324de-5b71-5055-b4ff-0338b8b6e979",
+              "name": "step failed",
+              "type": "PROCESSOR"
+            },
+            "flowFileExpiration": "0 sec",
+            "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
+            "identifier": "37f09d11-7f7c-5109-9cd5-39ab85d106ba",
+            "labelIndex": 1,
+            "loadBalanceCompression": "DO_NOT_COMPRESS",
+            "loadBalanceStrategy": "DO_NOT_LOAD_BALANCE",
+            "prioritizers": [],
+            "selectedRelationships": [
+              "failure",
+              "retries_exceeded"
+            ],
+            "source": {
+              "comments": "",
+              "groupId": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
+              "id": "bb2c39ac-6b9b-54b5-bc03-66555cde4aa9",
+              "name": "put applied retry",
               "type": "PROCESSOR"
             },
             "zIndex": 0
@@ -37028,9 +37057,9 @@
             "concurrentlySchedulableTaskCount": 1,
             "executionNode": "ALL",
             "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-            "identifier": "49d5f0d1-8935-59fe-a608-b9794de2d82b",
+            "identifier": "acdce4e1-39ac-5b76-8bef-9f63d0b8c454",
             "maxBackoffPeriod": "10 mins",
-            "name": "applied expected",
+            "name": "oltp sides",
             "penaltyDuration": "30 sec",
             "position": {
               "x": 420.0,
@@ -37039,7 +37068,7 @@
             "properties": {
               "Database Connection Pooling Service": "7ff80f41-fbb9-55fd-a314-f2a494a5f1d8",
               "Record Writer": "4967921e-77c9-531a-bf40-0b98c0e023dd",
-              "SQL Query": "select ${cycle_id}::bigint as cycle_id, target, zone_id, category_id, check_name, rows, sum_cents::bigint as sum_cents, wsum::text as wsum from pricing_apply.reconcile_expected_applied(${cycle_id}, '${target}')"
+              "SQL Query": "select 'expected' as side, ${cycle_id}::bigint as cycle_id, target, zone_id, category_id, check_name, rows, sum_cents::bigint as sum_cents, wsum::text as wsum from pricing_apply.reconcile_expected_applied(${cycle_id}, '${target}') union all select 'actual' as side, ${cycle_id}::bigint as cycle_id, target, zone_id, category_id, check_name, rows, sum_cents::bigint as sum_cents, wsum::text as wsum from pricing_apply.reconcile_actual(${cycle_id}, '${target}')"
             },
             "propertyDescriptors": {
               "Database Connection Pooling Service": {
@@ -37088,79 +37117,39 @@
             "concurrentlySchedulableTaskCount": 1,
             "executionNode": "ALL",
             "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-            "identifier": "a6b43998-ab72-5b3f-8c53-3a0c91e2a1c2",
+            "identifier": "9791eebe-2d5d-5da5-8744-9cfa7a34d807",
             "maxBackoffPeriod": "10 mins",
-            "name": "put applied",
+            "name": "keep expected",
             "penaltyDuration": "30 sec",
             "position": {
               "x": 840.0,
               "y": 660.0
             },
             "properties": {
-              "Database Connection Pooling Service": "cbf9569a-b4c8-55f8-813e-147b1f5ba802",
-              "Database Type": "PostgreSQL",
-              "Maximum Batch Size": "1000",
-              "Record Reader": "1789bd65-9688-59bf-a7b0-0adb0ee5b850",
-              "Schema Name": "audit",
-              "Statement Type": "UPSERT",
-              "Table Name": "reconcile_expected",
-              "Update Keys": "cycle_id,target,zone_id,category_id,check_name"
+              "Destination": "flowfile-attribute",
+              "Return Type": "json",
+              "reconcile.expected": "$[?(@.side == 'expected')]"
             },
             "propertyDescriptors": {
-              "Database Connection Pooling Service": {
-                "displayName": "Database Connection Pooling Service",
-                "dynamic": false,
-                "identifiesControllerService": true,
-                "name": "Database Connection Pooling Service",
-                "sensitive": false
-              },
-              "Database Type": {
-                "displayName": "Database Type",
+              "Destination": {
+                "displayName": "Destination",
                 "dynamic": false,
                 "identifiesControllerService": false,
-                "name": "Database Type",
+                "name": "Destination",
                 "sensitive": false
               },
-              "Maximum Batch Size": {
-                "displayName": "Maximum Batch Size",
+              "Return Type": {
+                "displayName": "Return Type",
                 "dynamic": false,
                 "identifiesControllerService": false,
-                "name": "Maximum Batch Size",
+                "name": "Return Type",
                 "sensitive": false
               },
-              "Record Reader": {
-                "displayName": "Record Reader",
-                "dynamic": false,
-                "identifiesControllerService": true,
-                "name": "Record Reader",
-                "sensitive": false
-              },
-              "Schema Name": {
-                "displayName": "Schema Name",
-                "dynamic": false,
+              "reconcile.expected": {
+                "displayName": "reconcile.expected",
+                "dynamic": true,
                 "identifiesControllerService": false,
-                "name": "Schema Name",
-                "sensitive": false
-              },
-              "Statement Type": {
-                "displayName": "Statement Type",
-                "dynamic": false,
-                "identifiesControllerService": false,
-                "name": "Statement Type",
-                "sensitive": false
-              },
-              "Table Name": {
-                "displayName": "Table Name",
-                "dynamic": false,
-                "identifiesControllerService": false,
-                "name": "Table Name",
-                "sensitive": false
-              },
-              "Update Keys": {
-                "displayName": "Update Keys",
-                "dynamic": false,
-                "identifiesControllerService": false,
-                "name": "Update Keys",
+                "name": "reconcile.expected",
                 "sensitive": false
               }
             },
@@ -37171,7 +37160,7 @@
             "schedulingPeriod": "0 sec",
             "schedulingStrategy": "TIMER_DRIVEN",
             "style": {},
-            "type": "org.apache.nifi.processors.standard.PutDatabaseRecord",
+            "type": "org.apache.nifi.processors.standard.EvaluateJsonPath",
             "yieldDuration": "1 sec"
           },
           {
@@ -37188,39 +37177,23 @@
             "concurrentlySchedulableTaskCount": 1,
             "executionNode": "ALL",
             "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-            "identifier": "e38b501f-2b99-52d0-9592-f818f29315fe",
+            "identifier": "b85d458b-318b-591c-a308-715dd8c52f54",
             "maxBackoffPeriod": "10 mins",
-            "name": "actual",
+            "name": "actual rows",
             "penaltyDuration": "30 sec",
             "position": {
               "x": 1260.0,
               "y": 660.0
             },
             "properties": {
-              "Database Connection Pooling Service": "7ff80f41-fbb9-55fd-a314-f2a494a5f1d8",
-              "Record Writer": "4967921e-77c9-531a-bf40-0b98c0e023dd",
-              "SQL Query": "select ${cycle_id}::bigint as cycle_id, target, zone_id, category_id, check_name, rows, sum_cents::bigint as sum_cents, wsum::text as wsum from pricing_apply.reconcile_actual(${cycle_id}, '${target}')"
+              "rows": "$[?(@.side == 'actual')]"
             },
             "propertyDescriptors": {
-              "Database Connection Pooling Service": {
-                "displayName": "Database Connection Pooling Service",
-                "dynamic": false,
-                "identifiesControllerService": true,
-                "name": "Database Connection Pooling Service",
-                "sensitive": false
-              },
-              "Record Writer": {
-                "displayName": "Record Writer",
-                "dynamic": false,
-                "identifiesControllerService": true,
-                "name": "Record Writer",
-                "sensitive": false
-              },
-              "SQL Query": {
-                "displayName": "SQL Query",
-                "dynamic": false,
+              "rows": {
+                "displayName": "rows",
+                "dynamic": true,
                 "identifiesControllerService": false,
-                "name": "SQL Query",
+                "name": "rows",
                 "sensitive": false
               }
             },
@@ -37231,7 +37204,7 @@
             "schedulingPeriod": "0 sec",
             "schedulingStrategy": "TIMER_DRIVEN",
             "style": {},
-            "type": "org.apache.nifi.processors.standard.ExecuteSQLRecord",
+            "type": "org.apache.nifi.processors.standard.EvaluateJsonPath",
             "yieldDuration": "1 sec"
           },
           {
@@ -37335,6 +37308,166 @@
             "yieldDuration": "1 sec"
           },
           {
+            "autoTerminatedRelationships": [],
+            "backoffMechanism": "PENALIZE_FLOWFILE",
+            "bulletinLevel": "WARN",
+            "bundle": {
+              "artifact": "nifi-standard-nar",
+              "group": "org.apache.nifi",
+              "version": "2.12.0"
+            },
+            "comments": "",
+            "componentType": "PROCESSOR",
+            "concurrentlySchedulableTaskCount": 1,
+            "executionNode": "ALL",
+            "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
+            "identifier": "53947fdb-91ad-588b-b1cf-da1f03e02f3d",
+            "maxBackoffPeriod": "10 mins",
+            "name": "applied rows",
+            "penaltyDuration": "30 sec",
+            "position": {
+              "x": 2100.0,
+              "y": 660.0
+            },
+            "properties": {
+              "Evaluation Mode": "Entire text",
+              "Replacement Strategy": "Always Replace",
+              "Replacement Value": "${reconcile.expected}"
+            },
+            "propertyDescriptors": {
+              "Evaluation Mode": {
+                "displayName": "Evaluation Mode",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Evaluation Mode",
+                "sensitive": false
+              },
+              "Replacement Strategy": {
+                "displayName": "Replacement Strategy",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Replacement Strategy",
+                "sensitive": false
+              },
+              "Replacement Value": {
+                "displayName": "Replacement Value",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Replacement Value",
+                "sensitive": false
+              }
+            },
+            "retriedRelationships": [],
+            "retryCount": 10,
+            "runDurationMillis": 0,
+            "scheduledState": "ENABLED",
+            "schedulingPeriod": "0 sec",
+            "schedulingStrategy": "TIMER_DRIVEN",
+            "style": {},
+            "type": "org.apache.nifi.processors.standard.ReplaceText",
+            "yieldDuration": "1 sec"
+          },
+          {
+            "autoTerminatedRelationships": [],
+            "backoffMechanism": "PENALIZE_FLOWFILE",
+            "bulletinLevel": "WARN",
+            "bundle": {
+              "artifact": "nifi-standard-nar",
+              "group": "org.apache.nifi",
+              "version": "2.12.0"
+            },
+            "comments": "",
+            "componentType": "PROCESSOR",
+            "concurrentlySchedulableTaskCount": 1,
+            "executionNode": "ALL",
+            "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
+            "identifier": "a6b43998-ab72-5b3f-8c53-3a0c91e2a1c2",
+            "maxBackoffPeriod": "10 mins",
+            "name": "put applied",
+            "penaltyDuration": "30 sec",
+            "position": {
+              "x": 0.0,
+              "y": 880.0
+            },
+            "properties": {
+              "Database Connection Pooling Service": "cbf9569a-b4c8-55f8-813e-147b1f5ba802",
+              "Database Type": "PostgreSQL",
+              "Maximum Batch Size": "1000",
+              "Record Reader": "1789bd65-9688-59bf-a7b0-0adb0ee5b850",
+              "Schema Name": "audit",
+              "Statement Type": "UPSERT",
+              "Table Name": "reconcile_expected",
+              "Update Keys": "cycle_id,target,zone_id,category_id,check_name"
+            },
+            "propertyDescriptors": {
+              "Database Connection Pooling Service": {
+                "displayName": "Database Connection Pooling Service",
+                "dynamic": false,
+                "identifiesControllerService": true,
+                "name": "Database Connection Pooling Service",
+                "sensitive": false
+              },
+              "Database Type": {
+                "displayName": "Database Type",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Database Type",
+                "sensitive": false
+              },
+              "Maximum Batch Size": {
+                "displayName": "Maximum Batch Size",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Maximum Batch Size",
+                "sensitive": false
+              },
+              "Record Reader": {
+                "displayName": "Record Reader",
+                "dynamic": false,
+                "identifiesControllerService": true,
+                "name": "Record Reader",
+                "sensitive": false
+              },
+              "Schema Name": {
+                "displayName": "Schema Name",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Schema Name",
+                "sensitive": false
+              },
+              "Statement Type": {
+                "displayName": "Statement Type",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Statement Type",
+                "sensitive": false
+              },
+              "Table Name": {
+                "displayName": "Table Name",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Table Name",
+                "sensitive": false
+              },
+              "Update Keys": {
+                "displayName": "Update Keys",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Update Keys",
+                "sensitive": false
+              }
+            },
+            "retriedRelationships": [],
+            "retryCount": 10,
+            "runDurationMillis": 0,
+            "scheduledState": "ENABLED",
+            "schedulingPeriod": "0 sec",
+            "schedulingStrategy": "TIMER_DRIVEN",
+            "style": {},
+            "type": "org.apache.nifi.processors.standard.PutDatabaseRecord",
+            "yieldDuration": "1 sec"
+          },
+          {
             "autoTerminatedRelationships": [
               "success"
             ],
@@ -37355,8 +37488,8 @@
             "name": "target succeeded",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 2100.0,
-              "y": 660.0
+              "x": 420.0,
+              "y": 880.0
             },
             "properties": {
               "Batch Size": "1",
@@ -37423,7 +37556,7 @@
             "name": "target started retry",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 0.0,
+              "x": 840.0,
               "y": 880.0
             },
             "properties": {
@@ -37475,7 +37608,7 @@
             "name": "target started retried",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 420.0,
+              "x": 1260.0,
               "y": 880.0
             },
             "properties": {
@@ -37543,7 +37676,7 @@
             "name": "transit expected retry",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 840.0,
+              "x": 1680.0,
               "y": 880.0
             },
             "properties": {
@@ -37595,7 +37728,7 @@
             "name": "transit expected retried",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 1260.0,
+              "x": 2100.0,
               "y": 880.0
             },
             "properties": {
@@ -37663,8 +37796,8 @@
             "name": "put transit retry",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 1680.0,
-              "y": 880.0
+              "x": 0.0,
+              "y": 1100.0
             },
             "properties": {
               "Maximum Retries": "#{retry_max}",
@@ -37713,126 +37846,6 @@
             "identifier": "b7ea1048-9f91-5311-b235-880c52b168b1",
             "maxBackoffPeriod": "10 mins",
             "name": "put transit retried",
-            "penaltyDuration": "30 sec",
-            "position": {
-              "x": 2100.0,
-              "y": 880.0
-            },
-            "properties": {
-              "Batch Size": "1",
-              "JDBC Connection Pool": "cbf9569a-b4c8-55f8-813e-147b1f5ba802",
-              "SQL Statement": "INSERT INTO audit.step_event (run_id, step_id, step_name, item, event, rows, bytes, detail) VALUES ('${run_id}', '${step_id}', 'reconcile.target', '${item:replace(\"'\", \"''\")}', 'retried', NULL, NULL, jsonb_build_object('error', '${step.error:replaceNull(${executesql.error.message:replaceNull(${putdatabaserecord.error:replaceNull(${s3.errorMessage:replaceNull(${s3.exception:replaceNull(${invokehttp.response.body:replaceNull(${invokehttp.status.message:replaceNull('see the NiFi bulletins')})})})})})}):replace(\"'\", \"''\")}'))",
-              "Support Fragmented Transactions": "false"
-            },
-            "propertyDescriptors": {
-              "Batch Size": {
-                "displayName": "Batch Size",
-                "dynamic": false,
-                "identifiesControllerService": false,
-                "name": "Batch Size",
-                "sensitive": false
-              },
-              "JDBC Connection Pool": {
-                "displayName": "JDBC Connection Pool",
-                "dynamic": false,
-                "identifiesControllerService": true,
-                "name": "JDBC Connection Pool",
-                "sensitive": false
-              },
-              "SQL Statement": {
-                "displayName": "SQL Statement",
-                "dynamic": false,
-                "identifiesControllerService": false,
-                "name": "SQL Statement",
-                "sensitive": false
-              },
-              "Support Fragmented Transactions": {
-                "displayName": "Support Fragmented Transactions",
-                "dynamic": false,
-                "identifiesControllerService": false,
-                "name": "Support Fragmented Transactions",
-                "sensitive": false
-              }
-            },
-            "retriedRelationships": [],
-            "retryCount": 10,
-            "runDurationMillis": 0,
-            "scheduledState": "ENABLED",
-            "schedulingPeriod": "0 sec",
-            "schedulingStrategy": "TIMER_DRIVEN",
-            "style": {},
-            "type": "org.apache.nifi.processors.standard.PutSQL",
-            "yieldDuration": "1 sec"
-          },
-          {
-            "autoTerminatedRelationships": [],
-            "backoffMechanism": "PENALIZE_FLOWFILE",
-            "bulletinLevel": "WARN",
-            "bundle": {
-              "artifact": "nifi-standard-nar",
-              "group": "org.apache.nifi",
-              "version": "2.12.0"
-            },
-            "comments": "",
-            "componentType": "PROCESSOR",
-            "concurrentlySchedulableTaskCount": 1,
-            "executionNode": "ALL",
-            "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-            "identifier": "69c6c625-65c7-5c39-a856-40a9836423c0",
-            "maxBackoffPeriod": "10 mins",
-            "name": "applied expected retry",
-            "penaltyDuration": "30 sec",
-            "position": {
-              "x": 0.0,
-              "y": 1100.0
-            },
-            "properties": {
-              "Maximum Retries": "#{retry_max}",
-              "Retry Attribute": "retry.50_reconcile.applied_expected"
-            },
-            "propertyDescriptors": {
-              "Maximum Retries": {
-                "displayName": "Maximum Retries",
-                "dynamic": false,
-                "identifiesControllerService": false,
-                "name": "Maximum Retries",
-                "sensitive": false
-              },
-              "Retry Attribute": {
-                "displayName": "Retry Attribute",
-                "dynamic": false,
-                "identifiesControllerService": false,
-                "name": "Retry Attribute",
-                "sensitive": false
-              }
-            },
-            "retriedRelationships": [],
-            "retryCount": 10,
-            "runDurationMillis": 0,
-            "scheduledState": "ENABLED",
-            "schedulingPeriod": "0 sec",
-            "schedulingStrategy": "TIMER_DRIVEN",
-            "style": {},
-            "type": "org.apache.nifi.processors.standard.RetryFlowFile",
-            "yieldDuration": "1 sec"
-          },
-          {
-            "autoTerminatedRelationships": [],
-            "backoffMechanism": "PENALIZE_FLOWFILE",
-            "bulletinLevel": "WARN",
-            "bundle": {
-              "artifact": "nifi-standard-nar",
-              "group": "org.apache.nifi",
-              "version": "2.12.0"
-            },
-            "comments": "",
-            "componentType": "PROCESSOR",
-            "concurrentlySchedulableTaskCount": 1,
-            "executionNode": "ALL",
-            "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-            "identifier": "b9b08f11-beb3-521d-a408-b99df7c7a3c2",
-            "maxBackoffPeriod": "10 mins",
-            "name": "applied expected retried",
             "penaltyDuration": "30 sec",
             "position": {
               "x": 420.0,
@@ -37898,9 +37911,9 @@
             "concurrentlySchedulableTaskCount": 1,
             "executionNode": "ALL",
             "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-            "identifier": "bb2c39ac-6b9b-54b5-bc03-66555cde4aa9",
+            "identifier": "26f829f9-d884-5344-8240-423c1814da4f",
             "maxBackoffPeriod": "10 mins",
-            "name": "put applied retry",
+            "name": "oltp sides retry",
             "penaltyDuration": "30 sec",
             "position": {
               "x": 840.0,
@@ -37908,7 +37921,7 @@
             },
             "properties": {
               "Maximum Retries": "#{retry_max}",
-              "Retry Attribute": "retry.50_reconcile.put_applied"
+              "Retry Attribute": "retry.50_reconcile.oltp_sides"
             },
             "propertyDescriptors": {
               "Maximum Retries": {
@@ -37950,132 +37963,12 @@
             "concurrentlySchedulableTaskCount": 1,
             "executionNode": "ALL",
             "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-            "identifier": "e835d1aa-7386-5b55-a497-5e4b8c5d400d",
+            "identifier": "67cd94e8-1f41-5161-a14b-e819580bfb04",
             "maxBackoffPeriod": "10 mins",
-            "name": "put applied retried",
+            "name": "oltp sides retried",
             "penaltyDuration": "30 sec",
             "position": {
               "x": 1260.0,
-              "y": 1100.0
-            },
-            "properties": {
-              "Batch Size": "1",
-              "JDBC Connection Pool": "cbf9569a-b4c8-55f8-813e-147b1f5ba802",
-              "SQL Statement": "INSERT INTO audit.step_event (run_id, step_id, step_name, item, event, rows, bytes, detail) VALUES ('${run_id}', '${step_id}', 'reconcile.target', '${item:replace(\"'\", \"''\")}', 'retried', NULL, NULL, jsonb_build_object('error', '${step.error:replaceNull(${executesql.error.message:replaceNull(${putdatabaserecord.error:replaceNull(${s3.errorMessage:replaceNull(${s3.exception:replaceNull(${invokehttp.response.body:replaceNull(${invokehttp.status.message:replaceNull('see the NiFi bulletins')})})})})})}):replace(\"'\", \"''\")}'))",
-              "Support Fragmented Transactions": "false"
-            },
-            "propertyDescriptors": {
-              "Batch Size": {
-                "displayName": "Batch Size",
-                "dynamic": false,
-                "identifiesControllerService": false,
-                "name": "Batch Size",
-                "sensitive": false
-              },
-              "JDBC Connection Pool": {
-                "displayName": "JDBC Connection Pool",
-                "dynamic": false,
-                "identifiesControllerService": true,
-                "name": "JDBC Connection Pool",
-                "sensitive": false
-              },
-              "SQL Statement": {
-                "displayName": "SQL Statement",
-                "dynamic": false,
-                "identifiesControllerService": false,
-                "name": "SQL Statement",
-                "sensitive": false
-              },
-              "Support Fragmented Transactions": {
-                "displayName": "Support Fragmented Transactions",
-                "dynamic": false,
-                "identifiesControllerService": false,
-                "name": "Support Fragmented Transactions",
-                "sensitive": false
-              }
-            },
-            "retriedRelationships": [],
-            "retryCount": 10,
-            "runDurationMillis": 0,
-            "scheduledState": "ENABLED",
-            "schedulingPeriod": "0 sec",
-            "schedulingStrategy": "TIMER_DRIVEN",
-            "style": {},
-            "type": "org.apache.nifi.processors.standard.PutSQL",
-            "yieldDuration": "1 sec"
-          },
-          {
-            "autoTerminatedRelationships": [],
-            "backoffMechanism": "PENALIZE_FLOWFILE",
-            "bulletinLevel": "WARN",
-            "bundle": {
-              "artifact": "nifi-standard-nar",
-              "group": "org.apache.nifi",
-              "version": "2.12.0"
-            },
-            "comments": "",
-            "componentType": "PROCESSOR",
-            "concurrentlySchedulableTaskCount": 1,
-            "executionNode": "ALL",
-            "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-            "identifier": "923df837-0ed5-5db0-8646-15077fbb6d56",
-            "maxBackoffPeriod": "10 mins",
-            "name": "actual retry",
-            "penaltyDuration": "30 sec",
-            "position": {
-              "x": 1680.0,
-              "y": 1100.0
-            },
-            "properties": {
-              "Maximum Retries": "#{retry_max}",
-              "Retry Attribute": "retry.50_reconcile.actual"
-            },
-            "propertyDescriptors": {
-              "Maximum Retries": {
-                "displayName": "Maximum Retries",
-                "dynamic": false,
-                "identifiesControllerService": false,
-                "name": "Maximum Retries",
-                "sensitive": false
-              },
-              "Retry Attribute": {
-                "displayName": "Retry Attribute",
-                "dynamic": false,
-                "identifiesControllerService": false,
-                "name": "Retry Attribute",
-                "sensitive": false
-              }
-            },
-            "retriedRelationships": [],
-            "retryCount": 10,
-            "runDurationMillis": 0,
-            "scheduledState": "ENABLED",
-            "schedulingPeriod": "0 sec",
-            "schedulingStrategy": "TIMER_DRIVEN",
-            "style": {},
-            "type": "org.apache.nifi.processors.standard.RetryFlowFile",
-            "yieldDuration": "1 sec"
-          },
-          {
-            "autoTerminatedRelationships": [],
-            "backoffMechanism": "PENALIZE_FLOWFILE",
-            "bulletinLevel": "WARN",
-            "bundle": {
-              "artifact": "nifi-standard-nar",
-              "group": "org.apache.nifi",
-              "version": "2.12.0"
-            },
-            "comments": "",
-            "componentType": "PROCESSOR",
-            "concurrentlySchedulableTaskCount": 1,
-            "executionNode": "ALL",
-            "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
-            "identifier": "93141464-c452-580a-9745-243d7c3ad37d",
-            "maxBackoffPeriod": "10 mins",
-            "name": "actual retried",
-            "penaltyDuration": "30 sec",
-            "position": {
-              "x": 2100.0,
               "y": 1100.0
             },
             "properties": {
@@ -38143,8 +38036,8 @@
             "name": "put actual retry",
             "penaltyDuration": "30 sec",
             "position": {
-              "x": 0.0,
-              "y": 1320.0
+              "x": 1680.0,
+              "y": 1100.0
             },
             "properties": {
               "Maximum Retries": "#{retry_max}",
@@ -38193,6 +38086,126 @@
             "identifier": "6c6e75b9-2023-52eb-9c6a-0296802eaae7",
             "maxBackoffPeriod": "10 mins",
             "name": "put actual retried",
+            "penaltyDuration": "30 sec",
+            "position": {
+              "x": 2100.0,
+              "y": 1100.0
+            },
+            "properties": {
+              "Batch Size": "1",
+              "JDBC Connection Pool": "cbf9569a-b4c8-55f8-813e-147b1f5ba802",
+              "SQL Statement": "INSERT INTO audit.step_event (run_id, step_id, step_name, item, event, rows, bytes, detail) VALUES ('${run_id}', '${step_id}', 'reconcile.target', '${item:replace(\"'\", \"''\")}', 'retried', NULL, NULL, jsonb_build_object('error', '${step.error:replaceNull(${executesql.error.message:replaceNull(${putdatabaserecord.error:replaceNull(${s3.errorMessage:replaceNull(${s3.exception:replaceNull(${invokehttp.response.body:replaceNull(${invokehttp.status.message:replaceNull('see the NiFi bulletins')})})})})})}):replace(\"'\", \"''\")}'))",
+              "Support Fragmented Transactions": "false"
+            },
+            "propertyDescriptors": {
+              "Batch Size": {
+                "displayName": "Batch Size",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Batch Size",
+                "sensitive": false
+              },
+              "JDBC Connection Pool": {
+                "displayName": "JDBC Connection Pool",
+                "dynamic": false,
+                "identifiesControllerService": true,
+                "name": "JDBC Connection Pool",
+                "sensitive": false
+              },
+              "SQL Statement": {
+                "displayName": "SQL Statement",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "SQL Statement",
+                "sensitive": false
+              },
+              "Support Fragmented Transactions": {
+                "displayName": "Support Fragmented Transactions",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Support Fragmented Transactions",
+                "sensitive": false
+              }
+            },
+            "retriedRelationships": [],
+            "retryCount": 10,
+            "runDurationMillis": 0,
+            "scheduledState": "ENABLED",
+            "schedulingPeriod": "0 sec",
+            "schedulingStrategy": "TIMER_DRIVEN",
+            "style": {},
+            "type": "org.apache.nifi.processors.standard.PutSQL",
+            "yieldDuration": "1 sec"
+          },
+          {
+            "autoTerminatedRelationships": [],
+            "backoffMechanism": "PENALIZE_FLOWFILE",
+            "bulletinLevel": "WARN",
+            "bundle": {
+              "artifact": "nifi-standard-nar",
+              "group": "org.apache.nifi",
+              "version": "2.12.0"
+            },
+            "comments": "",
+            "componentType": "PROCESSOR",
+            "concurrentlySchedulableTaskCount": 1,
+            "executionNode": "ALL",
+            "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
+            "identifier": "bb2c39ac-6b9b-54b5-bc03-66555cde4aa9",
+            "maxBackoffPeriod": "10 mins",
+            "name": "put applied retry",
+            "penaltyDuration": "30 sec",
+            "position": {
+              "x": 0.0,
+              "y": 1320.0
+            },
+            "properties": {
+              "Maximum Retries": "#{retry_max}",
+              "Retry Attribute": "retry.50_reconcile.put_applied"
+            },
+            "propertyDescriptors": {
+              "Maximum Retries": {
+                "displayName": "Maximum Retries",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Maximum Retries",
+                "sensitive": false
+              },
+              "Retry Attribute": {
+                "displayName": "Retry Attribute",
+                "dynamic": false,
+                "identifiesControllerService": false,
+                "name": "Retry Attribute",
+                "sensitive": false
+              }
+            },
+            "retriedRelationships": [],
+            "retryCount": 10,
+            "runDurationMillis": 0,
+            "scheduledState": "ENABLED",
+            "schedulingPeriod": "0 sec",
+            "schedulingStrategy": "TIMER_DRIVEN",
+            "style": {},
+            "type": "org.apache.nifi.processors.standard.RetryFlowFile",
+            "yieldDuration": "1 sec"
+          },
+          {
+            "autoTerminatedRelationships": [],
+            "backoffMechanism": "PENALIZE_FLOWFILE",
+            "bulletinLevel": "WARN",
+            "bundle": {
+              "artifact": "nifi-standard-nar",
+              "group": "org.apache.nifi",
+              "version": "2.12.0"
+            },
+            "comments": "",
+            "componentType": "PROCESSOR",
+            "concurrentlySchedulableTaskCount": 1,
+            "executionNode": "ALL",
+            "groupIdentifier": "5f8eb97c-a659-5901-b629-d986f0c74bfd",
+            "identifier": "e835d1aa-7386-5b55-a497-5e4b8c5d400d",
+            "maxBackoffPeriod": "10 mins",
+            "name": "put applied retried",
             "penaltyDuration": "30 sec",
             "position": {
               "x": 420.0,
