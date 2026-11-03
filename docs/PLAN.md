@@ -480,6 +480,14 @@ Group `50 reconcile`:
 
 Group `90 finalize`: ExecuteSQLRecord[control] `audit.finish_cycle(...)`, then terminate.
 
+Built in PR 4 (`src/retail_pricing/nifi/builder/`, one module per group): `00 trigger`, `10 extract`,
+the extract gate, `20 load`, the load gate (end_run, then commit_watermarks) and `90 finalize`.
+Step names and items are in DECISIONS 108, retries and error texts in 111. PR 5 seam: in
+`builder/__init__.py` the load gate's `success` goes straight to `90 finalize`; PR 5 inserts
+`30 transform`, `40`-`43 reverse` and `50 reconcile` there, each followed by `gate.build` (the
+reconcile gate with `audit.reconcile` as its follow-up query). Group names equal
+`registry.job.process_group_name`, which is how deploy step 8 finds them.
+
 Retry and idempotency summary: S3 keys include the extract run id, so a rerun never reads stale
 files. Raw tables are ReplacingMergeTree, so a re-load is harmless. dbt cycle models delete their
 own cycle first. Staging inserts are INSERT_IGNORE, and apply_batch replays. A crashed cycle is
@@ -742,6 +750,10 @@ event and ref.
 | `sql (Postgres functions)` | `docker compose up -d --wait oltp control-db`, `data` SF0.01, `oltp load`, `control init`, `pytest -m sql` | 4 min | 2 |
 | `dbt (ClickHouse, SF0.01)` | section 8.4, artifacts run_results.json on failure | 6 min | 3 |
 | `e2e (compose loop, SF0.01)` | `make demo SF=0.01` with the `ci` params, then `pytest -m integration`; logs on failure; `make down` always | 15-25 min, timeout 40 | 4 (extract and load), 5 (full loop), 6 (monitoring) |
+
+Until `make demo` exists (PR 5), e2e runs the steps itself: `make data SF=0.01`, compose up of
+oltp, control-db, s3, clickhouse and nifi, `make load control-init ch-init s3-init`, `nifi deploy
+--env ci`, `make test-integration`; on failure it uploads NiFi's `logs/nifi-app.log`.
 
 The DuckDB extension directory is cached by key `duckdb-2.0.0-tpcds`. `security.yml` stays as
 is. After each PR merges, add its new job to branch protection (job names never change once
