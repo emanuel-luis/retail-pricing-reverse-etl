@@ -12485,7 +12485,7 @@
             },
             "properties": {
               "HTTP Method": "POST",
-              "HTTP URL": "#{ch_url}/?wait_end_of_query=1&max_insert_threads=2",
+              "HTTP URL": "#{ch_url}/?wait_end_of_query=1&max_insert_threads=1",
               "Request Content-Type": "text/plain",
               "Request Password": "#{ch_password}",
               "Request Username": "#{ch_user}",

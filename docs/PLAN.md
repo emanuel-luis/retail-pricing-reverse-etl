@@ -461,7 +461,7 @@ Group `10 extract`:
 
 Group `20 load`:
 - Plan: ExecuteSQLRecord[control] `audit.load_plan(cycle_id, extract_run_id)`.
-- Item work: ReplaceText body `INSERT INTO raw.${table_name} SELECT *, ${cycle_id}, now64(3) FROM s3(raw_s3, filename='${prefix}*.parquet', format='Parquet') SETTINGS use_hive_partitioning=0` (spike: overriding `url` needs SHOW NAMED COLLECTIONS SECRETS; `filename` is relative to the collection URL) -> InvokeHTTP POST `#{ch_url}/?wait_end_of_query=1&max_insert_threads=2` (basic auth `#{ch_user}`/`#{ch_password}`, read timeout `#{ch_read_timeout}`) -> UpdateAttribute (`written_rows=${X-ClickHouse-Summary:jsonPath('$.written_rows')}`) -> RouteOnAttribute (`written_rows` equals `expected_rows`, else failed with detail).
+- Item work: ReplaceText body `INSERT INTO raw.${table_name} SELECT *, ${cycle_id}, now64(3) FROM s3(raw_s3, filename='${prefix}*.parquet', format='Parquet') SETTINGS use_hive_partitioning=0` (spike: overriding `url` needs SHOW NAMED COLLECTIONS SECRETS; `filename` is relative to the collection URL) -> InvokeHTTP POST `#{ch_url}/?wait_end_of_query=1&max_insert_threads=1` (basic auth `#{ch_user}`/`#{ch_password}`, read timeout `#{ch_read_timeout}`) -> UpdateAttribute (`written_rows=${X-ClickHouse-Summary:jsonPath('$.written_rows')}`) -> RouteOnAttribute (`written_rows` equals `expected_rows`, else failed with detail).
 - InvokeHTTP Retry and Failure go to RetryFlowFile; No Retry goes straight to failed.
 
 Group `30 transform`:
